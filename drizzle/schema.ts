@@ -143,6 +143,35 @@ export const appointments = mysqlTable("appointments", {
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertAppointment = typeof appointments.$inferInsert;
 
+// Damages/Issues table for tracking roof damage
+export const damages = mysqlTable("damages", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  projectId: int("projectId").notNull(),
+  customerId: int("customerId").notNull(),
+  category: mysqlEnum("category", ["missing_shingles", "flashing_damage", "leaks", "sagging", "rot", "moss_algae", "hail_damage", "wind_damage", "other"]).notNull(),
+  description: text("description").notNull(),
+  severity: mysqlEnum("severity", ["minor", "moderate", "severe"]).default("moderate").notNull(),
+  location: varchar("location", { length: 255 }),
+  estimatedCost: decimal("estimatedCost", { precision: 10, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Damage = typeof damages.$inferSelect;
+export type InsertDamage = typeof damages.$inferInsert;
+
+// Damage photos linking photos to specific damage items
+export const damagePhotos = mysqlTable("damagePhotos", {
+  id: int("id").autoincrement().primaryKey(),
+  damageId: int("damageId").notNull(),
+  photoId: int("photoId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DamagePhoto = typeof damagePhotos.$inferSelect;
+export type InsertDamagePhoto = typeof damagePhotos.$inferInsert;
+
 // Activity log for tracking changes
 export const activityLog = mysqlTable("activityLog", {
   id: int("id").autoincrement().primaryKey(),

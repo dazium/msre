@@ -15,6 +15,13 @@
       "when": 1773882623417,
       "tag": "0001_wakeful_korvac",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1773889648131,
+      "tag": "0002_daffy_scrambler",
+      "breakpoints": true
     }
   ]
 }

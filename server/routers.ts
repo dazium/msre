@@ -143,6 +143,40 @@ export const appRouter = router({
     ),
   }),
 
+  damages: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const projects = await db.getProjectsByUserId(ctx.user.id);
+      const allDamages = [];
+      for (const project of projects) {
+        const damages = await db.getDamagesByProjectId(project.id, ctx.user.id);
+        allDamages.push(...damages);
+      }
+      return allDamages;
+    }),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
+      db.getDamageById(input.id, ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      projectId: z.number(),
+      category: z.enum(["missing_shingles", "flashing_damage", "leaks", "sagging", "rot", "moss_algae", "hail_damage", "wind_damage", "other"]),
+      description: z.string().min(1),
+      severity: z.enum(["minor", "moderate", "severe"]).optional(),
+      location: z.string().optional(),
+      estimatedCost: z.string().optional(),
+    })).mutation(({ ctx, input }) => {
+      return db.createDamage({
+        userId: ctx.user.id,
+        projectId: input.projectId,
+        customerId: 0, // Will be fetched from project
+        category: input.category,
+        description: input.description,
+        severity: input.severity || "moderate",
+        location: input.location,
+        estimatedCost: input.estimatedCost ? parseFloat(input.estimatedCost) : undefined as any,
+      });
+    }),
+  }),
+
   appointments: router({
     list: protectedProcedure.query(({ ctx }) =>
       db.getAppointmentsByUserId(ctx.user.id)

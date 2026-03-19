@@ -126,12 +126,12 @@ export default function Home() {
               </a>
 
               <a 
-                href="/estimates" 
+                href="/damages" 
                 className="blueprint-card hover:blueprint-glow transition-all cursor-pointer text-center py-6"
               >
                 <FileText className="w-8 h-8 mx-auto mb-3 text-primary" />
-                <p className="font-semibold text-foreground">Create Estimates</p>
-                <p className="text-xs text-foreground/60 mt-1">Generate quotes</p>
+                <p className="font-semibold text-foreground">Record Damages</p>
+                <p className="text-xs text-foreground/60 mt-1">Document roof issues</p>
               </a>
 
               <a 

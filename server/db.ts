@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -198,4 +198,63 @@ export async function createPhoto(data: InsertPhoto) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.insert(photos).values(data);
+}
+
+// Damage queries
+export async function getDamagesByProjectId(projectId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(damages).where(
+    and(eq(damages.projectId, projectId), eq(damages.userId, userId))
+  );
+}
+
+export async function getDamageById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(damages).where(
+    and(eq(damages.id, id), eq(damages.userId, userId))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createDamage(data: InsertDamage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(damages).values(data);
+}
+
+export async function updateDamage(id: number, userId: number, data: Partial<InsertDamage>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(damages).set(data).where(
+    and(eq(damages.id, id), eq(damages.userId, userId))
+  );
+}
+
+export async function deleteDamage(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(damages).where(
+    and(eq(damages.id, id), eq(damages.userId, userId))
+  );
+}
+
+// Damage photo queries
+export async function getDamagePhotos(damageId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(damagePhotos).where(eq(damagePhotos.damageId, damageId));
+}
+
+export async function createDamagePhoto(data: InsertDamagePhoto) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(damagePhotos).values(data);
+}
+
+export async function deleteDamagePhoto(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(damagePhotos).where(eq(damagePhotos.id, id));
 }

@@ -1,41 +1,41 @@
 # Rooftop Renovators CRM - Project TODO
 
 ## Database & Schema
-- [ ] Generate Drizzle migrations from schema.ts
-- [ ] Apply migrations to database
-- [ ] Verify all tables created successfully
+- [x] Generate Drizzle migrations from schema.ts
+- [x] Apply migrations to database
+- [x] Verify all tables created successfully
 
 ## Core UI Framework
-- [ ] Design and implement blueprint aesthetic with CSS (deep royal blue, grid pattern, white CAD-style lines)
-- [ ] Set up global theming and color variables
-- [ ] Create DashboardLayout component with sidebar navigation
+- [x] Design and implement blueprint aesthetic with CSS (deep royal blue, grid pattern, white CAD-style lines)
+- [x] Set up global theming and color variables
+- [x] Create DashboardLayout component with sidebar navigation
 - [ ] Implement responsive mobile navigation
-- [ ] Add Google Fonts for bold sans-serif typography
-- [ ] Create reusable card and section components with blueprint styling
-- [ ] Set up loading states and error boundaries
+- [x] Add Google Fonts for bold sans-serif typography
+- [x] Create reusable card and section components with blueprint styling
+- [x] Set up loading states and error boundaries
 
-## Lead & Customer Management
-- [ ] Create customers table queries in server/db.ts
-- [ ] Build customers list page with search and filter
+## Lead & Customer Management (PRIORITY)
+- [x] Create customers table queries in server/db.ts
+- [x] Build customers list page with search and filter
+- [x] Add customer creation form with validation
+- [x] Build customer status tracking (lead → won/lost)
 - [ ] Implement customer detail view with edit capability
-- [ ] Add customer creation form with validation
-- [ ] Build customer status tracking (lead → won/lost)
 - [ ] Create customer contact history/notes section
 - [ ] Add bulk customer import/export functionality
 - [ ] Implement customer search across name, email, phone
 
 ## Project Tracking
-- [ ] Create projects table queries in server/db.ts
+- [x] Create projects table queries in server/db.ts
+- [x] Add project creation form with customer linking
+- [x] Build project status update workflow
 - [ ] Build projects dashboard with kanban-style status board
 - [ ] Implement project detail view with timeline
-- [ ] Add project creation form with customer linking
-- [ ] Build project status update workflow
 - [ ] Create project timeline visualization
 - [ ] Add project filtering by status, customer, date range
 - [ ] Implement project search functionality
 
 ## Estimates & Pricing
-- [ ] Create estimates table queries in server/db.ts
+- [x] Create estimates table queries in server/db.ts
 - [ ] Build estimate creation form with line items
 - [ ] Implement estimate line item management (add/edit/delete)
 - [ ] Create estimate total calculation logic
@@ -44,7 +44,7 @@
 - [ ] Implement estimate number auto-generation
 - [ ] Create estimate history for each project
 
-## Photo Upload & Documentation
+## Photo Upload & Documentation (PRIORITY)
 - [ ] Set up S3 file storage integration
 - [ ] Create photo upload component with drag-and-drop
 - [ ] Build photo gallery for projects and customers
@@ -53,8 +53,16 @@
 - [ ] Create photo deletion and management features
 - [ ] Add before/after photo comparison view
 
+## Damages Tracking (PRIORITY)
+- [x] Create damages table in schema (link to projects, descriptions, photos)
+- [x] Build damages form with customer/house selection
+- [x] Add damage description input with predefined categories
+- [ ] Implement photo attachment to damage items
+- [ ] Create damage list view with photos
+- [ ] Build auto-population of estimates from damages
+
 ## Calendar & Scheduling
-- [ ] Create appointments table queries in server/db.ts
+- [x] Create appointments table queries in server/db.ts
 - [ ] Build calendar view component (month/week/day)
 - [ ] Implement appointment creation form
 - [ ] Add appointment types (estimate, inspection, job start, etc.)
