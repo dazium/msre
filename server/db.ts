@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,113 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Customer queries
+export async function getCustomersByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(customers).where(eq(customers.userId, userId));
+}
+
+export async function getCustomerById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(customers).where(
+    and(eq(customers.id, id), eq(customers.userId, userId))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createCustomer(data: InsertCustomer) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(customers).values(data);
+}
+
+export async function updateCustomer(id: number, userId: number, data: Partial<InsertCustomer>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(customers).set(data).where(
+    and(eq(customers.id, id), eq(customers.userId, userId))
+  );
+}
+
+// Project queries
+export async function getProjectsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(projects).where(eq(projects.userId, userId));
+}
+
+export async function getProjectById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(projects).where(
+    and(eq(projects.id, id), eq(projects.userId, userId))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createProject(data: InsertProject) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(projects).values(data);
+}
+
+// Estimate queries
+export async function getEstimatesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(estimates).where(eq(estimates.userId, userId));
+}
+
+export async function getEstimateById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(estimates).where(
+    and(eq(estimates.id, id), eq(estimates.userId, userId))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createEstimate(data: InsertEstimate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(estimates).values(data);
+}
+
+// Appointment queries
+export async function getAppointmentsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(appointments).where(eq(appointments.userId, userId));
+}
+
+export async function getAppointmentById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(appointments).where(
+    and(eq(appointments.id, id), eq(appointments.userId, userId))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createAppointment(data: InsertAppointment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(appointments).values(data);
+}
+
+// Photo queries
+export async function getPhotosByProjectId(projectId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(photos).where(
+    and(eq(photos.projectId, projectId), eq(photos.userId, userId))
+  );
+}
+
+export async function createPhoto(data: InsertPhoto) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(photos).values(data);
+}

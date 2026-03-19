@@ -1,0 +1,143 @@
+# Rooftop Renovators CRM - Project TODO
+
+## Database & Schema
+- [ ] Generate Drizzle migrations from schema.ts
+- [ ] Apply migrations to database
+- [ ] Verify all tables created successfully
+
+## Core UI Framework
+- [ ] Design and implement blueprint aesthetic with CSS (deep royal blue, grid pattern, white CAD-style lines)
+- [ ] Set up global theming and color variables
+- [ ] Create DashboardLayout component with sidebar navigation
+- [ ] Implement responsive mobile navigation
+- [ ] Add Google Fonts for bold sans-serif typography
+- [ ] Create reusable card and section components with blueprint styling
+- [ ] Set up loading states and error boundaries
+
+## Lead & Customer Management
+- [ ] Create customers table queries in server/db.ts
+- [ ] Build customers list page with search and filter
+- [ ] Implement customer detail view with edit capability
+- [ ] Add customer creation form with validation
+- [ ] Build customer status tracking (lead → won/lost)
+- [ ] Create customer contact history/notes section
+- [ ] Add bulk customer import/export functionality
+- [ ] Implement customer search across name, email, phone
+
+## Project Tracking
+- [ ] Create projects table queries in server/db.ts
+- [ ] Build projects dashboard with kanban-style status board
+- [ ] Implement project detail view with timeline
+- [ ] Add project creation form with customer linking
+- [ ] Build project status update workflow
+- [ ] Create project timeline visualization
+- [ ] Add project filtering by status, customer, date range
+- [ ] Implement project search functionality
+
+## Estimates & Pricing
+- [ ] Create estimates table queries in server/db.ts
+- [ ] Build estimate creation form with line items
+- [ ] Implement estimate line item management (add/edit/delete)
+- [ ] Create estimate total calculation logic
+- [ ] Build estimate preview/PDF view
+- [ ] Add estimate status tracking (draft → sent → accepted)
+- [ ] Implement estimate number auto-generation
+- [ ] Create estimate history for each project
+
+## Photo Upload & Documentation
+- [ ] Set up S3 file storage integration
+- [ ] Create photo upload component with drag-and-drop
+- [ ] Build photo gallery for projects and customers
+- [ ] Add photo tagging and caption functionality
+- [ ] Implement photo organization by project
+- [ ] Create photo deletion and management features
+- [ ] Add before/after photo comparison view
+
+## Calendar & Scheduling
+- [ ] Create appointments table queries in server/db.ts
+- [ ] Build calendar view component (month/week/day)
+- [ ] Implement appointment creation form
+- [ ] Add appointment types (estimate, inspection, job start, etc.)
+- [ ] Create appointment notifications/reminders
+- [ ] Build appointment detail view with editing
+- [ ] Implement appointment status tracking
+- [ ] Add calendar filtering by type and status
+
+## Dashboard
+- [ ] Create dashboard overview page
+- [ ] Display active projects widget
+- [ ] Show recent leads widget
+- [ ] Add upcoming appointments widget
+- [ ] Create quick stats (total customers, active projects, revenue)
+- [ ] Build activity feed showing recent changes
+- [ ] Add key metrics and KPIs display
+
+## Google Maps Integration
+- [ ] Set up Google Maps component from template
+- [ ] Implement job location visualization on map
+- [ ] Add route planning between multiple jobs
+- [ ] Create location search and geocoding
+- [ ] Build address validation using Maps API
+- [ ] Add map markers for customers and projects
+- [ ] Implement map filtering by project status
+
+## LLM Integration
+- [ ] Set up LLM helper for project summaries
+- [ ] Create estimate description generation
+- [ ] Build project notes auto-generation
+- [ ] Implement customer profile summary generation
+- [ ] Add AI-powered project recommendations
+- [ ] Create estimate optimization suggestions
+
+## Search & Filtering
+- [ ] Implement global search across leads and projects
+- [ ] Add advanced filter panel for customers
+- [ ] Build project filter by status, date, value
+- [ ] Create estimate filter by status and date
+- [ ] Add saved filter presets
+- [ ] Implement search result highlighting
+
+## Mobile Responsiveness
+- [ ] Test all pages on mobile devices
+- [ ] Optimize touch interactions for mobile
+- [ ] Implement mobile-friendly forms
+- [ ] Create mobile-optimized photo upload
+- [ ] Build mobile calendar view
+- [ ] Test map functionality on mobile
+- [ ] Ensure fast loading on mobile networks
+
+## Testing & Quality
+- [ ] Write vitest tests for database queries
+- [ ] Create tests for tRPC procedures
+- [ ] Build component tests for key UI elements
+- [ ] Test estimate calculations
+- [ ] Verify photo upload functionality
+- [ ] Test calendar scheduling
+- [ ] Validate form submissions
+
+## UI Polish & Branding
+- [ ] Apply Rooftop Renovators branding
+- [ ] Add company logo and favicon
+- [ ] Refine blueprint aesthetic throughout
+- [ ] Ensure consistent spacing and alignment
+- [ ] Add micro-interactions and animations
+- [ ] Optimize colors for accessibility
+- [ ] Test dark/light theme consistency
+- [ ] Add empty states and loading skeletons
+
+## Performance & Optimization
+- [ ] Optimize database queries with indexes
+- [ ] Implement pagination for large lists
+- [ ] Add lazy loading for images
+- [ ] Optimize bundle size
+- [ ] Test performance on slow networks
+- [ ] Implement caching strategies
+
+## Deployment & Final
+- [ ] Create initial checkpoint
+- [ ] Verify all features work end-to-end
+- [ ] Test user authentication flow
+- [ ] Validate data persistence
+- [ ] Create deployment documentation
+- [ ] Final QA and bug fixes
+- [ ] Deliver to user
