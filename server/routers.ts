@@ -108,6 +108,22 @@ export const appRouter = router({
         endDate: input.endDate ? new Date(input.endDate) : undefined,
       })
     ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      status: z.enum(["lead", "scheduled", "in_progress", "completed", "on_hold", "cancelled"]).optional(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      estimatedValue: z.string().optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, ...data } = input;
+      const updateData: any = { ...data };
+      if (data.startDate) updateData.startDate = new Date(data.startDate);
+      if (data.endDate) updateData.endDate = new Date(data.endDate);
+      if (data.estimatedValue) updateData.estimatedValue = parseFloat(data.estimatedValue);
+      return db.updateProject(id, ctx.user.id, updateData);
+    }),
   }),
 
   estimates: router({

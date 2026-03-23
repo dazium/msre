@@ -141,6 +141,14 @@ export async function createProject(data: InsertProject) {
   return db.insert(projects).values(data);
 }
 
+export async function updateProject(id: number, userId: number, data: Partial<InsertProject>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(projects).set(data).where(
+    and(eq(projects.id, id), eq(projects.userId, userId))
+  );
+}
+
 // Estimate queries
 export async function getEstimatesByUserId(userId: number) {
   const db = await getDb();
