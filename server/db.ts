@@ -202,10 +202,35 @@ export async function getPhotosByProjectId(projectId: number, userId: number) {
   );
 }
 
+export async function getPhotoById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(photos).where(
+    and(eq(photos.id, id), eq(photos.userId, userId))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function createPhoto(data: InsertPhoto) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.insert(photos).values(data);
+}
+
+export async function updatePhoto(id: number, userId: number, data: Partial<InsertPhoto>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(photos).set(data).where(
+    and(eq(photos.id, id), eq(photos.userId, userId))
+  );
+}
+
+export async function deletePhoto(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(photos).where(
+    and(eq(photos.id, id), eq(photos.userId, userId))
+  );
 }
 
 // Damage queries

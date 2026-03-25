@@ -225,6 +225,58 @@ export const appRouter = router({
       })
     ),
   }),
+
+  photos: router({
+    listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ ctx, input }) =>
+      db.getPhotosByProjectId(input.projectId, ctx.user.id)
+    ),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
+      db.getPhotoById(input.id, ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      projectId: z.number(),
+      fileName: z.string().min(1),
+      fileUrl: z.string().url(),
+      fileKey: z.string().min(1),
+      mimeType: z.string().optional(),
+      caption: z.string().optional(),
+    })).mutation(({ ctx, input }) =>
+      db.createPhoto({
+        userId: ctx.user.id,
+        projectId: input.projectId,
+        fileName: input.fileName,
+        fileUrl: input.fileUrl,
+        fileKey: input.fileKey,
+        mimeType: input.mimeType,
+        caption: input.caption,
+      })
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      caption: z.string().optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, ...data } = input;
+      return db.updatePhoto(id, ctx.user.id, data);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
+      db.deletePhoto(input.id, ctx.user.id)
+    ),
+    linkToDamage: protectedProcedure.input(z.object({
+      photoId: z.number(),
+      damageId: z.number(),
+    })).mutation(({ ctx, input }) =>
+      db.createDamagePhoto({
+        photoId: input.photoId,
+        damageId: input.damageId,
+      })
+    ),
+    unlinkFromDamage: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
+      db.deleteDamagePhoto(input.id)
+    ),
+    getDamagePhotos: protectedProcedure.input(z.object({ damageId: z.number() })).query(({ input }) =>
+      db.getDamagePhotos(input.damageId)
+    ),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

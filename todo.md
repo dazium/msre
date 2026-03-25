@@ -45,12 +45,14 @@
 - [ ] Create estimate history for each project
 
 ## Photo Upload & Documentation (PRIORITY)
-- [ ] Set up S3 file storage integration
-- [ ] Create photo upload component with drag-and-drop
-- [ ] Build photo gallery for projects and customers
-- [ ] Add photo tagging and caption functionality
-- [ ] Implement photo organization by project
-- [ ] Create photo deletion and management features
+- [x] Set up S3 file storage integration
+- [x] Create photo upload component with drag-and-drop
+- [x] Build photo gallery for projects and customers
+- [x] Add photo tagging and caption functionality
+- [x] Implement photo organization by project
+- [x] Create photo deletion and management features
+- [x] Link photos to damage records
+- [x] Create tests for photo upload feature (12 tests passing)
 - [ ] Add before/after photo comparison view
 
 ## Damages Tracking (PRIORITY)

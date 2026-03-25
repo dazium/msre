@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Customers from "./pages/Customers";
 import Projects from "./pages/Projects";
 import Damages from "./pages/Damages";
+import Photos from "./pages/Photos";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <Route path={"/customers"} component={Customers} />
       <Route path={"/projects"} component={Projects} />
       <Route path={"/damages"} component={Damages} />
+      <Route path={"/photos/:projectId"} component={Photos} />
       <Route path={"/estimates"} component={() => <div>Estimates Page (Coming Soon)</div>} />
       <Route path={"/calendar"} component={() => <div>Calendar Page (Coming Soon)</div>} />
       <Route path={"/404"} component={NotFound} />
