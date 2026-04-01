@@ -185,3 +185,29 @@ export const activityLog = mysqlTable("activityLog", {
 
 export type ActivityLog = typeof activityLog.$inferSelect;
 export type InsertActivityLog = typeof activityLog.$inferInsert;
+// Materials table - predefined roofing materials
+export const materials = mysqlTable("materials", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  category: mysqlEnum("category", ["flashing", "underlayment", "vents", "fasteners", "sealants", "other"]).default("other").notNull(),
+  unit: varchar("unit", { length: 20 }).default("piece").notNull(),
+  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Material = typeof materials.$inferSelect;
+export type InsertMaterial = typeof materials.$inferInsert;
+
+// Damage materials - materials needed for specific damages
+export const damageMaterials = mysqlTable("damageMaterials", {
+  id: int("id").autoincrement().primaryKey(),
+  damageId: int("damageId").notNull(),
+  materialId: int("materialId").notNull(),
+  quantity: int("quantity").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DamageMaterial = typeof damageMaterials.$inferSelect;
+export type InsertDamageMaterial = typeof damageMaterials.$inferInsert;

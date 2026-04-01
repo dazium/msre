@@ -165,3 +165,11 @@
 - [ ] Create deployment documentation
 - [ ] Final QA and bug fixes
 - [ ] Deliver to user
+
+## Materials Tracking (NEW PRIORITY)
+- [x] Add materials table to schema (drip edge, vents, ice and water, synthetic underlay, etc.)
+- [x] Create materials checklist component with quantity inputs
+- [x] Integrate materials into Damages form
+- [ ] Display materials with quantities in Estimates
+- [ ] Auto-calculate material costs based on quantities
+- [ ] Write tests for materials feature

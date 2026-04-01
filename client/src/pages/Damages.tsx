@@ -8,7 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Plus, Upload, Trash2, AlertCircle } from "lucide-react";
-// Photo upload will be handled via tRPC procedure
+import MaterialsChecklist, { SelectedMaterial } from "@/components/MaterialsChecklist";
 
 const DAMAGE_CATEGORIES = [
   { value: "missing_shingles", label: "Missing Shingles" },
@@ -34,6 +34,7 @@ export default function Damages() {
     location: "",
     estimatedCost: "",
   });
+  const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterial[]>([]);
 
   const { data: projects } = trpc.projects.list.useQuery();
   const { data: damages, isLoading, refetch } = trpc.damages.list.useQuery();
@@ -65,6 +66,7 @@ export default function Damages() {
       // Create damage record
       await createMutation.mutateAsync({
         projectId: parseInt(selectedProject),
+        customerId: 0,
         category: formData.category as any,
         description: formData.description,
         severity: formData.severity as any,
@@ -72,9 +74,7 @@ export default function Damages() {
         estimatedCost: formData.estimatedCost ? parseFloat(formData.estimatedCost).toString() : undefined,
       });
 
-      // TODO: Handle photo uploads in next phase
-
-      toast.success("Damage recorded successfully with photos!");
+      toast.success(`Damage recorded with ${selectedMaterials.length} materials!`);
       setFormData({
         category: "",
         description: "",
@@ -82,6 +82,7 @@ export default function Damages() {
         location: "",
         estimatedCost: "",
       });
+      setSelectedMaterials([]);
       setUploadedPhotos([]);
       setSelectedProject("");
       setIsOpen(false);
@@ -199,6 +200,10 @@ export default function Damages() {
                       onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
                       placeholder="1500.00"
                     />
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <MaterialsChecklist onMaterialsChange={setSelectedMaterials} initialMaterials={selectedMaterials} />
                   </div>
 
                   {/* Photo Upload */}
