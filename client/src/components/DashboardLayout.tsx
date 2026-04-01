@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BarChart3, Calendar, FileText, Home, LogOut, PanelLeft, Settings, Users, Zap } from "lucide-react";
+import { BarChart3, Calendar, FileText, Home, LogOut, PanelLeft, Settings, Users, Zap, Navigation } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -33,6 +33,7 @@ const menuItems = [
   { icon: BarChart3, label: "Projects", path: "/projects" },
   { icon: FileText, label: "Estimates", path: "/estimates" },
   { icon: Calendar, label: "Calendar", path: "/calendar" },
+  { icon: Navigation, label: "Route Optimization", path: "/route-optimization" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

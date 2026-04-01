@@ -231,6 +231,7 @@ describe("Damage Photos Router - Linking", () => {
 
     await caller.damages.create({
       projectId: 109,
+      customerId: 1,
       category: "leaks",
       description: "Water leaks",
     });
@@ -259,6 +260,7 @@ describe("Damage Photos Router - Linking", () => {
 
     await caller.damages.create({
       projectId: 110,
+      customerId: 100,
       category: "wind_damage",
       description: "Wind damage",
     });

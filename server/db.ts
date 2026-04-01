@@ -259,6 +259,12 @@ export async function deletePhoto(id: number, userId: number) {
 }
 
 // Damage queries
+export async function getDamagesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(damages).where(eq(damages.userId, userId));
+}
+
 export async function getDamagesByProjectId(projectId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];

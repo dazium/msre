@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, MapPin, Phone, Mail } from "lucide-react";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 export default function Customers() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +24,8 @@ export default function Customers() {
     city: "",
     state: "",
     zipCode: "",
+    latitude: "",
+    longitude: "",
     notes: "",
   });
 
@@ -49,6 +52,8 @@ export default function Customers() {
         city: "",
         state: "",
         zipCode: "",
+        latitude: "",
+        longitude: "",
         notes: "",
       });
       setIsOpen(false);
@@ -144,12 +149,21 @@ export default function Customers() {
                   </div>
 
                   <div>
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
+                    <AddressAutocomplete
                       value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="123 Main St"
+                      onChange={(address) => setFormData({ ...formData, address })}
+                      onLocationSelect={(location) =>
+                        setFormData({
+                          ...formData,
+                          address: location.address,
+                          city: location.city,
+                          state: location.state,
+                          zipCode: location.zipCode,
+                          latitude: location.latitude,
+                          longitude: location.longitude,
+                        })
+                      }
+                      placeholder="123 Main St, Winter, ON"
                     />
                   </div>
 

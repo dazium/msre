@@ -114,7 +114,7 @@ export function generateEstimatePDF(data: EstimatePDFData) {
 
   doc.setFontSize(12);
   doc.setTextColor(10, 22, 40);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text(`Total: $${data.total.toFixed(2)}`, pageWidth - margin - 50, finalY + 10);
 
   // Footer

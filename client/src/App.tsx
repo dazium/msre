@@ -12,6 +12,7 @@ import Photos from "./pages/Photos";
 import Calendar from "./pages/Calendar";
 import Estimates from "./pages/Estimates";
 import Maps from "./pages/Maps";
+import RouteOptimization from "./pages/RouteOptimization";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path={"/estimates"} component={Estimates} />
       <Route path={"/calendar"} component={Calendar} />
       <Route path={"/maps"} component={Maps} />
+      <Route path={"/route-optimization"} component={RouteOptimization} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

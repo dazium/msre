@@ -105,12 +105,15 @@ export default function Estimates() {
     const total = calculateTotal();
 
     try {
+      const selectedProjectData = projectsData?.find(p => p.id === selectedProject);
       await createMutation.mutateAsync({
         projectId: selectedProject,
+        customerId: selectedProjectData?.customerId || 0,
         estimateNumber: formData.get("estimateNumber") as string,
+        title: formData.get("title") as string || "Estimate",
         description: formData.get("description") as string,
-        totalAmount: total,
-        lineItems: JSON.stringify(lineItems),
+        subtotal: (total * 0.9).toFixed(2),
+        total: total.toFixed(2),
         status: "draft",
       });
 
@@ -155,7 +158,7 @@ TOTAL: $${estimate.totalAmount}
   };
 
   if (isLoading) {
-    return <DashboardLayout><div className="p-8">Loading estimates...</div></DashboardLayout>;
+    return <div className="p-8">Loading estimates...</div>;
   }
 
   return (

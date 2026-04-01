@@ -20,11 +20,6 @@ export default function Photos() {
   const [selectedDamageId, setSelectedDamageId] = useState<string>("");
 
   // Queries
-  const { data: project } = trpc.projects.getById.useQuery(
-    { id: projectId },
-    { enabled: projectId > 0 }
-  );
-
   const { data: photos, refetch: refetchPhotos } = trpc.photos.listByProject.useQuery(
     { projectId },
     { enabled: projectId > 0 }
@@ -132,9 +127,7 @@ export default function Photos() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold">Project Photos</h1>
-          {project && (
-            <p className="text-muted-foreground">{project.title}</p>
-          )}
+          <p className="text-muted-foreground">Project ID: {projectId}</p>
         </div>
       </div>
 

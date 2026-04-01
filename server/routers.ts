@@ -113,9 +113,10 @@ export const appRouter = router({
   }),
 
   damages: router({
-    list: protectedProcedure.query(({ ctx }) =>
-      db.getDamagesByProjectId(0, ctx.user.id)
-    ),
+    list: protectedProcedure.query(({ ctx }) => {
+      // Return all damages for this user across all projects
+      return db.getDamagesByUserId(ctx.user.id);
+    }),
     listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ ctx, input }) =>
       db.getDamagesByProjectId(input.projectId, ctx.user.id)
     ),
@@ -244,20 +245,24 @@ export const appRouter = router({
     list: protectedProcedure.query(({ ctx }) => db.listEstimates()),
     create: protectedProcedure.input(z.object({
       projectId: z.number(),
+      customerId: z.number(),
       estimateNumber: z.string(),
+      title: z.string(),
       description: z.string().optional(),
+      subtotal: z.string(),
+      total: z.string(),
       status: z.enum(["draft", "sent", "accepted", "rejected"]).default("draft"),
-      totalAmount: z.string(),
-      lineItems: z.string(),
     })).mutation(({ ctx, input }) => {
       return db.createEstimate({
         projectId: input.projectId,
+        customerId: input.customerId,
         userId: ctx.user.id,
         estimateNumber: input.estimateNumber,
+        title: input.title,
         description: input.description,
+        subtotal: input.subtotal,
+        total: input.total,
         status: input.status,
-        totalAmount: input.totalAmount,
-        lineItems: input.lineItems,
       });
     }),
   }),
