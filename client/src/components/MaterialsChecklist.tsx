@@ -24,6 +24,7 @@ const DEFAULT_MATERIALS = [
   { id: "flashing-kit", name: "Flashing Kit", category: "flashing" },
   { id: "roof-cement", name: "Roof Cement", category: "sealants" },
   { id: "nails", name: "Roofing Nails", category: "fasteners" },
+  { id: "nails-box", name: "Nails by the Box", category: "fasteners" },
   { id: "underlayment", name: "Underlayment", category: "underlayment" },
 ];
 
