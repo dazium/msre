@@ -34,7 +34,7 @@
 - [ ] Implement project detail view with timeline
 - [ ] Create project timeline visualization
 
-## Estimates & Pricing
+## Estimates & Pricing (IN PROGRESS)
 - [x] Create estimates table queries in server/db.ts
 - [ ] Build estimate creation form with line items
 - [ ] Implement estimate line item management (add/edit/delete)
@@ -43,6 +43,8 @@
 - [ ] Add estimate status tracking (draft → sent → accepted)
 - [ ] Implement estimate number auto-generation
 - [ ] Create estimate history for each project
+- [ ] Auto-populate estimates from damages
+- [ ] Write tests for estimates feature
 
 ## Photo Upload & Documentation (PRIORITY)
 - [x] Set up S3 file storage integration
@@ -64,15 +66,24 @@
 - [ ] Implement photo attachment to damage items
 - [ ] Create damage list view with photos
 
-## Calendar & Scheduling
+## Calendar & Scheduling (COMPLETE)
 - [x] Create appointments table queries in server/db.ts
-- [ ] Build calendar view component (month/week/day)
-- [ ] Implement appointment creation form
-- [ ] Add appointment types (estimate, inspection, job start, etc.)
+- [x] Build calendar view component (month/week/day)
+- [x] Implement appointment creation form
+- [x] Add appointment types (estimate, inspection, job start, etc.)
+- [x] Implement appointment status tracking
+- [x] Write tests for calendar feature (14 tests passing)
 - [ ] Create appointment notifications/reminders
 - [ ] Build appointment detail view with editing
-- [ ] Implement appointment status tracking
 - [ ] Add calendar filtering by type and status
+
+## Google Maps Integration (IN PROGRESS)
+- [ ] Integrate Google Maps component for job location visualization
+- [ ] Add markers for all scheduled appointments
+- [ ] Implement route planning between multiple job locations
+- [ ] Add location search and geocoding
+- [ ] Create directions display with estimated travel time
+- [ ] Add map filtering by appointment type and status
 
 ## Dashboard
 - [ ] Create dashboard overview page

@@ -49,10 +49,6 @@ describe("Customers Router - Full CRUD", () => {
       lastName: "Doe",
       phone: "555-1234",
       email: "john@example.com",
-      address: "123 Main St",
-      city: "Winter",
-      state: "ON",
-      zipCode: "P0X 1X0",
       status: "lead" as const,
       notes: "New lead from referral",
     };
@@ -71,10 +67,6 @@ describe("Customers Router - Full CRUD", () => {
         lastName: "Smith",
         phone: "555-0001",
         email: "alice@example.com",
-        address: "456 Oak Ave",
-        city: "Winter",
-        state: "ON",
-        zipCode: "P0X 1X0",
         status: "lead" as const,
       },
       {
@@ -82,10 +74,6 @@ describe("Customers Router - Full CRUD", () => {
         lastName: "Johnson",
         phone: "555-0002",
         email: "bob@example.com",
-        address: "789 Pine Rd",
-        city: "Winter",
-        state: "ON",
-        zipCode: "P0X 1X0",
         status: "contacted" as const,
       },
     ];
@@ -109,10 +97,6 @@ describe("Customers Router - Full CRUD", () => {
       lastName: "Brown",
       phone: "555-0003",
       email: "charlie@example.com",
-      address: "321 Elm St",
-      city: "Winter",
-      state: "ON",
-      zipCode: "P0X 1X0",
       status: "lead",
     });
 
@@ -157,13 +141,9 @@ describe("Projects Router - Full CRUD", () => {
       customerId: 1,
       title: "Roof Replacement - North Side",
       description: "Complete roof replacement with new shingles",
-      address: "123 Main St",
-      city: "Winter",
-      state: "ON",
-      zipCode: "P0X 1X0",
       status: "lead" as const,
-      startDate: "2026-04-01",
-      endDate: "2026-04-15",
+      startDate: new Date(2026, 3, 1),
+      endDate: new Date(2026, 3, 15),
       estimatedValue: "8500.00",
     };
 
@@ -180,10 +160,6 @@ describe("Projects Router - Full CRUD", () => {
         customerId: 1,
         title: "Roof Inspection",
         description: "Initial roof inspection",
-        address: "123 Main St",
-        city: "Winter",
-        state: "ON",
-        zipCode: "P0X 1X0",
         status: "scheduled" as const,
         estimatedValue: "500.00",
       },
@@ -191,10 +167,6 @@ describe("Projects Router - Full CRUD", () => {
         customerId: 1,
         title: "Gutter Installation",
         description: "Install new gutters",
-        address: "123 Main St",
-        city: "Winter",
-        state: "ON",
-        zipCode: "P0X 1X0",
         status: "lead" as const,
         estimatedValue: "2000.00",
       },
@@ -262,6 +234,7 @@ describe("Damages Router - Full CRUD", () => {
 
     const damageData = {
       projectId: 1,
+      customerId: 1,
       category: "missing_shingles" as const,
       description: "Missing shingles on north side of roof, approximately 4x6 feet",
       severity: "moderate" as const,
@@ -291,7 +264,8 @@ describe("Damages Router - Full CRUD", () => {
 
     for (const category of categories) {
       const result = await caller.damages.create({
-        projectId: 1,
+        customerId: 1,
+      projectId: 1,
         category,
         description: `Test damage - ${category}`,
       });
@@ -307,7 +281,8 @@ describe("Damages Router - Full CRUD", () => {
 
     for (const severity of severities) {
       const result = await caller.damages.create({
-        projectId: 1,
+        customerId: 1,
+      projectId: 1,
         category: "missing_shingles",
         description: `Test damage - ${severity}`,
         severity,
@@ -323,6 +298,7 @@ describe("Damages Router - Full CRUD", () => {
     const damages = [
       {
         projectId: 1,
+        customerId: 1,
         category: "missing_shingles" as const,
         description: "Missing shingles on north side",
         severity: "moderate" as const,
@@ -331,6 +307,7 @@ describe("Damages Router - Full CRUD", () => {
       },
       {
         projectId: 1,
+        customerId: 1,
         category: "flashing_damage" as const,
         description: "Damaged flashing around chimney",
         severity: "severe" as const,
@@ -339,6 +316,7 @@ describe("Damages Router - Full CRUD", () => {
       },
       {
         projectId: 1,
+        customerId: 1,
         category: "moss_algae" as const,
         description: "Moss growth on shaded areas",
         severity: "minor" as const,
@@ -361,6 +339,7 @@ describe("Damages Router - Full CRUD", () => {
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.damages.create({
+      customerId: 1,
       projectId: 1,
       category: "other",
       description: "Unspecified roof damage",
@@ -416,10 +395,6 @@ describe("Integration Tests - Full Workflow", () => {
       lastName: "Test",
       phone: "555-9999",
       email: "integration@test.com",
-      address: "999 Test St",
-      city: "Winter",
-      state: "ON",
-      zipCode: "P0X 1X0",
       status: "lead",
       notes: "Integration test customer",
     });
@@ -430,10 +405,6 @@ describe("Integration Tests - Full Workflow", () => {
       customerId: 1,
       title: "Integration Test Project",
       description: "Full workflow test",
-      address: "999 Test St",
-      city: "Winter",
-      state: "ON",
-      zipCode: "P0X 1X0",
       status: "scheduled",
       estimatedValue: "5000.00",
     });
@@ -441,6 +412,7 @@ describe("Integration Tests - Full Workflow", () => {
 
     // Step 3: Record damages for the project
     const damageResult = await caller.damages.create({
+      customerId: 1,
       projectId: 1,
       category: "missing_shingles",
       description: "Integration test damage",

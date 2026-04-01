@@ -178,6 +178,7 @@ describe("Damage Photos Router - Linking", () => {
 
     await caller.damages.create({
       projectId: 107,
+      customerId: 1,
       category: "missing_shingles",
       description: "Missing shingles",
     });
@@ -203,6 +204,7 @@ describe("Damage Photos Router - Linking", () => {
 
     await caller.damages.create({
       projectId: 108,
+      customerId: 1,
       category: "flashing_damage",
       description: "Flashing damage",
     });
@@ -287,6 +289,7 @@ describe("Photo Integration Tests", () => {
 
     await caller.damages.create({
       projectId: 1,
+      customerId: 1,
       category: "missing_shingles",
       description: "Test damage for photo linking",
       severity: "moderate",

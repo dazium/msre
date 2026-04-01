@@ -48,8 +48,8 @@ export const appRouter = router({
         city: input.city,
         state: input.state,
         zipCode: input.zipCode,
-        latitude: input.latitude ? parseFloat(input.latitude) : undefined as any,
-        longitude: input.longitude ? parseFloat(input.longitude) : undefined as any,
+        latitude: input.latitude,
+        longitude: input.longitude,
         notes: input.notes,
       })
     ),
@@ -75,37 +75,26 @@ export const appRouter = router({
     list: protectedProcedure.query(({ ctx }) =>
       db.getProjectsByUserId(ctx.user.id)
     ),
-    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
-      db.getProjectById(input.id, ctx.user.id)
-    ),
     create: protectedProcedure.input(z.object({
       customerId: z.number(),
       title: z.string().min(1),
       description: z.string().optional(),
-      address: z.string().optional(),
-      city: z.string().optional(),
-      state: z.string().optional(),
-      zipCode: z.string().optional(),
-      latitude: z.string().optional(),
-      longitude: z.string().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
+      status: z.enum(["lead", "scheduled", "in_progress", "completed", "on_hold", "cancelled"]).default("lead"),
       estimatedValue: z.string().optional(),
+      actualValue: z.string().optional(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
     })).mutation(({ ctx, input }) =>
       db.createProject({
         userId: ctx.user.id,
         customerId: input.customerId,
         title: input.title,
         description: input.description,
-        address: input.address,
-        city: input.city,
-        state: input.state,
-        zipCode: input.zipCode,
-        latitude: input.latitude ? parseFloat(input.latitude) : undefined as any,
-        longitude: input.longitude ? parseFloat(input.longitude) : undefined as any,
-        estimatedValue: input.estimatedValue ? parseFloat(input.estimatedValue) : undefined as any,
-        startDate: input.startDate ? new Date(input.startDate) : undefined,
-        endDate: input.endDate ? new Date(input.endDate) : undefined,
+        status: input.status,
+        estimatedValue: input.estimatedValue,
+        actualValue: input.actualValue,
+        startDate: input.startDate,
+        endDate: input.endDate,
       })
     ),
     update: protectedProcedure.input(z.object({
@@ -113,115 +102,41 @@ export const appRouter = router({
       title: z.string().optional(),
       description: z.string().optional(),
       status: z.enum(["lead", "scheduled", "in_progress", "completed", "on_hold", "cancelled"]).optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
       estimatedValue: z.string().optional(),
+      actualValue: z.string().optional(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
     })).mutation(({ ctx, input }) => {
       const { id, ...data } = input;
-      const updateData: any = { ...data };
-      if (data.startDate) updateData.startDate = new Date(data.startDate);
-      if (data.endDate) updateData.endDate = new Date(data.endDate);
-      if (data.estimatedValue) updateData.estimatedValue = parseFloat(data.estimatedValue);
-      return db.updateProject(id, ctx.user.id, updateData);
+      return db.updateProject(id, ctx.user.id, data);
     }),
   }),
 
-  estimates: router({
+  damages: router({
     list: protectedProcedure.query(({ ctx }) =>
-      db.getEstimatesByUserId(ctx.user.id)
+      db.getDamagesByProjectId(0, ctx.user.id)
     ),
-    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
-      db.getEstimateById(input.id, ctx.user.id)
+    listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ ctx, input }) =>
+      db.getDamagesByProjectId(input.projectId, ctx.user.id)
     ),
     create: protectedProcedure.input(z.object({
       projectId: z.number(),
       customerId: z.number(),
-      estimateNumber: z.string().min(1),
-      title: z.string().min(1),
-      description: z.string().optional(),
-      subtotal: z.string(),
-      tax: z.string().optional(),
-      total: z.string(),
-      validUntil: z.string().optional(),
-    })).mutation(({ ctx, input }) =>
-      db.createEstimate({
-        userId: ctx.user.id,
-        projectId: input.projectId,
-        customerId: input.customerId,
-        estimateNumber: input.estimateNumber,
-        title: input.title,
-        description: input.description,
-        subtotal: parseFloat(input.subtotal) as any,
-        tax: input.tax ? parseFloat(input.tax) : 0 as any,
-        total: parseFloat(input.total) as any,
-        validUntil: input.validUntil ? new Date(input.validUntil) : undefined,
-      })
-    ),
-  }),
-
-  damages: router({
-    list: protectedProcedure.query(async ({ ctx }) => {
-      const projects = await db.getProjectsByUserId(ctx.user.id);
-      const allDamages = [];
-      for (const project of projects) {
-        const damages = await db.getDamagesByProjectId(project.id, ctx.user.id);
-        allDamages.push(...damages);
-      }
-      return allDamages;
-    }),
-    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
-      db.getDamageById(input.id, ctx.user.id)
-    ),
-    create: protectedProcedure.input(z.object({
-      projectId: z.number(),
       category: z.enum(["missing_shingles", "flashing_damage", "leaks", "sagging", "rot", "moss_algae", "hail_damage", "wind_damage", "other"]),
       description: z.string().min(1),
-      severity: z.enum(["minor", "moderate", "severe"]).optional(),
+      severity: z.enum(["minor", "moderate", "severe"]).default("moderate"),
       location: z.string().optional(),
       estimatedCost: z.string().optional(),
-    })).mutation(({ ctx, input }) => {
-      return db.createDamage({
+    })).mutation(({ ctx, input }) =>
+      db.createDamage({
         userId: ctx.user.id,
         projectId: input.projectId,
-        customerId: 0, // Will be fetched from project
+        customerId: input.customerId,
         category: input.category,
         description: input.description,
-        severity: input.severity || "moderate",
+        severity: input.severity,
         location: input.location,
-        estimatedCost: input.estimatedCost ? parseFloat(input.estimatedCost) : undefined as any,
-      });
-    }),
-  }),
-
-  appointments: router({
-    list: protectedProcedure.query(({ ctx }) =>
-      db.getAppointmentsByUserId(ctx.user.id)
-    ),
-    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
-      db.getAppointmentById(input.id, ctx.user.id)
-    ),
-    create: protectedProcedure.input(z.object({
-      customerId: z.number().optional(),
-      projectId: z.number().optional(),
-      title: z.string().min(1),
-      description: z.string().optional(),
-      startTime: z.string(),
-      endTime: z.string(),
-      location: z.string().optional(),
-      type: z.enum(["estimate", "inspection", "consultation", "job_start", "follow_up", "other"]).optional(),
-      notes: z.string().optional(),
-    })).mutation(({ ctx, input }) =>
-      db.createAppointment({
-        userId: ctx.user.id,
-        customerId: input.customerId,
-        projectId: input.projectId,
-        title: input.title,
-        description: input.description,
-        startTime: new Date(input.startTime),
-        endTime: new Date(input.endTime),
-        location: input.location,
-        type: input.type || "other",
-        notes: input.notes,
+        estimatedCost: input.estimatedCost,
       })
     ),
   }),
@@ -229,9 +144,6 @@ export const appRouter = router({
   photos: router({
     listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ ctx, input }) =>
       db.getPhotosByProjectId(input.projectId, ctx.user.id)
-    ),
-    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
-      db.getPhotoById(input.id, ctx.user.id)
     ),
     create: protectedProcedure.input(z.object({
       projectId: z.number(),
@@ -276,6 +188,78 @@ export const appRouter = router({
     getDamagePhotos: protectedProcedure.input(z.object({ damageId: z.number() })).query(({ input }) =>
       db.getDamagePhotos(input.damageId)
     ),
+  }),
+
+  appointments: router({
+    list: protectedProcedure.query(({ ctx }) =>
+      db.getAppointmentsByUserId(ctx.user.id)
+    ),
+    listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ input }) =>
+      db.getAppointmentsByProject(input.projectId)
+    ),
+    create: protectedProcedure.input(z.object({
+      projectId: z.number().optional(),
+      customerId: z.number().optional(),
+      title: z.string().min(1),
+      description: z.string().optional(),
+      type: z.enum(["estimate", "inspection", "consultation", "job_start", "follow_up", "other"]).default("other"),
+      startTime: z.date(),
+      endTime: z.date(),
+      status: z.enum(["scheduled", "completed", "cancelled", "no_show"]).default("scheduled"),
+      location: z.string().optional(),
+      notes: z.string().optional(),
+    })).mutation(({ ctx, input }) =>
+      db.createAppointment({
+        userId: ctx.user.id,
+        projectId: input.projectId || 0,
+        customerId: input.customerId || 0,
+        title: input.title,
+        description: input.description,
+        type: input.type,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        status: input.status,
+        location: input.location,
+        notes: input.notes,
+      })
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      status: z.enum(["scheduled", "completed", "cancelled", "no_show"]).optional(),
+      startTime: z.date().optional(),
+      endTime: z.date().optional(),
+      location: z.string().optional(),
+      notes: z.string().optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, ...data } = input;
+      return db.updateAppointment(id, data);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
+      db.deleteAppointment(input.id)
+    ),
+  }),
+  estimates: router({
+    list: protectedProcedure.query(({ ctx }) => db.listEstimates()),
+    create: protectedProcedure.input(z.object({
+      projectId: z.number(),
+      estimateNumber: z.string(),
+      description: z.string().optional(),
+      status: z.enum(["draft", "sent", "accepted", "rejected"]).default("draft"),
+      totalAmount: z.string(),
+      lineItems: z.string(),
+    })).mutation(({ ctx, input }) => {
+      return db.createEstimate({
+        projectId: input.projectId,
+        userId: ctx.user.id,
+        estimateNumber: input.estimateNumber,
+        description: input.description,
+        status: input.status,
+        totalAmount: input.totalAmount,
+        lineItems: input.lineItems,
+      });
+    }),
   }),
 });
 

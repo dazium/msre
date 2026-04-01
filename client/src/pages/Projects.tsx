@@ -17,10 +17,6 @@ export default function Projects() {
     customerId: "",
     title: "",
     description: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
     startDate: "",
     endDate: "",
     estimatedValue: "",
@@ -38,20 +34,20 @@ export default function Projects() {
     }
 
     try {
-      const { customerId: _, ...rest } = formData;
       await createMutation.mutateAsync({
-        ...rest,
         customerId: parseInt(formData.customerId),
+        title: formData.title,
+        description: formData.description,
+        status: "lead",
+        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+        endDate: formData.endDate ? new Date(formData.endDate) : undefined,
+        estimatedValue: formData.estimatedValue,
       });
       toast.success("Project created successfully");
       setFormData({
         customerId: "",
         title: "",
         description: "",
-        address: "",
-        city: "",
-        state: "",
-        zipCode: "",
         startDate: "",
         endDate: "",
         estimatedValue: "",
@@ -138,46 +134,7 @@ export default function Projects() {
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="123 Main St"
-                    />
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="city">City</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        placeholder="Winter"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="state">State</Label>
-                      <Input
-                        id="state"
-                        value={formData.state}
-                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        placeholder="ON"
-                        maxLength={2}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="zipCode">Postal Code</Label>
-                      <Input
-                        id="zipCode"
-                        value={formData.zipCode}
-                        onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                        placeholder="P0X 1X0"
-                      />
-                    </div>
-                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -283,12 +240,7 @@ export default function Projects() {
                         </div>
                         <p className="text-sm text-foreground/70 mt-1">{project.description}</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm text-foreground/70">
-                          {project.address && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              {project.city}, {project.state}
-                            </div>
-                          )}
+
                           {project.startDate && (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />

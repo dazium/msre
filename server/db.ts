@@ -1,3 +1,4 @@
+import { desc } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto } from "../drizzle/schema";
@@ -171,6 +172,12 @@ export async function createEstimate(data: InsertEstimate) {
   return db.insert(estimates).values(data);
 }
 
+export async function listEstimates() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(estimates).orderBy(desc(estimates.createdAt));
+}
+
 // Appointment queries
 export async function getAppointmentsByUserId(userId: number) {
   const db = await getDb();
@@ -191,6 +198,24 @@ export async function createAppointment(data: InsertAppointment) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.insert(appointments).values(data);
+}
+
+export async function getAppointmentsByProject(projectId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(appointments).where(eq(appointments.projectId, projectId));
+}
+
+export async function updateAppointment(id: number, data: Partial<InsertAppointment>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(appointments).set(data).where(eq(appointments.id, id));
+}
+
+export async function deleteAppointment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(appointments).where(eq(appointments.id, id));
 }
 
 // Photo queries

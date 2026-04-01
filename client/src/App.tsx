@@ -9,6 +9,8 @@ import Customers from "./pages/Customers";
 import Projects from "./pages/Projects";
 import Damages from "./pages/Damages";
 import Photos from "./pages/Photos";
+import Calendar from "./pages/Calendar";
+import Estimates from "./pages/Estimates";
 
 function Router() {
   return (
@@ -18,8 +20,8 @@ function Router() {
       <Route path={"/projects"} component={Projects} />
       <Route path={"/damages"} component={Damages} />
       <Route path={"/photos/:projectId"} component={Photos} />
-      <Route path={"/estimates"} component={() => <div>Estimates Page (Coming Soon)</div>} />
-      <Route path={"/calendar"} component={() => <div>Calendar Page (Coming Soon)</div>} />
+      <Route path={"/estimates"} component={Estimates} />
+      <Route path={"/calendar"} component={Calendar} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
