@@ -11,6 +11,7 @@ import Damages from "./pages/Damages";
 import Photos from "./pages/Photos";
 import Calendar from "./pages/Calendar";
 import Estimates from "./pages/Estimates";
+import Maps from "./pages/Maps";
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function Router() {
       <Route path={"/photos/:projectId"} component={Photos} />
       <Route path={"/estimates"} component={Estimates} />
       <Route path={"/calendar"} component={Calendar} />
+      <Route path={"/maps"} component={Maps} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

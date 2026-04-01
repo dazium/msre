@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { generateEstimatePDF } from "@/lib/pdf-export";
 
 // Materials list matching MaterialsChecklist
 const MATERIALS = [
