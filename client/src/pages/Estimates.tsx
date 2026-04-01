@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -11,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
 
 // Materials list matching MaterialsChecklist
 const MATERIALS = [
