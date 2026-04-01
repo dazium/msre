@@ -32,7 +32,7 @@ export function generateEstimatePDF(data: EstimatePDFData) {
   // Header - Company Info
   doc.setFontSize(20);
   doc.setTextColor(10, 22, 40); // Deep blue
-  doc.text(data.companyName || "Rooftop Renovators", margin, margin + 10);
+  doc.text(data.companyName || "Roofing CRM", margin, margin + 10);
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);

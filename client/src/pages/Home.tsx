@@ -9,7 +9,7 @@ export default function Home() {
         {/* Welcome Section */}
         <div className="blueprint-section">
           <div className="blueprint-header">
-            <h1 className="text-3xl font-bold">Welcome to Rooftop Renovators CRM</h1>
+            <h1 className="text-3xl font-bold">Welcome to Roofing CRM</h1>
             <p className="text-sm text-secondary-foreground/80 mt-2">Manage your projects, customers, and estimates with ease</p>
           </div>
           <div className="p-6">

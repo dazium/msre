@@ -171,10 +171,10 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex flex-col min-w-0">
                   <span className="font-bold text-sm text-sidebar-foreground truncate">
-                    Rooftop
+                    Roofing
                   </span>
                   <span className="text-xs text-sidebar-foreground/70 truncate">
-                    Renovators
+                    CRM
                   </span>
                 </div>
               ) : null}
