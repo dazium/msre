@@ -10,12 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Plus, MapPin, Clock } from "lucide-react";
+import { ContactLink } from "@/components/ContactLink";
+import { AddressMapModal } from "@/components/AddressMapModal";
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 31)); // March 2026
   const [showDialog, setShowDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
   const { data: appointmentsData, isLoading } = trpc.appointments.list.useQuery();
   const createMutation = trpc.appointments.create.useMutation();
@@ -212,10 +216,15 @@ export default function Calendar() {
                           {new Date(apt.startTime).toLocaleString()}
                         </div>
                         {apt.location && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {apt.location}
-                          </div>
+                          <ContactLink
+                            type="address"
+                            value={apt.location}
+                            label={apt.location}
+                            onAddressClick={(addr) => {
+                              setSelectedAddress(addr);
+                              setMapOpen(true);
+                            }}
+                          />
                         )}
                       </div>
                     </div>

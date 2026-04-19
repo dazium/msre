@@ -1,8 +1,23 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { BarChart3, Calendar, FileText, TrendingUp, Users } from "lucide-react";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { CustomerDetailModal } from "@/components/CustomerDetailModal";
+import { ContactLink } from "@/components/ContactLink";
+import { AddressMapModal } from "@/components/AddressMapModal";
 
 export default function Home() {
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const { data: customers } = trpc.customers.list.useQuery();
+
+  const handleAddressClick = (address: string) => {
+    setSelectedAddress(address);
+    setMapOpen(true);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -63,9 +78,34 @@ export default function Home() {
               </h2>
             </div>
             <div className="p-6">
-              <p className="text-foreground/60 text-center py-8">
-                No customers yet. Start by adding your first customer.
-              </p>
+              {customers && customers.length > 0 ? (
+                <div className="space-y-2">
+                  {customers.slice(0, 5).map((customer) => (
+                    <div
+                      key={customer.id}
+                      className="p-3 bg-background/50 rounded border border-border hover:border-primary cursor-pointer transition-all"
+                      onClick={() => setSelectedCustomerId(customer.id)}
+                    >
+                      <p className="font-semibold text-foreground">{customer.firstName} {customer.lastName}</p>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-foreground/60">
+                        <ContactLink type="phone" value={customer.phone} />
+                        {customer.address && (
+                          <ContactLink
+                            type="address"
+                            value={customer.address}
+                            label={customer.city || customer.address}
+                            onAddressClick={handleAddressClick}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-foreground/60 text-center py-8">
+                  No customers yet. Start by adding your first customer.
+                </p>
+              )}
             </div>
           </div>
 
@@ -146,6 +186,18 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <CustomerDetailModal
+        customerId={selectedCustomerId}
+        isOpen={selectedCustomerId !== null}
+        onClose={() => setSelectedCustomerId(null)}
+      />
+
+      <AddressMapModal
+        address={selectedAddress}
+        isOpen={mapOpen}
+        onClose={() => setMapOpen(false)}
+      />
     </DashboardLayout>
   );
 }

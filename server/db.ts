@@ -219,21 +219,20 @@ export async function deleteAppointment(id: number) {
 }
 
 // Photo queries
+export async function getProjectsByCustomerId(customerId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(projects).where(
+    and(eq(projects.customerId, customerId), eq(projects.userId, userId))
+  );
+}
+
 export async function getPhotosByProjectId(projectId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(photos).where(
     and(eq(photos.projectId, projectId), eq(photos.userId, userId))
   );
-}
-
-export async function getPhotoById(id: number, userId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(photos).where(
-    and(eq(photos.id, id), eq(photos.userId, userId))
-  ).limit(1);
-  return result.length > 0 ? result[0] : undefined;
 }
 
 export async function createPhoto(data: InsertPhoto) {

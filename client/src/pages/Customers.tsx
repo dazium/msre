@@ -10,11 +10,15 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, MapPin, Phone, Mail } from "lucide-react";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { ContactLink } from "@/components/ContactLink";
+import { AddressMapModal } from "@/components/AddressMapModal";
 
 export default function Customers() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [mapOpen, setMapOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -278,22 +282,21 @@ export default function Customers() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm text-foreground/70">
                           {customer.phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-4 h-4" />
-                              {customer.phone}
-                            </div>
+                            <ContactLink type="phone" value={customer.phone} />
                           )}
                           {customer.email && (
-                            <div className="flex items-center gap-1">
-                              <Mail className="w-4 h-4" />
-                              {customer.email}
-                            </div>
+                            <ContactLink type="email" value={customer.email} />
                           )}
                           {customer.address && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              {customer.city}, {customer.state}
-                            </div>
+                            <ContactLink
+                              type="address"
+                              value={customer.address}
+                              label={`${customer.city}, ${customer.state}`}
+                              onAddressClick={(addr) => {
+                                setSelectedAddress(addr);
+                                setMapOpen(true);
+                              }}
+                            />
                           )}
                         </div>
                         <p className="text-xs text-foreground/50 mt-2">{customer.notes}</p>
@@ -321,6 +324,12 @@ export default function Customers() {
           </div>
         </div>
       </div>
+
+      <AddressMapModal
+        address={selectedAddress}
+        isOpen={mapOpen}
+        onClose={() => setMapOpen(false)}
+      />
     </DashboardLayout>
   );
 }

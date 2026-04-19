@@ -75,6 +75,12 @@ export const appRouter = router({
     list: protectedProcedure.query(({ ctx }) =>
       db.getProjectsByUserId(ctx.user.id)
     ),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
+      db.getProjectById(input.id, ctx.user.id)
+    ),
+    listByCustomer: protectedProcedure.input(z.object({ customerId: z.number() })).query(({ ctx, input }) =>
+      db.getProjectsByCustomerId(input.customerId, ctx.user.id)
+    ),
     create: protectedProcedure.input(z.object({
       customerId: z.number(),
       title: z.string().min(1),
