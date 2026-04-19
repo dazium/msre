@@ -167,7 +167,7 @@ export default function Customers() {
                           longitude: location.longitude,
                         })
                       }
-                      placeholder="123 Main St, Winter, ON"
+                      placeholder="123 Main St, Windsor, ON"
                     />
                   </div>
 
@@ -178,7 +178,7 @@ export default function Customers() {
                         id="city"
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        placeholder="Winter"
+                        placeholder="Windsor"
                       />
                     </div>
                     <div>

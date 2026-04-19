@@ -52,7 +52,7 @@ describe("Appointments Router - Calendar & Scheduling", () => {
       type: "inspection",
       startTime,
       endTime,
-      location: "123 Main St, Winter, ON",
+      location: "123 Main St, Windsor, ON",
       description: "Initial roof inspection",
     });
 
@@ -94,7 +94,7 @@ describe("Appointments Router - Calendar & Scheduling", () => {
       startTime,
       endTime,
       status: "scheduled",
-      location: "456 Oak Ave, Winter, ON",
+      location: "456 Oak Ave, Windsor, ON",
       notes: "Bring ladder and safety equipment",
     });
 
@@ -267,7 +267,7 @@ describe("Calendar Integration Tests", () => {
       type: "job_start",
       startTime,
       endTime,
-      location: "789 Elm St, Winter, ON",
+      location: "789 Elm St, Windsor, ON",
       description: "Full workflow test",
       status: "scheduled",
     });
