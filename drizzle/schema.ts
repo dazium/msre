@@ -95,6 +95,7 @@ export type InsertEstimate = typeof estimates.$inferInsert;
 export const estimateLineItems = mysqlTable("estimateLineItems", {
   id: int("id").autoincrement().primaryKey(),
   estimateId: int("estimateId").notNull(),
+  materialId: int("materialId"),
   description: text("description").notNull(),
   quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
   unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(),
@@ -104,6 +105,14 @@ export const estimateLineItems = mysqlTable("estimateLineItems", {
 
 export type EstimateLineItem = typeof estimateLineItems.$inferSelect;
 export type InsertEstimateLineItem = typeof estimateLineItems.$inferInsert;
+
+// Relations
+export const estimateLineItemsRelations = relations(estimateLineItems, ({ one }) => ({
+  material: one(materials, {
+    fields: [estimateLineItems.materialId],
+    references: [materials.id],
+  }),
+}));
 
 // Photos/Documents table
 export const photos = mysqlTable("photos", {
@@ -200,6 +209,10 @@ export const materials = mysqlTable("materials", {
 
 export type Material = typeof materials.$inferSelect;
 export type InsertMaterial = typeof materials.$inferInsert;
+
+export const materialsRelations = relations(materials, ({ many }) => ({
+  lineItems: many(estimateLineItems),
+}));
 
 // Damage materials - materials needed for specific damages
 export const damageMaterials = mysqlTable("damageMaterials", {

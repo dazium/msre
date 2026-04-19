@@ -273,6 +273,41 @@ export const appRouter = router({
     }),
   }),
 
+  estimateLineItems: router({
+    list: protectedProcedure.input(z.object({ estimateId: z.number() })).query(({ input }) =>
+      db.getEstimateLineItems(input.estimateId)
+    ),
+    create: protectedProcedure.input(z.object({
+      estimateId: z.number(),
+      materialId: z.number().optional(),
+      description: z.string().min(1),
+      quantity: z.string(),
+      unitPrice: z.string(),
+      total: z.string(),
+    })).mutation(({ input }) =>
+      db.createEstimateLineItem({
+        estimateId: input.estimateId,
+        materialId: input.materialId,
+        description: input.description,
+        quantity: input.quantity,
+        unitPrice: input.unitPrice,
+        total: input.total,
+      })
+    ),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ input }) =>
+      db.deleteEstimateLineItem(input.id)
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      quantity: z.string().optional(),
+      unitPrice: z.string().optional(),
+      total: z.string().optional(),
+    })).mutation(({ input }) => {
+      const { id, ...data } = input;
+      return db.updateEstimateLineItem(id, data);
+    }),
+  }),
+
   materials: router({
     list: protectedProcedure.query(({ ctx }) =>
       db.getMaterialsByUserId(ctx.user.id)

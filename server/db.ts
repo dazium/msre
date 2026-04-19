@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -346,4 +346,30 @@ export async function deleteMaterial(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.delete(materials).where(eq(materials.id, id));
+}
+
+// Estimate Line Items
+export async function createEstimateLineItem(data: InsertEstimateLineItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(estimateLineItems).values(data);
+  return result;
+}
+
+export async function getEstimateLineItems(estimateId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(estimateLineItems).where(eq(estimateLineItems.estimateId, estimateId));
+}
+
+export async function deleteEstimateLineItem(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(estimateLineItems).where(eq(estimateLineItems.id, id));
+}
+
+export async function updateEstimateLineItem(id: number, data: Partial<InsertEstimateLineItem>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(estimateLineItems).set(data).where(eq(estimateLineItems.id, id));
 }

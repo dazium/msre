@@ -1,0 +1,1 @@
+ALTER TABLE `estimateLineItems` ADD `materialId` int;
