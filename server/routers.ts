@@ -272,6 +272,46 @@ export const appRouter = router({
       });
     }),
   }),
+
+  materials: router({
+    list: protectedProcedure.query(({ ctx }) =>
+      db.getMaterialsByUserId(ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      name: z.string().min(1),
+      category: z.enum(["shingles", "underlayment", "ice_water_shield", "plywood", "flashing", "pipe_flange", "ridge_caps", "gutters", "fascia_soffit", "other"]),
+      unit: z.string().default("piece"),
+      unitPrice: z.number().min(0),
+      description: z.string().optional(),
+    })).mutation(({ ctx, input }) =>
+      db.createMaterial({
+        userId: ctx.user.id,
+        name: input.name,
+        category: input.category,
+        unit: input.unit,
+        unitPrice: input.unitPrice.toString(),
+        description: input.description,
+      })
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      category: z.enum(["shingles", "underlayment", "ice_water_shield", "plywood", "flashing", "pipe_flange", "ridge_caps", "gutters", "fascia_soffit", "other"]).optional(),
+      unit: z.string().optional(),
+      unitPrice: z.number().min(0).optional(),
+      description: z.string().optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, unitPrice, ...data } = input;
+      const updateData: any = { ...data };
+      if (unitPrice !== undefined) {
+        updateData.unitPrice = unitPrice.toString();
+      }
+      return db.updateMaterial(id, updateData);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ input }) =>
+      db.deleteMaterial(input.id)
+    ),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

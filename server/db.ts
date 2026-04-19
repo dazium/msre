@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -320,4 +320,30 @@ export async function deleteDamagePhoto(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.delete(damagePhotos).where(eq(damagePhotos.id, id));
+}
+
+// Materials functions
+export async function getMaterialsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(materials).where(eq(materials.userId, userId));
+}
+
+export async function createMaterial(data: InsertMaterial) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(materials).values(data);
+  return result;
+}
+
+export async function updateMaterial(id: number, data: Partial<InsertMaterial>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(materials).set(data).where(eq(materials.id, id));
+}
+
+export async function deleteMaterial(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(materials).where(eq(materials.id, id));
 }

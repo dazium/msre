@@ -185,13 +185,15 @@ export const activityLog = mysqlTable("activityLog", {
 
 export type ActivityLog = typeof activityLog.$inferSelect;
 export type InsertActivityLog = typeof activityLog.$inferInsert;
-// Materials table - predefined roofing materials
+// Materials table - predefined roofing materials with Canadian pricing
 export const materials = mysqlTable("materials", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
   name: varchar("name", { length: 100 }).notNull(),
-  category: mysqlEnum("category", ["flashing", "underlayment", "vents", "fasteners", "sealants", "other"]).default("other").notNull(),
+  category: mysqlEnum("category", ["shingles", "underlayment", "ice_water_shield", "plywood", "flashing", "pipe_flange", "ridge_caps", "gutters", "fascia_soffit", "other"]).default("other").notNull(),
   unit: varchar("unit", { length: 20 }).default("piece").notNull(),
-  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }),
+  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(),
+  description: text("description"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
