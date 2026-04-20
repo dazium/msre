@@ -26,6 +26,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { HeaderSearch } from './HeaderSearch';
 
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/" },
@@ -313,6 +314,7 @@ function DashboardLayoutContent({
               </div>
             )}
           </div>
+          {!isMobile && <HeaderSearch />}
         </div>
         <main className="flex-1 p-4 lg:p-8 bg-background">{children}</main>
       </SidebarInset>
