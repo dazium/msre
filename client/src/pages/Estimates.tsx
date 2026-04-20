@@ -13,6 +13,7 @@ import { Plus, Trash2, Download } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { generateEstimatePDF } from "@/lib/pdf-export";
 import RoofSpecifications from "@/components/RoofSpecifications";
+import { RoofMeasurementTool } from "@/components/RoofMeasurementTool";
 import type { RoofSpecs, RoofCalculations } from "@/lib/roof-calculator";
 
 export default function Estimates() {
@@ -25,6 +26,7 @@ export default function Estimates() {
   const [showRoofSpecs, setShowRoofSpecs] = useState(false);
   const [roofSpecs, setRoofSpecs] = useState<RoofSpecs | null>(null);
   const [roofCalcs, setRoofCalcs] = useState<RoofCalculations | null>(null);
+  const [showMeasurementTool, setShowMeasurementTool] = useState(false);
 
   const { data: estimatesData, isLoading } = trpc.estimates.list.useQuery();
   const { data: projectsData } = trpc.projects.list.useQuery();
@@ -100,6 +102,25 @@ export default function Estimates() {
     setLineItems(items);
     setShowRoofSpecs(false);
     toast.success(`Added ${items.length} materials to estimate`);
+  }, []);
+
+  const handleMeasurementComplete = useCallback((totalArea: number, totalSquares: number, sections: any[]) => {
+    const firstSection = sections[0];
+    setRoofSpecs({
+      roofArea: totalArea,
+      roofPitch: firstSection?.pitch || '6/12',
+      numberOfValleys: 0,
+      numberOfDormers: 0,
+      numberOfChimneys: 0,
+      numberOfSkyLights: 0,
+      hasRidgeVent: false,
+      tearOffRequired: false,
+      roofType: 'asphalt_shingles',
+      wastePercentage: 10,
+    });
+    setShowMeasurementTool(false);
+    setShowRoofSpecs(true);
+    toast.success(`Roof measured: ${totalSquares} squares (${totalArea.toLocaleString()} sq ft)`);
   }, []);
 
   const handleCreateEstimate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -263,6 +284,19 @@ export default function Estimates() {
                 />
               </div>
 
+              {/* Roof Measurement Tool */}
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full bg-green-50 hover:bg-green-100 dark:bg-green-950 dark:hover:bg-green-900"
+                  onClick={() => setShowMeasurementTool(true)}
+                >
+                  📏 Measure Roof On-Site
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">Input dimensions as you measure them</p>
+              </div>
+
               {/* Roof Specifications */}
               <div>
                 <Button
@@ -388,6 +422,16 @@ export default function Estimates() {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Roof Measurement Tool Modal */}
+        <Dialog open={showMeasurementTool} onOpenChange={setShowMeasurementTool}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>On-Site Roof Measurement</DialogTitle>
+            </DialogHeader>
+            <RoofMeasurementTool onComplete={handleMeasurementComplete} />
           </DialogContent>
         </Dialog>
 
