@@ -390,7 +390,13 @@ export default function Estimates() {
                 setRoofSpecs(specs);
                 setRoofCalcs(calcs);
               }}
+              onApplyMaterials={(items) => {
+                setLineItems(items);
+                setShowRoofSpecs(false);
+                toast.success(`Added ${items.length} materials to estimate`);
+              }}
               initialSpecs={roofSpecs || undefined}
+              materials={materials}
             />
             <div className="flex gap-2 justify-end mt-6">
               <Button type="button" variant="outline" onClick={() => setShowRoofSpecs(false)}>

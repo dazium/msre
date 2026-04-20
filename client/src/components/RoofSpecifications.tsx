@@ -15,10 +15,13 @@ import {
   type RoofSpecs,
   type RoofCalculations,
 } from "@/lib/roof-calculator";
+import { mapRoofToMaterials, createLaborLineItem } from "@/lib/roof-to-materials";
 
 interface RoofSpecificationsProps {
   onCalculate?: (specs: RoofSpecs, calculations: RoofCalculations) => void;
+  onApplyMaterials?: (lineItems: any[]) => void;
   initialSpecs?: RoofSpecs;
+  materials?: any[];
 }
 
 const PITCH_OPTIONS = [
@@ -46,7 +49,7 @@ const ROOF_TYPES = [
   { value: "other", label: "Other" },
 ];
 
-export function RoofSpecifications({ onCalculate, initialSpecs }: RoofSpecificationsProps) {
+export function RoofSpecifications({ onCalculate, onApplyMaterials, initialSpecs, materials }: RoofSpecificationsProps) {
   const [specs, setSpecs] = useState<RoofSpecs>(
     initialSpecs || {
       roofArea: 2000,
@@ -312,6 +315,22 @@ export function RoofSpecifications({ onCalculate, initialSpecs }: RoofSpecificat
                   </p>
                 </div>
               </div>
+
+              {/* Apply Materials Button */}
+              {onApplyMaterials && materials && materials.length > 0 && (
+                <div className="border-t pt-4">
+                  <Button
+                    onClick={() => {
+                      const materialItems = mapRoofToMaterials(calculations, materials);
+                      const laborItem = createLaborLineItem(calculations.estimatedLaborHours);
+                      onApplyMaterials([...materialItems, laborItem]);
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    ✅ Apply Materials to Estimate
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
