@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BarChart3, Calendar, FileText, Home, LogOut, PanelLeft, Settings, Users, Zap, Navigation, Package } from "lucide-react";
+import { BarChart3, Calendar, FileText, Home, LogOut, PanelLeft, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -119,12 +119,43 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+  const [history, setHistory] = useState<string[]>([location]);
+  const [historyIndex, setHistoryIndex] = useState(0);
 
   useEffect(() => {
     if (isCollapsed) {
       setIsResizing(false);
     }
   }, [isCollapsed]);
+
+  // Track navigation history
+  useEffect(() => {
+    if (location !== history[historyIndex]) {
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(location);
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+    }
+  }, [location]);
+
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex < history.length - 1;
+
+  const goBack = () => {
+    if (canGoBack) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setLocation(history[newIndex]);
+    }
+  };
+
+  const goForward = () => {
+    if (canGoForward) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setLocation(history[newIndex]);
+    }
+  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -251,20 +282,38 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
-        {isMobile && (
-          <div className="flex border-b border-border h-14 items-center justify-between bg-card/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
-              <div className="flex items-center gap-3">
+        <div className="flex border-b border-border h-14 items-center justify-between bg-card/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40 px-4">
+          <div className="flex items-center gap-2">
+            {isMobile && <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={goBack}
+                disabled={!canGoBack}
+                className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Go back"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={goForward}
+                disabled={!canGoForward}
+                className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Go forward"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+            {isMobile && (
+              <div className="flex items-center gap-3 ml-2">
                 <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground font-semibold">
-                    {activeMenuItem?.label ?? "Rooftop Renovators"}
+                  <span className="tracking-tight text-foreground font-semibold text-sm">
+                    {activeMenuItem?.label ?? "Roofing CRM"}
                   </span>
                 </div>
               </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
         <main className="flex-1 p-4 lg:p-8 bg-background">{children}</main>
       </SidebarInset>
     </>
