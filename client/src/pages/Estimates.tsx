@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,18 @@ export default function Estimates() {
     const tax = subtotal * 0.13; // 13% HST
     return (subtotal + tax).toFixed(2);
   };
+
+  // Memoize callbacks to prevent infinite loops
+  const handleRoofCalculate = useCallback((specs: RoofSpecs, calcs: RoofCalculations) => {
+    setRoofSpecs(specs);
+    setRoofCalcs(calcs);
+  }, []);
+
+  const handleApplyMaterials = useCallback((items: any[]) => {
+    setLineItems(items);
+    setShowRoofSpecs(false);
+    toast.success(`Added ${items.length} materials to estimate`);
+  }, []);
 
   const handleCreateEstimate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -386,15 +398,8 @@ export default function Estimates() {
               <DialogTitle>Roof Specifications</DialogTitle>
             </DialogHeader>
             <RoofSpecifications
-              onCalculate={(specs, calcs) => {
-                setRoofSpecs(specs);
-                setRoofCalcs(calcs);
-              }}
-              onApplyMaterials={(items) => {
-                setLineItems(items);
-                setShowRoofSpecs(false);
-                toast.success(`Added ${items.length} materials to estimate`);
-              }}
+              onCalculate={handleRoofCalculate}
+              onApplyMaterials={handleApplyMaterials}
               initialSpecs={roofSpecs || undefined}
               materials={materials}
             />
