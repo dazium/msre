@@ -226,3 +226,27 @@ export const damageMaterials = mysqlTable("damageMaterials", {
 
 export type DamageMaterial = typeof damageMaterials.$inferSelect;
 export type InsertDamageMaterial = typeof damageMaterials.$inferInsert;
+
+// Roof Specifications table - stores roof dimensions, pitch, valleys, etc. for estimates
+export const roofSpecifications = mysqlTable("roofSpecifications", {
+  id: int("id").autoincrement().primaryKey(),
+  estimateId: int("estimateId").notNull(),
+  userId: int("userId").notNull(),
+  roofArea: decimal("roofArea", { precision: 10, scale: 2 }).notNull(),
+  roofPitch: varchar("roofPitch", { length: 20 }).notNull(),
+  numberOfValleys: int("numberOfValleys").default(0).notNull(),
+  numberOfDormers: int("numberOfDormers").default(0).notNull(),
+  numberOfChimneys: int("numberOfChimneys").default(0).notNull(),
+  numberOfSkyLights: int("numberOfSkyLights").default(0).notNull(),
+  hasRidgeVent: boolean("hasRidgeVent").default(false).notNull(),
+  tearOffRequired: boolean("tearOffRequired").default(true).notNull(),
+  roofType: mysqlEnum("roofType", ["asphalt_shingles", "metal", "tile", "slate", "wood", "flat", "other"]).default("asphalt_shingles").notNull(),
+  estimatedSquares: decimal("estimatedSquares", { precision: 10, scale: 2 }).notNull(),
+  estimatedLaborHours: decimal("estimatedLaborHours", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RoofSpecification = typeof roofSpecifications.$inferSelect;
+export type InsertRoofSpecification = typeof roofSpecifications.$inferInsert;

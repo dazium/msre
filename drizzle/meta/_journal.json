@@ -43,6 +43,13 @@
       "when": 1776605724173,
       "tag": "0005_gray_triton",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1776683852458,
+      "tag": "0006_thankful_joystick",
+      "breakpoints": true
     }
   ]
 }

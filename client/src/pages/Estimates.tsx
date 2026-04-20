@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { generateEstimatePDF } from "@/lib/pdf-export";
+import RoofSpecifications from "@/components/RoofSpecifications";
+import type { RoofSpecs, RoofCalculations } from "@/lib/roof-calculator";
 
 export default function Estimates() {
   const [, setLocation] = useLocation();
@@ -20,6 +22,9 @@ export default function Estimates() {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [lineItems, setLineItems] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
+  const [showRoofSpecs, setShowRoofSpecs] = useState(false);
+  const [roofSpecs, setRoofSpecs] = useState<RoofSpecs | null>(null);
+  const [roofCalcs, setRoofCalcs] = useState<RoofCalculations | null>(null);
 
   const { data: estimatesData, isLoading } = trpc.estimates.list.useQuery();
   const { data: projectsData } = trpc.projects.list.useQuery();
@@ -246,6 +251,25 @@ export default function Estimates() {
                 />
               </div>
 
+              {/* Roof Specifications */}
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowRoofSpecs(true)}
+                >
+                  📐 Add Roof Specifications
+                </Button>
+                {roofCalcs && (
+                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
+                    <p className="font-semibold text-blue-900 dark:text-blue-100">
+                      Roof: {roofCalcs.estimatedSquares} squares | Labor: {roofCalcs.estimatedLaborHours} hours
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Line Items */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -352,6 +376,27 @@ export default function Estimates() {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Roof Specifications Modal */}
+        <Dialog open={showRoofSpecs} onOpenChange={setShowRoofSpecs}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Roof Specifications</DialogTitle>
+            </DialogHeader>
+            <RoofSpecifications
+              onCalculate={(specs, calcs) => {
+                setRoofSpecs(specs);
+                setRoofCalcs(calcs);
+              }}
+              initialSpecs={roofSpecs || undefined}
+            />
+            <div className="flex gap-2 justify-end mt-6">
+              <Button type="button" variant="outline" onClick={() => setShowRoofSpecs(false)}>
+                Close
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

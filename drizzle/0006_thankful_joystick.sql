@@ -1,0 +1,20 @@
+CREATE TABLE `roofSpecifications` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`estimateId` int NOT NULL,
+	`userId` int NOT NULL,
+	`roofArea` decimal(10,2) NOT NULL,
+	`roofPitch` varchar(20) NOT NULL,
+	`numberOfValleys` int NOT NULL DEFAULT 0,
+	`numberOfDormers` int NOT NULL DEFAULT 0,
+	`numberOfChimneys` int NOT NULL DEFAULT 0,
+	`numberOfSkyLights` int NOT NULL DEFAULT 0,
+	`hasRidgeVent` boolean NOT NULL DEFAULT false,
+	`tearOffRequired` boolean NOT NULL DEFAULT true,
+	`roofType` enum('asphalt_shingles','metal','tile','slate','wood','flat','other') NOT NULL DEFAULT 'asphalt_shingles',
+	`estimatedSquares` decimal(10,2) NOT NULL,
+	`estimatedLaborHours` decimal(10,2) NOT NULL,
+	`notes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `roofSpecifications_id` PRIMARY KEY(`id`)
+);
