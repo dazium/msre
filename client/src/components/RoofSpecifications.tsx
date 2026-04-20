@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, Zap, Home } from "lucide-react";
+import { AlertCircle, Zap, Home, Package } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   calculateRoofEstimates,
@@ -544,6 +544,28 @@ export function RoofSpecifications({ onCalculate, onApplyMaterials, initialSpecs
                   </p>
                 </div>
               </div>
+
+              {/* Material Line Items Preview */}
+              {materials && materials.length > 0 && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    Auto-Calculated Materials
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    {mapRoofToMaterials(calculations, materials).map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                        <span className="font-medium">{item.description}</span>
+                        <span className="text-muted-foreground">{item.quantity} x ${item.unitPrice.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950 rounded text-sm font-semibold border border-blue-200 dark:border-blue-800">
+                      <span>Labor ({calculations.estimatedLaborHours} hours)</span>
+                      <span className="text-blue-900 dark:text-blue-100">${(calculations.estimatedLaborHours * 50).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Apply Materials Button */}
               {onApplyMaterials && materials && materials.length > 0 && (
