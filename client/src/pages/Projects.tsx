@@ -6,10 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { Plus, MapPin, Calendar } from "lucide-react";
 
 export default function Projects() {
+  const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -229,7 +231,11 @@ export default function Projects() {
             ) : (
               <div className="space-y-3">
                 {filteredProjects?.map((project) => (
-                  <div key={project.id} className="blueprint-card p-4 hover:blueprint-glow transition-all">
+                  <div
+                    key={project.id}
+                    onClick={() => setLocation(`/projects/${project.id}`)}
+                    className="blueprint-card p-4 hover:blueprint-glow transition-all cursor-pointer"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">

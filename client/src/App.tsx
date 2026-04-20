@@ -14,6 +14,7 @@ import Estimates from "./pages/Estimates";
 import Maps from "./pages/Maps";
 import RouteOptimization from "./pages/RouteOptimization";
 import Materials from "./pages/Materials";
+import ProjectDetail from "./pages/ProjectDetail";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/customers"} component={Customers} />
       <Route path={"/projects"} component={Projects} />
+      <Route path={"/projects/:id"} component={ProjectDetail} />
       <Route path={"/damages"} component={Damages} />
       <Route path={"/photos/:projectId"} component={Photos} />
       <Route path={"/estimates"} component={Estimates} />
