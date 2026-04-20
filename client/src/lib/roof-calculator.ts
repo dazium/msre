@@ -13,6 +13,7 @@ export interface RoofSpecs {
   hasRidgeVent: boolean;
   tearOffRequired: boolean;
   roofType: "asphalt_shingles" | "metal" | "tile" | "slate" | "wood" | "flat" | "other";
+  wastePercentage: number; // Material waste factor (e.g., 10 for 10%)
 }
 
 export interface RoofCalculations {
@@ -25,6 +26,7 @@ export interface RoofCalculations {
   estimatedRidgeCaps: number; // Linear feet
   estimatedLaborHours: number; // Total labor hours
   complexityFactor: number; // 1.0 = simple, 1.5+ = complex
+  wastePercentage: number; // Material waste factor applied
 }
 
 /**
@@ -142,17 +144,19 @@ export function calculateLaborHours(squares: number, complexityFactor: number): 
 export function calculateRoofEstimates(specs: RoofSpecs): RoofCalculations {
   const squares = calculateSquares(specs.roofArea);
   const complexityFactor = calculateComplexityFactor(specs);
+  const wasteMultiplier = 1 + (specs.wastePercentage / 100);
 
   return {
     estimatedSquares: Math.round(squares * 100) / 100,
-    estimatedShingles: calculateShingles(squares),
-    estimatedUnderlayment: calculateUnderlayment(specs.roofArea),
-    estimatedIceWater: calculateIceWater(squares, specs.numberOfValleys),
-    estimatedPlywood: specs.tearOffRequired ? calculatePlywood(specs.roofArea) : 0,
-    estimatedFlashing: calculateFlashing(specs.roofArea, specs.numberOfValleys, specs.numberOfChimneys, specs.numberOfSkyLights),
-    estimatedRidgeCaps: calculateRidgeCaps(specs.roofArea),
+    estimatedShingles: Math.ceil(calculateShingles(squares) * wasteMultiplier),
+    estimatedUnderlayment: Math.ceil(calculateUnderlayment(specs.roofArea) * wasteMultiplier),
+    estimatedIceWater: Math.ceil(calculateIceWater(squares, specs.numberOfValleys) * wasteMultiplier),
+    estimatedPlywood: specs.tearOffRequired ? Math.ceil(calculatePlywood(specs.roofArea) * wasteMultiplier) : 0,
+    estimatedFlashing: Math.ceil(calculateFlashing(specs.roofArea, specs.numberOfValleys, specs.numberOfChimneys, specs.numberOfSkyLights) * wasteMultiplier),
+    estimatedRidgeCaps: Math.ceil(calculateRidgeCaps(specs.roofArea) * wasteMultiplier),
     estimatedLaborHours: calculateLaborHours(squares, complexityFactor),
     complexityFactor: Math.round(complexityFactor * 100) / 100,
+    wastePercentage: specs.wastePercentage,
   };
 }
 

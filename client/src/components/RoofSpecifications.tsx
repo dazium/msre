@@ -65,6 +65,7 @@ const COMMON_ROOF_TYPES = [
       hasRidgeVent: false,
       tearOffRequired: true,
       roofType: "asphalt_shingles",
+      wastePercentage: 10,
     },
   },
   {
@@ -81,6 +82,7 @@ const COMMON_ROOF_TYPES = [
       hasRidgeVent: false,
       tearOffRequired: true,
       roofType: "asphalt_shingles",
+      wastePercentage: 12,
     },
   },
   {
@@ -97,6 +99,7 @@ const COMMON_ROOF_TYPES = [
       hasRidgeVent: false,
       tearOffRequired: true,
       roofType: "asphalt_shingles",
+      wastePercentage: 10,
     },
   },
   {
@@ -113,6 +116,7 @@ const COMMON_ROOF_TYPES = [
       hasRidgeVent: false,
       tearOffRequired: true,
       roofType: "asphalt_shingles",
+      wastePercentage: 15,
     },
   },
   {
@@ -129,6 +133,7 @@ const COMMON_ROOF_TYPES = [
       hasRidgeVent: false,
       tearOffRequired: true,
       roofType: "asphalt_shingles",
+      wastePercentage: 15,
     },
   },
   {
@@ -145,6 +150,7 @@ const COMMON_ROOF_TYPES = [
       hasRidgeVent: false,
       tearOffRequired: false,
       roofType: "flat",
+      wastePercentage: 8,
     },
   },
   {
@@ -161,6 +167,7 @@ const COMMON_ROOF_TYPES = [
       hasRidgeVent: false,
       tearOffRequired: true,
       roofType: "asphalt_shingles",
+      wastePercentage: 10,
     },
   },
 ];
@@ -211,12 +218,14 @@ export function RoofSpecifications({ onCalculate, onApplyMaterials, initialSpecs
       hasRidgeVent: false,
       tearOffRequired: true,
       roofType: "asphalt_shingles",
+      wastePercentage: 10,
     }
   );
 
   const [calculations, setCalculations] = useState<RoofCalculations | null>(null);
   const [selectedRoofType, setSelectedRoofType] = useState<string>("");
   const [customComplexity, setCustomComplexity] = useState<string>("moderate");
+  const [wastePercentage, setWastePercentage] = useState<number>(10);
 
   // Auto-calculate when specs change
   useEffect(() => {
@@ -443,6 +452,31 @@ export function RoofSpecifications({ onCalculate, onApplyMaterials, initialSpecs
                 </div>
               </div>
 
+              {/* Material Waste Percentage */}
+              <div className="space-y-2 border-t pt-4">
+                <Label htmlFor="wastePercentage">Material Waste Factor (%)</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="wastePercentage"
+                    type="number"
+                    min="0"
+                    max="50"
+                    step="1"
+                    value={specs.wastePercentage}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 0;
+                      setWastePercentage(value);
+                      handleChange("wastePercentage", value);
+                    }}
+                    className="mt-1 w-20"
+                  />
+                  <span className="text-sm text-muted-foreground">Typical: 8-15%</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Accounts for waste, cuts, breakage, and overlaps during installation
+                </p>
+              </div>
+
               {/* Checkboxes */}
               <div className="space-y-3 border-t pt-4">
                 <div className="flex items-center space-x-2">
@@ -482,12 +516,12 @@ export function RoofSpecifications({ onCalculate, onApplyMaterials, initialSpecs
               <CardDescription>Auto-calculated based on roof specifications</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Complexity Alert */}
+              {/* Complexity & Waste Alert */}
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   <strong>Complexity:</strong> {getComplexityDescription(calculations.complexityFactor)} (Factor:{" "}
-                  {calculations.complexityFactor.toFixed(2)}x)
+                  {calculations.complexityFactor.toFixed(2)}x) | <strong>Waste Factor:</strong> {calculations.wastePercentage}%
                 </AlertDescription>
               </Alert>
 
