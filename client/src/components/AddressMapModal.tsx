@@ -10,24 +10,39 @@ interface AddressMapModalProps {
 
 export function AddressMapModal({ address, isOpen, onClose }: AddressMapModalProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
+  const geocodedRef = useRef(false);
 
   useEffect(() => {
-    if (isOpen && address && mapRef.current && window.google?.maps?.Geocoder) {
+    if (!isOpen || !address || !mapRef.current) {
+      geocodedRef.current = false;
+      return;
+    }
+
+    if (geocodedRef.current) return; // Prevent duplicate geocoding
+    geocodedRef.current = true;
+
+    if (window.google?.maps?.Geocoder) {
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ address }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results?.[0]) {
           const location = results[0].geometry.location;
-          mapRef.current?.setCenter(location);
-          mapRef.current?.setZoom(15);
-          new google.maps.Marker({
-            map: mapRef.current,
-            position: location,
-            title: address,
-          });
+          if (mapRef.current) {
+            mapRef.current.setCenter(location);
+            mapRef.current.setZoom(15);
+            new google.maps.marker.AdvancedMarkerElement({
+              map: mapRef.current,
+              position: location,
+              title: address,
+            });
+          }
         }
       });
     }
   }, [isOpen, address]);
+
+  if (!address) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -39,6 +54,7 @@ export function AddressMapModal({ address, isOpen, onClose }: AddressMapModalPro
           <MapView
             onMapReady={(map) => {
               mapRef.current = map;
+              geocodedRef.current = false;
               if (address && window.google?.maps?.Geocoder) {
                 const geocoder = new google.maps.Geocoder();
                 geocoder.geocode({ address }, (results, status) => {
@@ -46,7 +62,7 @@ export function AddressMapModal({ address, isOpen, onClose }: AddressMapModalPro
                     const location = results[0].geometry.location;
                     map.setCenter(location);
                     map.setZoom(15);
-                    new google.maps.Marker({
+                    new google.maps.marker.AdvancedMarkerElement({
                       map,
                       position: location,
                       title: address,
