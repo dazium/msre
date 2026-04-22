@@ -15,6 +15,7 @@ import Maps from "./pages/Maps";
 import RouteOptimization from "./pages/RouteOptimization";
 import Materials from "./pages/Materials";
 import ProjectDetail from "./pages/ProjectDetail";
+import CrewApp from "./pages/CrewApp";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
       <Route path={"/maps"} component={Maps} />
       <Route path={"/route-optimization"} component={RouteOptimization} />
       <Route path={"/materials"} component={Materials} />
+      <Route path={"/crew"} component={CrewApp} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
