@@ -36,6 +36,7 @@ const menuItems = [
   { icon: Calendar, label: "Calendar", path: "/calendar" },
   { icon: Navigation, label: "Route Optimization", path: "/route-optimization" },
   { icon: Package, label: "Materials", path: "/materials" },
+  { icon: Users, label: "Crews", path: "/crews" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

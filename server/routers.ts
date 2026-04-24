@@ -347,6 +347,47 @@ export const appRouter = router({
       db.deleteMaterial(input.id)
     ),
   }),
+
+  crews: router({
+    list: protectedProcedure.query(({ ctx }) =>
+      db.getCrewsByUserId(ctx.user.id)
+    ),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
+      db.getCrewById(input.id, ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      crewLead: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().email().optional(),
+    })).mutation(({ ctx, input }) =>
+      db.createCrew({
+        userId: ctx.user.id,
+        name: input.name,
+        description: input.description,
+        crewLead: input.crewLead,
+        phone: input.phone,
+        email: input.email,
+        status: "active",
+      })
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      description: z.string().optional(),
+      crewLead: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().email().optional(),
+      status: z.enum(["active", "inactive"]).optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, ...data } = input;
+      return db.updateCrew(id, ctx.user.id, data);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
+      db.deleteCrew(input.id, ctx.user.id)
+    ),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

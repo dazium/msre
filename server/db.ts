@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -372,4 +372,43 @@ export async function updateEstimateLineItem(id: number, data: Partial<InsertEst
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.update(estimateLineItems).set(data).where(eq(estimateLineItems.id, id));
+}
+
+// Crew queries
+export async function getCrewsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(crews).where(eq(crews.userId, userId));
+}
+
+export async function getCrewById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(crews).where(
+    and(eq(crews.id, id), eq(crews.userId, userId))
+  );
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createCrew(data: InsertCrew) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(crews).values(data);
+  return result;
+}
+
+export async function updateCrew(id: number, userId: number, data: Partial<InsertCrew>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(crews).set(data).where(
+    and(eq(crews.id, id), eq(crews.userId, userId))
+  );
+}
+
+export async function deleteCrew(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(crews).where(
+    and(eq(crews.id, id), eq(crews.userId, userId))
+  );
 }

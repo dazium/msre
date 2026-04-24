@@ -45,11 +45,29 @@ export const customers = mysqlTable("customers", {
 export type Customer = typeof customers.$inferSelect;
 export type InsertCustomer = typeof customers.$inferInsert;
 
+// Crews table - for managing work crews
+export const crews = mysqlTable("crews", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  crewLead: varchar("crewLead", { length: 100 }),
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Crew = typeof crews.$inferSelect;
+export type InsertCrew = typeof crews.$inferInsert;
+
 // Projects table
 export const projects = mysqlTable("projects", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   customerId: int("customerId").notNull(),
+  // crewId: int("crewId"), // TODO: Apply migration to add this column
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   address: text("address"),
