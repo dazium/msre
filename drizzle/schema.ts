@@ -67,7 +67,7 @@ export const projects = mysqlTable("projects", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   customerId: int("customerId").notNull(),
-  // crewId: int("crewId"), // TODO: Apply migration to add this column
+  // crewId: int("crewId"), // TODO: Migration applied but test DB not synced
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   address: text("address"),
