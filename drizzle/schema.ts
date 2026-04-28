@@ -67,7 +67,7 @@ export const projects = mysqlTable("projects", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   customerId: int("customerId").notNull(),
-  // crewId: int("crewId"), // TODO: Migration applied but test DB not synced
+  crewId: int("crewId"),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   address: text("address"),
@@ -268,3 +268,26 @@ export const roofSpecifications = mysqlTable("roofSpecifications", {
 
 export type RoofSpecification = typeof roofSpecifications.$inferSelect;
 export type InsertRoofSpecification = typeof roofSpecifications.$inferInsert;
+
+// Invoices table - for billing and payment tracking
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  estimateId: int("estimateId"),
+  projectId: int("projectId").notNull(),
+  customerId: int("customerId").notNull(),
+  invoiceNumber: varchar("invoiceNumber", { length: 50 }).notNull().unique(),
+  issueDate: date("issueDate").notNull(),
+  dueDate: date("dueDate").notNull(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }).default("0").notNull(),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  amountPaid: decimal("amountPaid", { precision: 10, scale: 2 }).default("0").notNull(),
+  status: mysqlEnum("status", ["draft", "sent", "viewed", "paid", "overdue", "cancelled"]).default("draft").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;

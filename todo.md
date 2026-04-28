@@ -181,3 +181,143 @@
 - [x] Add customer location search with geocoding
 - [x] Implement route optimization for multi-stop planning
 - [x] Ensure all tests pass
+
+---
+
+# PHASE 1: QUICK WINS (High Impact, Low Effort)
+
+## Customer Management - Phase 1
+- [ ] Customer portal - View projects, estimates, photos
+- [ ] Customer communication hub - SMS, email, in-app notifications
+- [ ] Customer history & notes - Interaction log and service history
+- [ ] Customer feedback system - Post-project surveys and ratings
+
+## Sales & Quoting - Phase 1
+- [ ] Multi-estimate workflow - Create multiple options (basic, standard, premium)
+- [ ] Estimate templates - Save and reuse common configurations
+- [ ] Estimate versioning - Track revisions and changes
+- [ ] Estimate expiration - Set dates with auto-reminders
+- [ ] Mobile estimate creation - Create estimates on-site with photos
+
+## Project Management - Phase 1
+- [ ] Project phases - Break into inspection, estimation, scheduling, installation, cleanup
+- [ ] Project milestones - Key dates and deliverables
+- [ ] Project status dashboard - At-a-glance view of all projects
+- [ ] Project attachments - Store blueprints, permits, contracts
+- [ ] Project completion checklist - Ensure all steps completed
+
+## Scheduling & Crew - Phase 1
+- [ ] Crew availability calendar - Visual crew availability
+- [ ] Crew assignments - Assign crew to projects with roles
+- [ ] Job scheduling - Drag-and-drop scheduling interface
+- [ ] Schedule conflict alerts - Warn on double-booking
+
+## Materials - Phase 1
+- [ ] Material allocation - Assign materials to projects
+- [ ] Low stock alerts - Notifications when below reorder point
+- [ ] Material waste tracking - Record actual vs. estimated waste
+
+---
+
+# PHASE 2: CORE OPERATIONS
+
+## Invoicing & Payments - Phase 2
+- [x] Invoice generation - Auto-generate from estimates
+- [x] Invoice database schema and tRPC procedures
+- [x] Invoice UI components (create, list, filter)
+- [x] Invoice number auto-generation with format
+- [x] Invoice status tracking (draft, sent, viewed, paid, overdue, cancelled)
+- [x] Comprehensive invoice tests (17 tests passing)
+- [ ] Invoice templates - Customizable layouts with branding
+- [ ] Partial invoicing - Invoice for completed phases
+- [ ] Payment processing - Stripe integration for credit card payments
+- [ ] Payment plans - Allow installment payments
+- [ ] Automatic payment reminders - Overdue invoice notifications
+- [ ] Late payment fees - Auto-apply after X days
+- [ ] Refunds & credits - Process refunds and apply credits
+
+## Financial Reporting - Phase 2
+- [ ] Revenue dashboard - Total revenue, trends, by project type
+- [ ] Profit & Loss report - Revenue minus costs
+- [ ] Cash flow forecast - Project future cash based on invoices
+- [ ] Budget vs. actual - Compare budgeted to actual costs
+- [ ] Project profitability report - Profit margin by project/crew
+- [ ] Customer lifetime value - Total revenue per customer
+- [ ] Sales pipeline report - Value of open estimates
+- [ ] Accounts receivable aging - Money owed and when due
+
+## Inspections & Damage Assessment - Phase 2
+- [ ] Inspection checklist - Standardized forms by roof type
+- [ ] Damage classification - Categorize by type (hail, wind, age, leak)
+- [ ] Damage severity levels - Cosmetic, functional, structural
+- [ ] Inspection photos - Organize by roof section with annotations
+- [ ] Inspection reports - Auto-generate professional reports
+- [ ] Insurance claim support - Generate reports for claims
+- [ ] Inspection history - Track all inspections over time
+
+## Compliance & Documentation - Phase 2
+- [ ] Permit tracking - Track required permits and status
+- [ ] License & certification management - Track crew credentials
+- [ ] Insurance documentation - Store certificates, track expiration
+- [ ] Contract management - Store and manage customer contracts
+- [ ] Compliance checklists - Ensure requirements are met
+- [ ] Document storage - Centralized storage with version control
+- [ ] Audit trail - Complete record of system changes
+
+## Warranty Management - Phase 2
+- [ ] Warranty tracking - Record warranty terms per project
+- [ ] Warranty claims - Process warranty claims with documentation
+- [ ] Warranty reminders - Auto-remind customers about warranties
+
+---
+
+# PHASE 3: INTEGRATIONS & ADVANCED FEATURES
+
+## Payment & Accounting Integrations - Phase 3
+- [ ] Stripe integration - Complete payment processing
+- [ ] QuickBooks Online sync - Sync invoices and financial data
+- [ ] Xero integration - Alternative accounting software
+- [ ] FreshBooks integration - Project accounting sync
+
+## Communication & Notifications - Phase 3
+- [ ] Twilio SMS integration - SMS notifications and marketing
+- [ ] Email service integration - SendGrid/Mailgun for transactional emails
+- [ ] Slack integration - Notifications to team Slack channels
+- [ ] Push notifications - Real-time alerts to mobile app
+
+## Scheduling & Mapping - Phase 3
+- [ ] Google Calendar sync - Complete integration with crew calendars
+- [ ] Google Maps integration - Route optimization and geolocation
+- [ ] Travel time calculation - Account for travel between jobs
+- [ ] Weather API integration - Weather forecasts for scheduling
+
+## Marketing & Lead Generation - Phase 3
+- [ ] Lead capture forms - Website forms that auto-populate CRM
+- [ ] Lead scoring - Automatic scoring based on engagement
+- [ ] Email marketing - Campaign management and automation
+- [ ] SMS marketing - Text message campaigns
+- [ ] Review management - Monitor Google, Yelp, Facebook reviews
+- [ ] Referral program - Track referrals and rewards
+- [ ] Social media integration - Track leads from Facebook, Instagram
+
+## Advanced Features - Phase 3
+- [ ] Expense tracking - Record and categorize business expenses
+- [ ] Crew performance metrics - Track productivity and quality
+- [ ] Crew payroll integration - Track hours for payroll
+- [ ] Crew geolocation tracking - Real-time location of crews
+- [ ] Crew certification management - Track licenses and training
+- [ ] Supplier management - Store supplier info and pricing
+- [ ] Purchase orders - Create and track POs
+- [ ] Vendor pricing comparison - Compare prices across suppliers
+- [ ] Material barcoding - Barcode scanning for inventory
+- [ ] Bulk purchasing discounts - Track and apply volume discounts
+- [ ] Conditional pricing - Different pricing by complexity/season
+- [ ] Discount management - Apply discounts with approval workflows
+- [ ] Tax configuration - Support multiple tax rates by region
+- [ ] Multi-currency support - USD, CAD, and other currencies
+- [ ] Knowledge base - Self-service FAQ and troubleshooting
+- [ ] Live chat support - Real-time customer support
+- [ ] Ticket system - Track customer issues and requests
+- [ ] SLA tracking - Response and resolution time tracking
+- [ ] Service requests - Schedule maintenance and repairs
+- [ ] Offline mode - Mobile app works offline with sync

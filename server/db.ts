@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -411,4 +411,56 @@ export async function deleteCrew(id: number, userId: number) {
   return db.delete(crews).where(
     and(eq(crews.id, id), eq(crews.userId, userId))
   );
+}
+
+// Invoice queries
+export async function getInvoicesByProject(projectId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(invoices).where(eq(invoices.projectId, projectId));
+}
+
+export async function getInvoicesByCustomer(customerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(invoices).where(eq(invoices.customerId, customerId));
+}
+
+export async function getInvoiceById(invoiceId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
+  return result[0] || null;
+}
+
+export async function createInvoice(data: InsertInvoice) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(invoices).values(data);
+}
+
+export async function updateInvoice(invoiceId: number, data: Partial<InsertInvoice>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(invoices).set(data).where(eq(invoices.id, invoiceId));
+}
+
+export async function deleteInvoice(invoiceId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(invoices).where(eq(invoices.id, invoiceId));
+}
+
+export async function generateInvoiceNumber(userId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const count = await db
+    .select({ count: sql`COUNT(*)` })
+    .from(invoices)
+    .where(and(eq(invoices.userId, userId), sql`YEAR(createdAt) = ${year}`));
+  const invoiceCount = (count[0]?.count as number) + 1;
+  return `INV-${year}${month}-${String(invoiceCount).padStart(4, "0")}`;
 }

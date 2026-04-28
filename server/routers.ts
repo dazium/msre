@@ -388,6 +388,68 @@ export const appRouter = router({
       db.deleteCrew(input.id, ctx.user.id)
     ),
   }),
+
+  invoices: router({
+    listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ input }) =>
+      db.getInvoicesByProject(input.projectId)
+    ),
+    listByCustomer: protectedProcedure.input(z.object({ customerId: z.number() })).query(({ input }) =>
+      db.getInvoicesByCustomer(input.customerId)
+    ),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ input }) =>
+      db.getInvoiceById(input.id)
+    ),
+    generateNumber: protectedProcedure.query(({ ctx }) =>
+      db.generateInvoiceNumber(ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      estimateId: z.number().optional(),
+      projectId: z.number(),
+      customerId: z.number(),
+      issueDate: z.string(),
+      dueDate: z.string(),
+      subtotal: z.string(),
+      tax: z.string().optional(),
+      total: z.string(),
+      notes: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const invoiceNumber = await db.generateInvoiceNumber(ctx.user.id);
+      return db.createInvoice({
+        userId: ctx.user.id,
+        estimateId: input.estimateId,
+        projectId: input.projectId,
+        customerId: input.customerId,
+        invoiceNumber,
+        issueDate: new Date(input.issueDate),
+        dueDate: new Date(input.dueDate),
+        subtotal: input.subtotal,
+        tax: input.tax || "0",
+        total: input.total,
+        notes: input.notes,
+      });
+    }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      estimateId: z.number().optional(),
+      issueDate: z.string().optional(),
+      dueDate: z.string().optional(),
+      subtotal: z.string().optional(),
+      tax: z.string().optional(),
+      total: z.string().optional(),
+      amountPaid: z.string().optional(),
+      status: z.enum(["draft", "sent", "viewed", "paid", "overdue", "cancelled"]).optional(),
+      notes: z.string().optional(),
+    })).mutation(({ input }) => {
+      const { id, issueDate, dueDate, ...data } = input;
+      const updateData: any = data;
+      if (issueDate) updateData.issueDate = new Date(issueDate);
+      if (dueDate) updateData.dueDate = new Date(dueDate);
+      return db.updateInvoice(id, updateData);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ input }) =>
+      db.deleteInvoice(input.id)
+    ),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
