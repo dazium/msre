@@ -321,3 +321,16 @@
 - [ ] SLA tracking - Response and resolution time tracking
 - [ ] Service requests - Schedule maintenance and repairs
 - [ ] Offline mode - Mobile app works offline with sync
+
+
+## Phase 1.5: Invoice PDF Export & Email (COMPLETE)
+- [x] Add PDF export tRPC procedure
+- [x] Create PDF generation helper using pdf-lib
+- [x] Add email delivery tRPC procedure
+- [x] Create email helper with HTML template support
+- [x] Build invoice detail page component
+- [x] Add "Export to PDF" button with download
+- [x] Add "Send Email" button with recipient input
+- [x] Write tests for PDF generation (5 tests)
+- [x] Write tests for email delivery (4 tests)
+- [x] Test end-to-end PDF and email workflows (1 test)

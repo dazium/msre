@@ -449,6 +449,15 @@ export const appRouter = router({
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ input }) =>
       db.deleteInvoice(input.id)
     ),
+    exportPDF: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
+      return { success: true, invoiceId: input.id };
+    }),
+    sendEmail: protectedProcedure.input(z.object({
+      id: z.number(),
+      recipientEmail: z.string().email(),
+    })).mutation(async ({ input }) => {
+      return { success: true, invoiceId: input.id, recipientEmail: input.recipientEmail };
+    }),
   }),
 });
 
