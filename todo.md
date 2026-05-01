@@ -228,7 +228,12 @@
 - [x] Invoice number auto-generation with format
 - [x] Invoice status tracking (draft, sent, viewed, paid, overdue, cancelled)
 - [x] Comprehensive invoice tests (17 tests passing)
-- [ ] Invoice templates - Customizable layouts with branding
+- [x] Invoice templates - Customizable layouts with branding
+- [x] Invoice template database schema and tRPC procedures
+- [x] Invoice template management UI (create, edit, delete, set default)
+- [x] Template color customization (primary, secondary, accent)
+- [x] Template branding (company name, logo, contact info)
+- [x] Template layout options (include/exclude sections)
 - [ ] Partial invoicing - Invoice for completed phases
 - [ ] Payment processing - Stripe integration for credit card payments
 - [ ] Payment plans - Allow installment payments

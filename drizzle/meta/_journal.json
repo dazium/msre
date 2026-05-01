@@ -78,6 +78,13 @@
       "when": 1777376705160,
       "tag": "0010_glossy_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1777653548728,
+      "tag": "0011_cool_valkyrie",
+      "breakpoints": true
     }
   ]
 }

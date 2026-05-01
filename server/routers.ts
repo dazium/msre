@@ -459,6 +459,62 @@ export const appRouter = router({
       return { success: true, invoiceId: input.id, recipientEmail: input.recipientEmail };
     }),
   }),
+  invoiceTemplates: router({
+    list: protectedProcedure.query(({ ctx }) =>
+      db.getInvoiceTemplates(ctx.user.id)
+    ),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ input }) =>
+      db.getInvoiceTemplateById(input.id)
+    ),
+    getDefault: protectedProcedure.query(({ ctx }) =>
+      db.getDefaultInvoiceTemplate(ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      isDefault: z.boolean().default(false),
+      companyName: z.string().min(1),
+      companyLogo: z.string().optional(),
+      companyPhone: z.string().optional(),
+      companyEmail: z.string().email().optional(),
+      companyAddress: z.string().optional(),
+      primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).default("#1a3a52"),
+      secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).default("#ffffff"),
+      accentColor: z.string().regex(/^#[0-9A-F]{6}$/i).default("#4a90e2"),
+      footerText: z.string().optional(),
+      paymentTerms: z.string().optional(),
+      includeCompanyLogo: z.boolean().default(true),
+      includeCompanyInfo: z.boolean().default(true),
+      includePaymentTerms: z.boolean().default(true),
+    })).mutation(({ ctx, input }) =>
+      db.createInvoiceTemplate({ ...input, userId: ctx.user.id })
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().min(1).optional(),
+      description: z.string().optional(),
+      isDefault: z.boolean().optional(),
+      companyName: z.string().min(1).optional(),
+      companyLogo: z.string().optional(),
+      companyPhone: z.string().optional(),
+      companyEmail: z.string().email().optional(),
+      companyAddress: z.string().optional(),
+      primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+      secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+      accentColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+      footerText: z.string().optional(),
+      paymentTerms: z.string().optional(),
+      includeCompanyLogo: z.boolean().optional(),
+      includeCompanyInfo: z.boolean().optional(),
+      includePaymentTerms: z.boolean().optional(),
+    })).mutation(({ input }) => {
+      const { id, ...data } = input;
+      return db.updateInvoiceTemplate(id, data);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ input }) =>
+      db.deleteInvoiceTemplate(input.id)
+    ),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

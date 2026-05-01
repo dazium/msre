@@ -291,3 +291,34 @@ export const invoices = mysqlTable("invoices", {
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
+
+// Invoice Templates table - for customizable invoice layouts
+export const invoiceTemplates = mysqlTable("invoiceTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  isDefault: boolean("isDefault").default(false).notNull(),
+  // Branding
+  companyName: varchar("companyName", { length: 255 }).notNull(),
+  companyLogo: text("companyLogo"),
+  companyPhone: varchar("companyPhone", { length: 20 }),
+  companyEmail: varchar("companyEmail", { length: 320 }),
+  companyAddress: text("companyAddress"),
+  // Colors
+  primaryColor: varchar("primaryColor", { length: 7 }).default("#1a3a52").notNull(),
+  secondaryColor: varchar("secondaryColor", { length: 7 }).default("#ffffff").notNull(),
+  accentColor: varchar("accentColor", { length: 7 }).default("#4a90e2").notNull(),
+  // Footer
+  footerText: text("footerText"),
+  paymentTerms: text("paymentTerms"),
+  // Layout
+  includeCompanyLogo: boolean("includeCompanyLogo").default(true).notNull(),
+  includeCompanyInfo: boolean("includeCompanyInfo").default(true).notNull(),
+  includePaymentTerms: boolean("includePaymentTerms").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InvoiceTemplate = typeof invoiceTemplates.$inferSelect;
+export type InsertInvoiceTemplate = typeof invoiceTemplates.$inferInsert;

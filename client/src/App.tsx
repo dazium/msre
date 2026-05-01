@@ -19,6 +19,7 @@ import CrewApp from "./pages/CrewApp";
 import Crews from "./pages/Crews";
 import Invoices from "@/pages/Invoices";
 import InvoiceDetail from "@/pages/InvoiceDetail";
+import InvoiceTemplates from "@/pages/InvoiceTemplates";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <Route path={"/crews"} component={Crews} />
       <Route path={"/invoices"} component={Invoices} />
       <Route path={"/invoices/:id"} component={InvoiceDetail} />
+      <Route path={"/invoice-templates"} component={InvoiceTemplates} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -463,4 +463,78 @@ export async function generateInvoiceNumber(userId: number): Promise<string> {
     .where(and(eq(invoices.userId, userId), sql`YEAR(createdAt) = ${year}`));
   const invoiceCount = (count[0]?.count as number) + 1;
   return `INV-${year}${month}-${String(invoiceCount).padStart(4, "0")}`;
+}
+
+
+// Invoice Template helpers
+export async function getInvoiceTemplates(userId: number): Promise<InvoiceTemplate[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(invoiceTemplates).where(eq(invoiceTemplates.userId, userId));
+}
+
+export async function getInvoiceTemplateById(id: number): Promise<InvoiceTemplate | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(invoiceTemplates).where(eq(invoiceTemplates.id, id));
+  return result[0] || null;
+}
+
+export async function getDefaultInvoiceTemplate(userId: number): Promise<InvoiceTemplate | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(invoiceTemplates)
+    .where(and(eq(invoiceTemplates.userId, userId), eq(invoiceTemplates.isDefault, true)));
+  return result[0] || null;
+}
+
+export async function createInvoiceTemplate(data: InsertInvoiceTemplate): Promise<InvoiceTemplate> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // If this is being set as default, unset other defaults
+  if (data.isDefault) {
+    await db
+      .update(invoiceTemplates)
+      .set({ isDefault: false })
+      .where(eq(invoiceTemplates.userId, data.userId));
+  }
+  
+  const result = await db.insert(invoiceTemplates).values(data);
+  const templateId = result[0]?.insertId;
+  if (!templateId) throw new Error("Failed to create invoice template");
+  
+  const created = await getInvoiceTemplateById(templateId);
+  if (!created) throw new Error("Failed to retrieve created template");
+  return created;
+}
+
+export async function updateInvoiceTemplate(id: number, data: Partial<InsertInvoiceTemplate>): Promise<InvoiceTemplate> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // If setting as default, unset other defaults for this user
+  if (data.isDefault) {
+    const template = await getInvoiceTemplateById(id);
+    if (template) {
+      await db
+        .update(invoiceTemplates)
+        .set({ isDefault: false })
+        .where(and(eq(invoiceTemplates.userId, template.userId), eq(invoiceTemplates.isDefault, true)));
+    }
+  }
+  
+  await db.update(invoiceTemplates).set(data).where(eq(invoiceTemplates.id, id));
+  
+  const updated = await getInvoiceTemplateById(id);
+  if (!updated) throw new Error("Failed to retrieve updated template");
+  return updated;
+}
+
+export async function deleteInvoiceTemplate(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(invoiceTemplates).where(eq(invoiceTemplates.id, id));
 }

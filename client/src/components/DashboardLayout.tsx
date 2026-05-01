@@ -34,6 +34,7 @@ const menuItems = [
   { icon: BarChart3, label: "Projects", path: "/projects" },
   { icon: FileText, label: "Estimates", path: "/estimates" },
   { icon: FileText, label: "Invoices", path: "/invoices" },
+  { icon: Settings, label: "Invoice Templates", path: "/invoice-templates" },
   { icon: Calendar, label: "Calendar", path: "/calendar" },
   { icon: Navigation, label: "Route Optimization", path: "/route-optimization" },
   { icon: Package, label: "Materials", path: "/materials" },
