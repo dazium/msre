@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -537,4 +537,234 @@ export async function deleteInvoiceTemplate(id: number): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(invoiceTemplates).where(eq(invoiceTemplates.id, id));
+}
+
+
+// Payment helpers
+export async function getPaymentsByInvoice(invoiceId: number): Promise<Payment[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(payments).where(eq(payments.invoiceId, invoiceId));
+}
+
+export async function getPaymentsByUser(userId: number): Promise<Payment[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(payments).where(eq(payments.userId, userId));
+}
+
+export async function getPaymentById(id: number): Promise<Payment | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(payments).where(eq(payments.id, id));
+  return result[0] || null;
+}
+
+export async function getPaymentByStripeId(stripePaymentIntentId: string): Promise<Payment | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(payments).where(eq(payments.stripePaymentIntentId, stripePaymentIntentId));
+  return result[0] || null;
+}
+
+export async function createPayment(data: InsertPayment): Promise<Payment> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(payments).values(data);
+  const paymentId = result[0]?.insertId;
+  if (!paymentId) throw new Error("Failed to create payment");
+  
+  const created = await getPaymentById(paymentId);
+  if (!created) throw new Error("Failed to retrieve created payment");
+  return created;
+}
+
+export async function updatePayment(id: number, data: Partial<InsertPayment>): Promise<Payment> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(payments).set(data).where(eq(payments.id, id));
+  
+  const updated = await getPaymentById(id);
+  if (!updated) throw new Error("Failed to retrieve updated payment");
+  return updated;
+}
+
+export async function getInvoicePaymentTotal(invoiceId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({ total: sql`SUM(amount)` })
+    .from(payments)
+    .where(and(eq(payments.invoiceId, invoiceId), eq(payments.status, "succeeded")));
+  
+  return parseFloat(result[0]?.total as string) || 0;
+}
+
+
+// Financial Reporting helpers
+export async function getTotalRevenue(userId: number, startDate?: Date, endDate?: Date): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const result = await db
+    .select({ total: sql`SUM(amount)` })
+    .from(payments)
+    .where(
+      and(
+        eq(payments.userId, userId),
+        eq(payments.status, "succeeded"),
+        startDate ? sql`createdAt >= ${startDate}` : undefined,
+        endDate ? sql`createdAt <= ${endDate}` : undefined
+      )
+    );
+
+  return parseFloat(result[0]?.total as string) || 0;
+}
+
+export async function getRevenueByMonth(userId: number, year: number): Promise<Array<{ month: number; revenue: number }>> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select({
+      month: sql`MONTH(createdAt)`,
+      revenue: sql`SUM(amount)`,
+    })
+    .from(payments)
+    .where(and(eq(payments.userId, userId), eq(payments.status, "succeeded"), sql`YEAR(createdAt) = ${year}`))
+    .groupBy(sql`MONTH(createdAt)`);
+
+  return result.map((r: any) => ({
+    month: r.month,
+    revenue: parseFloat(r.revenue) || 0,
+  }));
+}
+
+export async function getInvoiceStats(userId: number): Promise<{
+  totalInvoices: number;
+  paidInvoices: number;
+  unpaidInvoices: number;
+  overdueInvoices: number;
+  totalAmount: number;
+  paidAmount: number;
+  unpaidAmount: number;
+}> {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalInvoices: 0,
+      paidInvoices: 0,
+      unpaidInvoices: 0,
+      overdueInvoices: 0,
+      totalAmount: 0,
+      paidAmount: 0,
+      unpaidAmount: 0,
+    };
+  }
+
+  const invoiceData = await db
+    .select({
+      status: invoices.status,
+      count: sql`COUNT(*)`,
+      totalAmount: sql`SUM(total)`,
+    })
+    .from(invoices)
+    .where(eq(invoices.userId, userId))
+    .groupBy(invoices.status);
+
+  let totalInvoices = 0;
+  let paidInvoices = 0;
+  let unpaidInvoices = 0;
+  let overdueInvoices = 0;
+  let totalAmount = 0;
+  let paidAmount = 0;
+  let unpaidAmount = 0;
+
+  for (const row of invoiceData) {
+    const count = (row.count as number) || 0;
+    const amount = parseFloat(row.totalAmount as string) || 0;
+
+    totalInvoices += count;
+    totalAmount += amount;
+
+    if (row.status === "paid") {
+      paidInvoices += count;
+      paidAmount += amount;
+    } else if (row.status === "overdue") {
+      overdueInvoices += count;
+      unpaidAmount += amount;
+    } else {
+      unpaidInvoices += count;
+      unpaidAmount += amount;
+    }
+  }
+
+  return {
+    totalInvoices,
+    paidInvoices,
+    unpaidInvoices,
+    overdueInvoices,
+    totalAmount,
+    paidAmount,
+    unpaidAmount,
+  };
+}
+
+export async function getProjectStats(userId: number): Promise<{
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  totalProjectValue: number;
+}> {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalProjects: 0,
+      activeProjects: 0,
+      completedProjects: 0,
+      totalProjectValue: 0,
+    };
+  }
+
+  const projectData = await db
+    .select({
+      status: projects.status,
+      count: sql`COUNT(*)`,
+    })
+    .from(projects)
+    .where(eq(projects.userId, userId))
+    .groupBy(projects.status);
+
+  let totalProjects = 0;
+  let activeProjects = 0;
+  let completedProjects = 0;
+
+  for (const row of projectData) {
+    const count = (row.count as number) || 0;
+    totalProjects += count;
+
+    if (row.status === "in_progress") {
+      activeProjects += count;
+    } else if (row.status === "completed") {
+      completedProjects += count;
+    }
+  }
+
+  // Get total project value from estimates
+  const estimateData = await db
+    .select({ totalValue: sql`SUM(totalCost)` })
+    .from(estimates)
+    .where(eq(estimates.userId, userId));
+
+  const totalProjectValue = parseFloat(estimateData[0]?.totalValue as string) || 0;
+
+  return {
+    totalProjects,
+    activeProjects,
+    completedProjects,
+    totalProjectValue,
+  };
 }

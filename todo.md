@@ -234,15 +234,26 @@
 - [x] Template color customization (primary, secondary, accent)
 - [x] Template branding (company name, logo, contact info)
 - [x] Template layout options (include/exclude sections)
+- [x] Payment processing - Stripe integration for credit card payments
+- [x] Stripe checkout session creation
+- [x] Payment database schema and tracking
+- [x] Payment tRPC procedures (list, create, checkout)
+- [x] PaymentButton component with Stripe integration
+- [x] "Pay Now" button on invoice detail page
 - [ ] Partial invoicing - Invoice for completed phases
-- [ ] Payment processing - Stripe integration for credit card payments
 - [ ] Payment plans - Allow installment payments
 - [ ] Automatic payment reminders - Overdue invoice notifications
 - [ ] Late payment fees - Auto-apply after X days
 - [ ] Refunds & credits - Process refunds and apply credits
 
 ## Financial Reporting - Phase 2
-- [ ] Revenue dashboard - Total revenue, trends, by project type
+- [x] Revenue dashboard - Total revenue, trends, by project type
+- [x] Monthly revenue chart with visualization
+- [x] Invoice statistics (total, paid, unpaid, overdue)
+- [x] Project statistics (total, active, completed)
+- [x] Collection rate calculation and display
+- [x] Financial tRPC procedures (getTotalRevenue, getRevenueByMonth, getInvoiceStats, getProjectStats)
+- [x] FinancialDashboard page component
 - [ ] Profit & Loss report - Revenue minus costs
 - [ ] Cash flow forecast - Project future cash based on invoices
 - [ ] Budget vs. actual - Compare budgeted to actual costs
@@ -339,3 +350,36 @@
 - [x] Write tests for PDF generation (5 tests)
 - [x] Write tests for email delivery (4 tests)
 - [x] Test end-to-end PDF and email workflows (1 test)
+
+
+## Phase 3: Advanced Features (Future)
+
+### Google Maps Rooftop Measurements
+- [ ] Integrate Google Maps satellite imagery viewer
+- [ ] Add drawing tools for roof boundary tracing
+- [ ] Calculate area and perimeter from drawn shapes
+- [ ] Estimate roof pitch from imagery
+- [ ] Auto-populate roof specifications from measurements
+- [ ] Link measurements to damage assessments
+- [ ] Store measurement history and revisions
+- [ ] Export measurement reports with imagery
+
+### Financial Reporting Dashboard
+- [ ] Revenue dashboard with trends and charts
+- [ ] Profit & Loss reporting
+- [ ] Cash flow analysis
+- [ ] Project profitability analysis
+- [ ] Customer lifetime value tracking
+
+### Payment Processing
+- [ ] Stripe integration for credit card payments
+- [ ] Payment plans and installments
+- [ ] Automatic payment reminders
+- [ ] Late payment fees
+- [ ] Refunds and credits processing
+
+### Advanced Scheduling
+- [ ] Crew scheduling optimization
+- [ ] Route optimization for multiple jobs
+- [ ] Weather-based job scheduling
+- [ ] Automatic crew assignment based on skills

@@ -515,6 +515,56 @@ export const appRouter = router({
       db.deleteInvoiceTemplate(input.id)
     ),
   }),
+  payments: router({
+    getByInvoice: protectedProcedure.input(z.object({ invoiceId: z.number() })).query(({ input }) =>
+      db.getPaymentsByInvoice(input.invoiceId)
+    ),
+    getByUser: protectedProcedure.query(({ ctx }) =>
+      db.getPaymentsByUser(ctx.user.id)
+    ),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ input }) =>
+      db.getPaymentById(input.id)
+    ),
+    getInvoiceTotal: protectedProcedure.input(z.object({ invoiceId: z.number() })).query(({ input }) =>
+      db.getInvoicePaymentTotal(input.invoiceId)
+    ),
+    createCheckoutSession: protectedProcedure.input(z.object({
+      invoiceId: z.number(),
+      invoiceNumber: z.string(),
+      amount: z.number().positive(),
+      currency: z.string().default("USD"),
+      successUrl: z.string().url(),
+      cancelUrl: z.string().url(),
+    })).mutation(async ({ ctx, input }) => {
+      const { createCheckoutSession } = await import("./stripe");
+      const session = await createCheckoutSession({
+        invoiceId: input.invoiceId,
+        invoiceNumber: input.invoiceNumber,
+        amount: input.amount,
+        currency: input.currency,
+        customerEmail: ctx.user.email || "",
+        customerName: ctx.user.name || "Customer",
+        userId: ctx.user.id,
+        successUrl: input.successUrl,
+        cancelUrl: input.cancelUrl,
+      });
+      return { sessionId: session.id, url: session.url };
+    }),
+  }),
+  financialReporting: router({
+    getTotalRevenue: protectedProcedure.query(({ ctx }) =>
+      db.getTotalRevenue(ctx.user.id)
+    ),
+    getRevenueByMonth: protectedProcedure.input(z.object({ year: z.number() })).query(({ ctx, input }) =>
+      db.getRevenueByMonth(ctx.user.id, input.year)
+    ),
+    getInvoiceStats: protectedProcedure.query(({ ctx }) =>
+      db.getInvoiceStats(ctx.user.id)
+    ),
+    getProjectStats: protectedProcedure.query(({ ctx }) =>
+      db.getProjectStats(ctx.user.id)
+    ),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -85,6 +85,13 @@
       "when": 1777653548728,
       "tag": "0011_cool_valkyrie",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1777762952087,
+      "tag": "0012_whole_blazing_skull",
+      "breakpoints": true
     }
   ]
 }

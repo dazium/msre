@@ -20,6 +20,7 @@ import Crews from "./pages/Crews";
 import Invoices from "@/pages/Invoices";
 import InvoiceDetail from "@/pages/InvoiceDetail";
 import InvoiceTemplates from "@/pages/InvoiceTemplates";
+import FinancialDashboard from "@/pages/FinancialDashboard";
 
 function Router() {
   return (
@@ -40,6 +41,7 @@ function Router() {
       <Route path={"/invoices"} component={Invoices} />
       <Route path={"/invoices/:id"} component={InvoiceDetail} />
       <Route path={"/invoice-templates"} component={InvoiceTemplates} />
+      <Route path={"/financial-dashboard"} component={FinancialDashboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

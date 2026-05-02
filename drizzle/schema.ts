@@ -322,3 +322,59 @@ export const invoiceTemplates = mysqlTable("invoiceTemplates", {
 
 export type InvoiceTemplate = typeof invoiceTemplates.$inferSelect;
 export type InsertInvoiceTemplate = typeof invoiceTemplates.$inferInsert;
+
+
+// Roof Measurements table - stores measurements from Google Maps satellite imagery
+export const roofMeasurements = mysqlTable("roofMeasurements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  projectId: int("projectId").notNull(),
+  damageId: int("damageId"),
+  estimateId: int("estimateId"),
+  // Location data
+  latitude: decimal("latitude", { precision: 10, scale: 8 }).notNull(),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }).notNull(),
+  // Measurement data
+  roofAreaSqFt: decimal("roofAreaSqFt", { precision: 10, scale: 2 }),
+  roofAreaSqMeters: decimal("roofAreaSqMeters", { precision: 10, scale: 2 }),
+  perimeterFt: decimal("perimeterFt", { precision: 10, scale: 2 }),
+  estimatedPitch: varchar("estimatedPitch", { length: 20 }),
+  // Polygon data (GeoJSON)
+  boundaryPolygon: text("boundaryPolygon"), // JSON array of lat/lng points
+  // Metadata
+  zoomLevel: int("zoomLevel").default(18).notNull(),
+  imageUrl: text("imageUrl"), // URL to saved satellite image
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RoofMeasurement = typeof roofMeasurements.$inferSelect;
+export type InsertRoofMeasurement = typeof roofMeasurements.$inferInsert;
+
+
+// Payments table - tracks Stripe payment transactions
+export const payments = mysqlTable("payments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  invoiceId: int("invoiceId").notNull(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }).notNull().unique(),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  status: mysqlEnum("status", ["pending", "succeeded", "failed", "cancelled", "refunded"]).default("pending").notNull(),
+  paymentMethod: varchar("paymentMethod", { length: 50 }), // card, bank_account, etc
+  lastFourDigits: varchar("lastFourDigits", { length: 4 }),
+  cardBrand: varchar("cardBrand", { length: 50 }), // visa, mastercard, etc
+  description: text("description"),
+  metadata: text("metadata"), // JSON for custom data
+  failureReason: text("failureReason"),
+  refundedAmount: decimal("refundedAmount", { precision: 10, scale: 2 }).default("0").notNull(),
+  refundReason: text("refundReason"),
+  receiptUrl: text("receiptUrl"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = typeof payments.$inferInsert;
