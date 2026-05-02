@@ -383,3 +383,7 @@
 - [ ] Route optimization for multiple jobs
 - [ ] Weather-based job scheduling
 - [ ] Automatic crew assignment based on skills
+
+
+## Bug Fixes
+- [x] Crew member addition not working in crew section - Fixed createCrew to return created crew object

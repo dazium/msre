@@ -394,7 +394,11 @@ export async function createCrew(data: InsertCrew) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(crews).values(data);
-  return result;
+  const crewId = result[0]?.insertId;
+  if (!crewId) throw new Error("Failed to create crew");
+  const created = await getCrewById(crewId, data.userId);
+  if (!created) throw new Error("Failed to retrieve created crew");
+  return created;
 }
 
 export async function updateCrew(id: number, userId: number, data: Partial<InsertCrew>) {
