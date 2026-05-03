@@ -378,3 +378,52 @@ export const payments = mysqlTable("payments", {
 
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = typeof payments.$inferInsert;
+
+
+// Crew Skills - track skills and certifications for each crew member
+export const crewSkills = mysqlTable("crewSkills", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  crewId: int("crewId").notNull(),
+  skillName: varchar("skillName", { length: 100 }).notNull(), // e.g., "Asphalt Shingles", "Metal Roofing", "Flat Roofs"
+  skillLevel: mysqlEnum("skillLevel", ["beginner", "intermediate", "expert"]).default("intermediate").notNull(),
+  certificationName: varchar("certificationName", { length: 100 }), // e.g., "OSHA 30", "CPR Certified"
+  certificationNumber: varchar("certificationNumber", { length: 100 }),
+  issuedDate: date("issuedDate"),
+  expirationDate: date("expirationDate"),
+  issuer: varchar("issuer", { length: 100 }), // e.g., "OSHA", "Red Cross"
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CrewSkill = typeof crewSkills.$inferSelect;
+export type InsertCrewSkill = typeof crewSkills.$inferInsert;
+
+// Skill Categories - predefined skills for the roofing industry
+export const skillCategories = mysqlTable("skillCategories", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  categoryName: varchar("categoryName", { length: 100 }).notNull(), // e.g., "Roofing Materials", "Safety", "Tools"
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SkillCategory = typeof skillCategories.$inferSelect;
+export type InsertSkillCategory = typeof skillCategories.$inferInsert;
+
+// Predefined Skills - list of available skills
+export const predefinedSkills = mysqlTable("predefinedSkills", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  skillName: varchar("skillName", { length: 100 }).notNull(),
+  categoryId: int("categoryId"),
+  description: text("description"),
+  isRequired: boolean("isRequired").default(false), // Mark critical skills
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PredefinedSkill = typeof predefinedSkills.$inferSelect;
+export type InsertPredefinedSkill = typeof predefinedSkills.$inferInsert;

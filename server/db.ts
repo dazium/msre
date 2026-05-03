@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -771,4 +771,121 @@ export async function getProjectStats(userId: number): Promise<{
     completedProjects,
     totalProjectValue,
   };
+}
+
+
+// Crew Skills helpers
+export async function getCrewSkills(crewId: number): Promise<CrewSkill[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(crewSkills).where(eq(crewSkills.crewId, crewId));
+}
+
+export async function getCrewSkillById(id: number): Promise<CrewSkill | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(crewSkills).where(eq(crewSkills.id, id));
+  return result[0] || null;
+}
+
+export async function createCrewSkill(data: InsertCrewSkill): Promise<CrewSkill> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(crewSkills).values(data);
+  const skillId = result[0]?.insertId;
+  if (!skillId) throw new Error("Failed to create crew skill");
+  
+  const created = await getCrewSkillById(skillId);
+  if (!created) throw new Error("Failed to retrieve created crew skill");
+  return created;
+}
+
+export async function updateCrewSkill(id: number, data: Partial<InsertCrewSkill>): Promise<CrewSkill> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(crewSkills).set(data).where(eq(crewSkills.id, id));
+  
+  const updated = await getCrewSkillById(id);
+  if (!updated) throw new Error("Failed to retrieve updated crew skill");
+  return updated;
+}
+
+export async function deleteCrewSkill(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(crewSkills).where(eq(crewSkills.id, id));
+}
+
+export async function getExpiredCertifications(userId: number): Promise<CrewSkill[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const today = new Date();
+  return db.select().from(crewSkills)
+    .where(and(
+      eq(crewSkills.userId, userId),
+      sql`expirationDate < ${today}`
+    ));
+}
+
+export async function getExpiringCertifications(userId: number, daysUntilExpiry: number = 30): Promise<CrewSkill[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const today = new Date();
+  const futureDate = new Date(today.getTime() + daysUntilExpiry * 24 * 60 * 60 * 1000);
+  
+  return db.select().from(crewSkills)
+    .where(and(
+      eq(crewSkills.userId, userId),
+      sql`expirationDate BETWEEN ${today} AND ${futureDate}`
+    ));
+}
+
+// Skill Categories helpers
+export async function getSkillCategories(userId: number): Promise<SkillCategory[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(skillCategories).where(eq(skillCategories.userId, userId));
+}
+
+export async function createSkillCategory(data: InsertSkillCategory): Promise<SkillCategory> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(skillCategories).values(data);
+  const categoryId = result[0]?.insertId;
+  if (!categoryId) throw new Error("Failed to create skill category");
+  
+  const created = await db.select().from(skillCategories).where(eq(skillCategories.id, categoryId));
+  return created[0];
+}
+
+// Predefined Skills helpers
+export async function getPredefinedSkills(userId: number): Promise<PredefinedSkill[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(predefinedSkills).where(eq(predefinedSkills.userId, userId));
+}
+
+export async function getRequiredSkills(userId: number): Promise<PredefinedSkill[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(predefinedSkills)
+    .where(and(eq(predefinedSkills.userId, userId), eq(predefinedSkills.isRequired, true)));
+}
+
+export async function createPredefinedSkill(data: InsertPredefinedSkill): Promise<PredefinedSkill> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(predefinedSkills).values(data);
+  const skillId = result[0]?.insertId;
+  if (!skillId) throw new Error("Failed to create predefined skill");
+  
+  const created = await db.select().from(predefinedSkills).where(eq(predefinedSkills.id, skillId));
+  return created[0];
 }

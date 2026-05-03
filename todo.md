@@ -387,3 +387,14 @@
 
 ## Bug Fixes
 - [x] Crew member addition not working in crew section - Fixed createCrew to return created crew object
+
+
+## Crew Skills & Certifications - PRIORITY
+- [ ] Crew skills database schema (crewSkills, certifications tables)
+- [ ] Crew skills tRPC procedures (CRUD operations)
+- [ ] Crew skills management UI (add, edit, delete skills)
+- [ ] Certification tracking (expiration dates, renewal reminders)
+- [ ] Skill levels (beginner, intermediate, expert)
+- [ ] Skill assignment to crew members
+- [ ] Job requirement matching (match jobs to crews with required skills)
+- [ ] Skills validation and testing
