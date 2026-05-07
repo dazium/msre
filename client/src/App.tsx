@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
 import Customers from "./pages/Customers";
 import Projects from "./pages/Projects";
@@ -24,28 +25,30 @@ import FinancialDashboard from "@/pages/FinancialDashboard";
 
 function Router() {
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/customers"} component={Customers} />
-      <Route path={"/projects"} component={Projects} />
-      <Route path={"/projects/:id"} component={ProjectDetail} />
-      <Route path={"/damages"} component={Damages} />
-      <Route path={"/photos/:projectId"} component={Photos} />
-      <Route path={"/estimates"} component={Estimates} />
-      <Route path={"/calendar"} component={Calendar} />
-      <Route path={"/maps"} component={Maps} />
-      <Route path={"/route-optimization"} component={RouteOptimization} />
-      <Route path={"/materials"} component={Materials} />
-      <Route path={"/crew"} component={CrewApp} />
-      <Route path={"/crews"} component={Crews} />
-      <Route path={"/invoices"} component={Invoices} />
-      <Route path={"/invoices/:id"} component={InvoiceDetail} />
-      <Route path={"/invoice-templates"} component={InvoiceTemplates} />
-      <Route path={"/financial-dashboard"} component={FinancialDashboard} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <DashboardLayout>
+      <Switch>
+        <Route path={"/"} component={Home} />
+        <Route path={"/customers"} component={Customers} />
+        <Route path={"/projects"} component={Projects} />
+        <Route path={"/projects/:id"} component={ProjectDetail} />
+        <Route path={"/damages"} component={Damages} />
+        <Route path={"/photos/:projectId"} component={Photos} />
+        <Route path={"/estimates"} component={Estimates} />
+        <Route path={"/calendar"} component={Calendar} />
+        <Route path={"/maps"} component={Maps} />
+        <Route path={"/route-optimization"} component={RouteOptimization} />
+        <Route path={"/materials"} component={Materials} />
+        <Route path={"/crew"} component={CrewApp} />
+        <Route path={"/crews"} component={Crews} />
+        <Route path={"/invoices"} component={Invoices} />
+        <Route path={"/invoices/:id"} component={InvoiceDetail} />
+        <Route path={"/invoice-templates"} component={InvoiceTemplates} />
+        <Route path={"/financial-dashboard"} component={FinancialDashboard} />
+        <Route path={"/404"} component={NotFound} />
+        {/* Final fallback route */}
+        <Route component={NotFound} />
+      </Switch>
+    </DashboardLayout>
   );
 }
 

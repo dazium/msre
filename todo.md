@@ -387,6 +387,9 @@
 
 ## Bug Fixes
 - [x] Crew member addition not working in crew section - Fixed createCrew to return created crew object
+- [x] Sidebar not persistent across pages - Wrapped all routes with DashboardLayout
+- [x] No back/forward navigation - Added back/forward buttons with history tracking
+- [x] Hard to navigate between screens - Improved routing by wrapping Router with DashboardLayout
 
 
 ## Crew Skills & Certifications - PRIORITY
