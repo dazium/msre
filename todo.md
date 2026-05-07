@@ -401,3 +401,13 @@
 - [ ] Skill assignment to crew members
 - [ ] Job requirement matching (match jobs to crews with required skills)
 - [ ] Skills validation and testing
+
+
+## Critical Bugs to Fix
+- [x] Financial Dashboard - Fixed missing useState import
+- [x] Invoicing - Fixed missing useState import
+- [x] Crews page - Fixed missing useState import
+- [x] Crews section - Added crewMembers table and tRPC procedures for multiple members per crew
+- [x] Crew members database schema (crewMembers table)
+- [x] Crew members tRPC procedures (getMembers, addMember, updateMember, deleteMember)
+- [x] All 74 tests passing

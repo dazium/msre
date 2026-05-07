@@ -427,3 +427,20 @@ export const predefinedSkills = mysqlTable("predefinedSkills", {
 
 export type PredefinedSkill = typeof predefinedSkills.$inferSelect;
 export type InsertPredefinedSkill = typeof predefinedSkills.$inferInsert;
+
+
+// Crew Members table - links individual crew members to crews
+export const crewMembers = mysqlTable("crewMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  crewId: int("crewId").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(), // e.g., "Lead", "Helper", "Specialist"
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  joinDate: timestamp("joinDate").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CrewMember = typeof crewMembers.$inferSelect;
+export type InsertCrewMember = typeof crewMembers.$inferInsert;

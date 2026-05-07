@@ -387,6 +387,42 @@ export const appRouter = router({
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
       db.deleteCrew(input.id, ctx.user.id)
     ),
+    getMembers: protectedProcedure.input(z.object({ crewId: z.number() })).query(({ input }) =>
+      db.getCrewMembers(input.crewId)
+    ),
+    addMember: protectedProcedure.input(z.object({
+      crewId: z.number(),
+      name: z.string(),
+      role: z.string(),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+    })).mutation(({ input }) =>
+      db.addCrewMember({
+        crewId: input.crewId,
+        name: input.name,
+        role: input.role,
+        phone: input.phone,
+        email: input.email,
+      })
+    ),
+    updateMember: protectedProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      role: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+    })).mutation(({ input }) =>
+      db.updateCrewMember(input.id, {
+        name: input.name,
+        role: input.role,
+        phone: input.phone,
+        email: input.email,
+      })
+    ),
+    deleteMember: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteCrewMember(input.id);
+      return { success: true };
+    }),
   }),
 
   invoices: router({

@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -888,4 +888,40 @@ export async function createPredefinedSkill(data: InsertPredefinedSkill): Promis
   
   const created = await db.select().from(predefinedSkills).where(eq(predefinedSkills.id, skillId));
   return created[0];
+}
+
+
+// Crew Members helpers
+export async function getCrewMembers(crewId: number): Promise<CrewMember[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(crewMembers).where(eq(crewMembers.crewId, crewId));
+}
+
+export async function addCrewMember(data: InsertCrewMember): Promise<CrewMember> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(crewMembers).values(data);
+  const memberId = result[0]?.insertId;
+  if (!memberId) throw new Error("Failed to create crew member");
+  
+  const created = await db.select().from(crewMembers).where(eq(crewMembers.id, memberId));
+  return created[0];
+}
+
+export async function updateCrewMember(id: number, data: Partial<InsertCrewMember>): Promise<CrewMember> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(crewMembers).set(data).where(eq(crewMembers.id, id));
+  const updated = await db.select().from(crewMembers).where(eq(crewMembers.id, id));
+  return updated[0];
+}
+
+export async function deleteCrewMember(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(crewMembers).where(eq(crewMembers.id, id));
 }
