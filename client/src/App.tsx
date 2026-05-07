@@ -22,6 +22,7 @@ import Invoices from "@/pages/Invoices";
 import InvoiceDetail from "@/pages/InvoiceDetail";
 import InvoiceTemplates from "@/pages/InvoiceTemplates";
 import FinancialDashboard from "@/pages/FinancialDashboard";
+import CustomerDetail from "@/pages/CustomerDetail";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
       <Switch>
         <Route path={"/"} component={Home} />
         <Route path={"/customers"} component={Customers} />
+        <Route path={"/customers/:id"} component={CustomerDetail} />
         <Route path={"/projects"} component={Projects} />
         <Route path={"/projects/:id"} component={ProjectDetail} />
         <Route path={"/damages"} component={Damages} />
