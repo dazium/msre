@@ -410,4 +410,5 @@
 - [x] Crews section - Added crewMembers table and tRPC procedures for multiple members per crew
 - [x] Crew members database schema (crewMembers table)
 - [x] Crew members tRPC procedures (getMembers, addMember, updateMember, deleteMember)
+- [x] Home page error - Fixed SUM(totalCost) query to use SUM(total) column
 - [x] All 74 tests passing

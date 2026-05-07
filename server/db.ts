@@ -759,7 +759,7 @@ export async function getProjectStats(userId: number): Promise<{
 
   // Get total project value from estimates
   const estimateData = await db
-    .select({ totalValue: sql`SUM(totalCost)` })
+    .select({ totalValue: sql`SUM(total)` })
     .from(estimates)
     .where(eq(estimates.userId, userId));
 
