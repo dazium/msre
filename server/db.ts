@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -924,4 +924,44 @@ export async function deleteCrewMember(id: number): Promise<void> {
   if (!db) throw new Error("Database not available");
   
   await db.delete(crewMembers).where(eq(crewMembers.id, id));
+}
+
+
+// Crew Member Skills
+export async function getCrewMemberSkills(crewMemberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(crewMemberSkills).where(eq(crewMemberSkills.crewMemberId, crewMemberId));
+}
+
+export async function addCrewMemberSkill(data: {
+  crewMemberId: number;
+  skillName: string;
+  certificationNumber?: string;
+  expirationDate?: Date;
+  isActive: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(crewMemberSkills).values({
+    crewMemberId: data.crewMemberId,
+    skillName: data.skillName,
+    certificationNumber: data.certificationNumber || null,
+    expirationDate: data.expirationDate || null,
+    isActive: data.isActive,
+  });
+  
+  const skillId = result[0]?.insertId;
+  if (!skillId) throw new Error("Failed to create crew member skill");
+  
+  const created = await db.select().from(crewMemberSkills).where(eq(crewMemberSkills.id, skillId));
+  return created[0];
+}
+
+export async function deleteCrewMemberSkill(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(crewMemberSkills).where(eq(crewMemberSkills.id, id));
 }

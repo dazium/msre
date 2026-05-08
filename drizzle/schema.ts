@@ -444,3 +444,19 @@ export const crewMembers = mysqlTable("crewMembers", {
 
 export type CrewMember = typeof crewMembers.$inferSelect;
 export type InsertCrewMember = typeof crewMembers.$inferInsert;
+
+
+// Crew Member Skills - tracks skills and certifications for each crew member
+export const crewMemberSkills = mysqlTable("crewMemberSkills", {
+  id: int("id").autoincrement().primaryKey(),
+  crewMemberId: int("crewMemberId").notNull(),
+  skillName: varchar("skillName", { length: 100 }).notNull(),
+  certificationNumber: varchar("certificationNumber", { length: 100 }),
+  expirationDate: timestamp("expirationDate"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CrewMemberSkill = typeof crewMemberSkills.$inferSelect;
+export type InsertCrewMemberSkill = typeof crewMemberSkills.$inferInsert;

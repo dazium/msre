@@ -1,4 +1,4 @@
-# Rooftop Renovators CRM - Project TODO
+# Roofing CRM - Project TODO
 
 ## Database & Schema
 - [x] Generate Drizzle migrations from schema.ts
@@ -140,7 +140,7 @@
 - [ ] Test estimate calculations
 
 ## UI Polish & Branding
-- [ ] Apply Rooftop Renovators branding
+- [ ] Apply company branding (logo, colors, fonts)
 - [ ] Add company logo and favicon
 - [ ] Refine blueprint aesthetic throughout
 - [ ] Ensure consistent spacing and alignment
@@ -354,7 +354,7 @@
 
 ## Phase 3: Advanced Features (Future)
 
-### Google Maps Rooftop Measurements
+### Google Maps Roof Measurements
 - [ ] Integrate Google Maps satellite imagery viewer
 - [ ] Add drawing tools for roof boundary tracing
 - [ ] Calculate area and perimeter from drawn shapes
@@ -392,15 +392,17 @@
 - [x] Hard to navigate between screens - Improved routing by wrapping Router with DashboardLayout
 
 
-## Crew Skills & Certifications - PRIORITY
-- [ ] Crew skills database schema (crewSkills, certifications tables)
-- [ ] Crew skills tRPC procedures (CRUD operations)
-- [ ] Crew skills management UI (add, edit, delete skills)
-- [ ] Certification tracking (expiration dates, renewal reminders)
-- [ ] Skill levels (beginner, intermediate, expert)
-- [ ] Skill assignment to crew members
+## Crew Skills & Certifications - COMPLETE
+- [x] Crew member skills database schema (crewMemberSkills table)
+- [x] Crew member skills tRPC procedures (getSkills, addSkill, deleteSkill)
+- [x] Crew member skills management UI (CrewMemberSkills component)
+- [x] Certification tracking (expiration dates, renewal reminders)
+- [x] Certification expiration alerts (expiring soon, expired badges)
+- [x] Skill assignment to crew members
+- [x] Skills validation and testing
 - [ ] Job requirement matching (match jobs to crews with required skills)
-- [ ] Skills validation and testing
+- [ ] Skill levels (beginner, intermediate, expert)
+- [ ] Bulk skill import from CSV
 
 
 ## Critical Bugs to Fix

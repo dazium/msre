@@ -423,6 +423,28 @@ export const appRouter = router({
       await db.deleteCrewMember(input.id);
       return { success: true };
     }),
+    getSkills: protectedProcedure.input(z.object({ crewMemberId: z.number() })).query(({ input }) =>
+      db.getCrewMemberSkills(input.crewMemberId)
+    ),
+    addSkill: protectedProcedure.input(z.object({
+      crewMemberId: z.number(),
+      skillName: z.string(),
+      certificationNumber: z.string().optional(),
+      expirationDate: z.date().optional(),
+      isActive: z.boolean().default(true),
+    })).mutation(({ input }) =>
+      db.addCrewMemberSkill({
+        crewMemberId: input.crewMemberId,
+        skillName: input.skillName,
+        certificationNumber: input.certificationNumber,
+        expirationDate: input.expirationDate,
+        isActive: input.isActive,
+      })
+    ),
+    deleteSkill: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+      await db.deleteCrewMemberSkill(input.id);
+      return { success: true };
+    }),
   }),
 
   invoices: router({

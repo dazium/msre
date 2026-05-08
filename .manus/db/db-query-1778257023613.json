@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `crewMemberSkills` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`crewMemberId` int NOT NULL,\n\t`skillName` varchar(100) NOT NULL,\n\t`certificationNumber` varchar(100),\n\t`expirationDate` timestamp,\n\t`isActive` boolean NOT NULL DEFAULT true,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\t`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `crewMemberSkills_id` PRIMARY KEY (`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user JMS636gsKsiVqC4.root --database LZQinAYuepcPKJH8fWkdhz --execute CREATE TABLE `crewMemberSkills` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`crewMemberId` int NOT NULL,\n\t`skillName` varchar(100) NOT NULL,\n\t`certificationNumber` varchar(100),\n\t`expirationDate` timestamp,\n\t`isActive` boolean NOT NULL DEFAULT true,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\t`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `crewMemberSkills_id` PRIMARY KEY (`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1344
+}
