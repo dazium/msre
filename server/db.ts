@@ -1,7 +1,6 @@
-import { desc } from "drizzle-orm";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -964,4 +963,109 @@ export async function deleteCrewMemberSkill(id: number): Promise<void> {
   if (!db) throw new Error("Database not available");
   
   await db.delete(crewMemberSkills).where(eq(crewMemberSkills.id, id));
+}
+
+// Customer Notes helpers
+export async function getCustomerNotes(customerId: number, userId: number): Promise<CustomerNote[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(customerNotes)
+    .where(and(eq(customerNotes.customerId, customerId), eq(customerNotes.userId, userId)))
+    .orderBy(desc(customerNotes.createdAt));
+}
+
+export async function getCustomerNoteById(id: number, userId: number): Promise<CustomerNote | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(customerNotes)
+    .where(and(eq(customerNotes.id, id), eq(customerNotes.userId, userId)));
+  return result[0] || null;
+}
+
+export async function createCustomerNote(data: InsertCustomerNote): Promise<CustomerNote> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(customerNotes).values(data);
+  const noteId = result[0]?.insertId;
+  if (!noteId) throw new Error("Failed to create customer note");
+  
+  const created = await db.select().from(customerNotes).where(eq(customerNotes.id, noteId));
+  return created[0];
+}
+
+export async function updateCustomerNote(id: number, userId: number, data: Partial<InsertCustomerNote>): Promise<CustomerNote> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(customerNotes).set(data).where(
+    and(eq(customerNotes.id, id), eq(customerNotes.userId, userId))
+  );
+  
+  const updated = await getCustomerNoteById(id, userId);
+  if (!updated) throw new Error("Failed to retrieve updated customer note");
+  return updated;
+}
+
+export async function deleteCustomerNote(id: number, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(customerNotes).where(
+    and(eq(customerNotes.id, id), eq(customerNotes.userId, userId))
+  );
+}
+
+// Get customer lifetime value (total project value)
+export async function getCustomerLifetimeValue(customerId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({ totalValue: sql`SUM(CAST(${estimates.subtotal} AS DECIMAL(10,2)))` })
+    .from(estimates)
+    .where(eq(estimates.customerId, customerId));
+  
+  return parseFloat(result[0]?.totalValue as string) || 0;
+}
+
+// Get customer project summary
+export async function getCustomerProjectSummary(customerId: number): Promise<{
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  totalValue: number;
+}> {
+  const db = await getDb();
+  if (!db) return { totalProjects: 0, activeProjects: 0, completedProjects: 0, totalValue: 0 };
+  
+  // Get project counts by status
+  const projectData = await db
+    .select({
+      status: projects.status,
+      count: sql`COUNT(*)`,
+    })
+    .from(projects)
+    .where(eq(projects.customerId, customerId))
+    .groupBy(projects.status);
+  
+  let totalProjects = 0;
+  let activeProjects = 0;
+  let completedProjects = 0;
+  
+  for (const row of projectData) {
+    const count = (row.count as number) || 0;
+    totalProjects += count;
+    
+    if (row.status === "in_progress" || row.status === "scheduled") {
+      activeProjects += count;
+    } else if (row.status === "completed") {
+      completedProjects += count;
+    }
+  }
+  
+  // Get total value from estimates
+  const totalValue = await getCustomerLifetimeValue(customerId);
+  
+  return { totalProjects, activeProjects, completedProjects, totalValue };
 }

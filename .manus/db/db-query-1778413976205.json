@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `customerNotes` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`customerId` int NOT NULL,\n\t`noteType` enum('call','email','meeting','follow_up','general','quote_sent','contract_signed') NOT NULL DEFAULT 'general',\n\t`title` varchar(255) NOT NULL,\n\t`content` text NOT NULL,\n\t`createdBy` int NOT NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `customerNotes_id` PRIMARY KEY(`id`)\n);\nALTER TABLE `customers` ADD `companyName` varchar(255);\nALTER TABLE `customers` ADD `preferredContactMethod` enum('phone','email','text','in_person') DEFAULT 'phone';\nALTER TABLE `customers` ADD `roofType` varchar(100);\nALTER TABLE `customers` ADD `serviceHistory` text;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user JMS636gsKsiVqC4.root --database LZQinAYuepcPKJH8fWkdhz --execute CREATE TABLE `customerNotes` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`customerId` int NOT NULL,\n\t`noteType` enum('call','email','meeting','follow_up','general','quote_sent','contract_signed') NOT NULL DEFAULT 'general',\n\t`title` varchar(255) NOT NULL,\n\t`content` text NOT NULL,\n\t`createdBy` int NOT NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `customerNotes_id` PRIMARY KEY(`id`)\n);\nALTER TABLE `customers` ADD `companyName` varchar(255);\nALTER TABLE `customers` ADD `preferredContactMethod` enum('phone','email','text','in_person') DEFAULT 'phone';\nALTER TABLE `customers` ADD `roofType` varchar(100);\nALTER TABLE `customers` ADD `serviceHistory` text;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1826
+}

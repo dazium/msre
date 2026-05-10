@@ -65,10 +65,55 @@ export const appRouter = router({
       zipCode: z.string().optional(),
       status: z.enum(["lead", "contacted", "qualified", "proposal_sent", "won", "lost"]).optional(),
       notes: z.string().optional(),
+      companyName: z.string().optional(),
+      preferredContactMethod: z.enum(["phone", "email", "text", "in_person"]).optional(),
+      roofType: z.string().optional(),
     })).mutation(({ ctx, input }) => {
       const { id, ...data } = input;
       return db.updateCustomer(id, ctx.user.id, data);
     }),
+    getLifetimeValue: protectedProcedure.input(z.object({ customerId: z.number() })).query(({ input }) =>
+      db.getCustomerLifetimeValue(input.customerId)
+    ),
+    getProjectSummary: protectedProcedure.input(z.object({ customerId: z.number() })).query(({ input }) =>
+      db.getCustomerProjectSummary(input.customerId)
+    ),
+  }),
+
+  customerNotes: router({
+    list: protectedProcedure.input(z.object({ customerId: z.number() })).query(({ ctx, input }) =>
+      db.getCustomerNotes(input.customerId, ctx.user.id)
+    ),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
+      db.getCustomerNoteById(input.id, ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      customerId: z.number(),
+      noteType: z.enum(["call", "email", "meeting", "follow_up", "general", "quote_sent", "contract_signed"]),
+      title: z.string().min(1),
+      content: z.string().min(1),
+    })).mutation(({ ctx, input }) =>
+      db.createCustomerNote({
+        userId: ctx.user.id,
+        customerId: input.customerId,
+        noteType: input.noteType,
+        title: input.title,
+        content: input.content,
+        createdBy: ctx.user.id,
+      })
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      content: z.string().optional(),
+      noteType: z.enum(["call", "email", "meeting", "follow_up", "general", "quote_sent", "contract_signed"]).optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, ...data } = input;
+      return db.updateCustomerNote(id, ctx.user.id, data);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
+      db.deleteCustomerNote(input.id, ctx.user.id)
+    ),
   }),
 
   projects: router({

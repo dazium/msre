@@ -38,6 +38,11 @@ export const customers = mysqlTable("customers", {
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   status: mysqlEnum("status", ["lead", "contacted", "qualified", "proposal_sent", "won", "lost"]).default("lead").notNull(),
   notes: text("notes"),
+  // Enhanced customer profile
+  companyName: varchar("companyName", { length: 255 }),
+  preferredContactMethod: mysqlEnum("preferredContactMethod", ["phone", "email", "text", "in_person"]).default("phone"),
+  roofType: varchar("roofType", { length: 100 }), // e.g., "Asphalt Shingles", "Metal", "Flat"
+  serviceHistory: text("serviceHistory"), // JSON array of past service types
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -460,3 +465,19 @@ export const crewMemberSkills = mysqlTable("crewMemberSkills", {
 
 export type CrewMemberSkill = typeof crewMemberSkills.$inferSelect;
 export type InsertCrewMemberSkill = typeof crewMemberSkills.$inferInsert;
+
+// Customer Notes - tracks all interactions and notes for each customer
+export const customerNotes = mysqlTable("customerNotes", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  customerId: int("customerId").notNull(),
+  noteType: mysqlEnum("noteType", ["call", "email", "meeting", "follow_up", "general", "quote_sent", "contract_signed"]).default("general").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  createdBy: int("createdBy").notNull(), // User ID who created the note
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomerNote = typeof customerNotes.$inferSelect;
+export type InsertCustomerNote = typeof customerNotes.$inferInsert;
