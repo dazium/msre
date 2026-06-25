@@ -490,6 +490,18 @@ export const appRouter = router({
       await db.deleteCrewMemberSkill(input.id);
       return { success: true };
     }),
+    setCrewLead: protectedProcedure.input(z.object({
+      crewId: z.number(),
+      crewLeadId: z.number().nullable(),
+    })).mutation(({ ctx, input }) =>
+      db.updateCrew(input.crewId, ctx.user.id, { crewLeadId: input.crewLeadId })
+    ),
+    getCrewWithMembers: protectedProcedure.input(z.object({ crewId: z.number() })).query(async ({ ctx, input }) => {
+      const crew = await db.getCrewById(input.crewId, ctx.user.id);
+      if (!crew) return null;
+      const members = await db.getCrewMembers(input.crewId);
+      return { ...crew, members };
+    }),
   }),
 
   invoices: router({

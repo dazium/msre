@@ -212,6 +212,14 @@
 - [ ] Project completion checklist - Ensure all steps completed
 
 ## Scheduling & Crew - Phase 1
+- [x] Crew management page - Create, edit, delete crews
+- [x] Crew lead designation - Set crew lead for each crew
+- [x] Crew members management - Add/remove team members from crews
+- [x] Hierarchical crew display - Show crew lead with members underneath
+- [x] Crew member roles - Track roles (Lead, Roofer, Helper, Specialist)
+- [x] Crew member contact info - Phone and email for each member
+- [x] Crew member skills tracking - Skills and certifications
+- [x] Comprehensive crew tests (16 tests passing)
 - [ ] Crew availability calendar - Visual crew availability
 - [ ] Crew assignments - Assign crew to projects with roles
 - [ ] Job scheduling - Drag-and-drop scheduling interface

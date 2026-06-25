@@ -56,7 +56,8 @@ export const crews = mysqlTable("crews", {
   userId: int("userId").notNull(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
-  crewLead: varchar("crewLead", { length: 100 }),
+  crewLeadId: int("crewLeadId"), // FK to crewMembers table
+  crewLead: varchar("crewLead", { length: 100 }), // Legacy field, kept for backward compatibility
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 320 }),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
