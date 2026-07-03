@@ -15,6 +15,7 @@ export default function Projects() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [crewFilter, setCrewFilter] = useState<string>("all");
   const [formData, setFormData] = useState({
     customerId: "",
     title: "",
@@ -67,7 +68,10 @@ export default function Projects() {
   const filteredProjects = projects?.filter((p) => {
     const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesCrew = crewFilter === "all" || 
+      (crewFilter === "unassigned" && !p.crewId) || 
+      (crewFilter !== "unassigned" && p.crewId?.toString() === crewFilter);
+    return matchesSearch && matchesStatus && matchesCrew;
   });
 
   const getStatusColor = (status: string) => {
@@ -80,6 +84,11 @@ export default function Projects() {
       cancelled: "text-gray-400",
     };
     return colors[status] || "text-foreground";
+  };
+
+  const getCrewName = (crewId?: number | null) => {
+    if (!crewId) return "Unassigned";
+    return crews?.find((c) => c.id === crewId)?.name || "Unknown Crew";
   };
 
   return (
@@ -208,7 +217,7 @@ export default function Projects() {
         {/* Filters */}
         <div className="blueprint-section">
           <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="search">Search</Label>
                 <Input
@@ -231,6 +240,23 @@ export default function Projects() {
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="on_hold">On Hold</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="crew">Assigned Crew</Label>
+                <Select value={crewFilter} onValueChange={setCrewFilter}>
+                  <SelectTrigger id="crew">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Crews</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {crews?.map((crew) => (
+                      <SelectItem key={crew.id} value={crew.id.toString()}>
+                        {crew.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -264,8 +290,12 @@ export default function Projects() {
                           </span>
                         </div>
                         <p className="text-sm text-foreground/70 mt-1">{project.description}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm text-foreground/70">
-
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-2 text-sm text-foreground/70">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
+                              {getCrewName(project.crewId)}
+                            </span>
+                          </div>
                           {project.startDate && (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />

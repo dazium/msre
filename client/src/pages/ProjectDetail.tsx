@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, DollarSign, MapPin, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, MapPin, FileText, Users } from "lucide-react";
 const formatDate = (date: Date | string) => {
   const d = new Date(date);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -31,6 +31,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const { data: estimates } = trpc.estimates.list.useQuery();
   const projectEstimates = estimates?.filter(e => e.projectId === projectId);
 
+  const { data: crew } = trpc.crews.getById.useQuery(
+    { id: project?.crewId ?? 0 },
+    { enabled: !!project?.crewId }
+  );
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       lead: "bg-blue-500/10 text-blue-400 border border-blue-500/30",
@@ -41,6 +46,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       cancelled: "bg-gray-500/10 text-gray-400 border border-gray-500/30",
     };
     return colors[status] || "bg-foreground/5 text-foreground";
+  };
+
+  const getCrewWithMembers = () => {
+    if (!crew) return null;
+    return crew;
   };
 
   const getDamageColor = (severity: string) => {
@@ -145,6 +155,56 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Assigned Crew */}
+            {crew && (
+              <Card className="blueprint-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Assigned Crew
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm text-foreground/60 mb-2">Crew Name</p>
+                    <p className="text-foreground font-semibold text-lg">{crew.name}</p>
+                  </div>
+                  {crew.description && (
+                    <div>
+                      <p className="text-sm text-foreground/60 mb-2">Description</p>
+                      <p className="text-foreground/80">{crew.description}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+            {!crew && project.crewId && (
+              <Card className="blueprint-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Assigned Crew
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground/60">Crew information loading...</p>
+                </CardContent>
+              </Card>
+            )}
+            {!project.crewId && (
+              <Card className="blueprint-card border-border/50 border-dashed">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Assigned Crew
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground/60">No crew assigned to this project</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Damages */}
             {damages && damages.length > 0 && (

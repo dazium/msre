@@ -220,8 +220,12 @@
 - [x] Crew member contact info - Phone and email for each member
 - [x] Crew member skills tracking - Skills and certifications
 - [x] Comprehensive crew tests (16 tests passing)
+- [x] Crew assignments - Assign crew to projects with display on project details
+- [x] Crew assignment UI - Crew selection in project creation form
+- [x] Project detail crew display - Show assigned crew with members
+- [x] Crew filter dropdown - Filter projects by assigned crew on projects list
+- [x] Crew display on project cards - Show crew name on each project in list
 - [ ] Crew availability calendar - Visual crew availability
-- [ ] Crew assignments - Assign crew to projects with roles
 - [ ] Job scheduling - Drag-and-drop scheduling interface
 - [ ] Schedule conflict alerts - Warn on double-booking
 
