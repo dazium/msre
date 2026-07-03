@@ -22,9 +22,11 @@ export default function Projects() {
     startDate: "",
     endDate: "",
     estimatedValue: "",
+    crewId: "unassigned",
   });
 
   const { data: customers } = trpc.customers.list.useQuery();
+  const { data: crews } = trpc.crews.list.useQuery();
   const { data: projects, isLoading, refetch } = trpc.projects.list.useQuery();
   const createMutation = trpc.projects.create.useMutation();
 
@@ -53,6 +55,7 @@ export default function Projects() {
         startDate: "",
         endDate: "",
         estimatedValue: "",
+        crewId: "unassigned",
       });
       setIsOpen(false);
       refetch();
@@ -171,6 +174,23 @@ export default function Projects() {
                     />
                   </div>
 
+                  <div>
+                    <Label htmlFor="crewId">Assign Crew (Optional)</Label>
+                    <Select value={formData.crewId || "unassigned"} onValueChange={(val) => setFormData({ ...formData, crewId: val })}>
+                      <SelectTrigger id="crewId">
+                        <SelectValue placeholder="Select a crew" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">No crew assigned</SelectItem>
+                        {crews?.map((crew) => (
+                          <SelectItem key={crew.id} value={crew.id.toString()}>
+                            {crew.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="flex gap-2 justify-end">
                     <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                       Cancel
@@ -206,7 +226,6 @@ export default function Projects() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="lead">Lead</SelectItem>
                     <SelectItem value="scheduled">Scheduled</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
