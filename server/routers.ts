@@ -161,6 +161,17 @@ export const appRouter = router({
       const { id, ...data } = input;
       return db.updateProject(id, ctx.user.id, data);
     }),
+    assignCrew: protectedProcedure.input(z.object({
+      projectId: z.number(),
+      crewId: z.number(),
+    })).mutation(({ ctx, input }) =>
+      db.assignCrewToProject(input.projectId, input.crewId, ctx.user.id)
+    ),
+    removeCrew: protectedProcedure.input(z.object({
+      projectId: z.number(),
+    })).mutation(({ ctx, input }) =>
+      db.removeCrewFromProject(input.projectId, ctx.user.id)
+    ),
   }),
 
   damages: router({

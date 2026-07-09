@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Calendar, DollarSign, MapPin, FileText, Users } from "lucide-react";
 const formatDate = (date: Date | string) => {
   const d = new Date(date);
@@ -11,6 +13,7 @@ const formatDate = (date: Date | string) => {
 
 export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [, setLocation] = useLocation();
+  const [editingCrew, setEditingCrew] = useState(false);
   const projectId = parseInt(params.id);
 
   const { data: project, isLoading: projectLoading } = trpc.projects.getById.useQuery(
@@ -36,6 +39,22 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     { enabled: !!project?.crewId }
   );
 
+  const { data: crews } = trpc.crews.list.useQuery();
+
+  const assignCrewMutation = trpc.projects.assignCrew.useMutation({
+    onSuccess: () => {
+      trpc.useUtils().projects.getById.invalidate({ id: projectId });
+      trpc.useUtils().crews.getById.invalidate();
+    },
+  });
+
+  const removeCrewMutation = trpc.projects.removeCrew.useMutation({
+    onSuccess: () => {
+      trpc.useUtils().projects.getById.invalidate({ id: projectId });
+      trpc.useUtils().crews.getById.invalidate();
+    },
+  });
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       lead: "bg-blue-500/10 text-blue-400 border border-blue-500/30",
@@ -47,6 +66,29 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     };
     return colors[status] || "bg-foreground/5 text-foreground";
   };
+
+  const CrewSelector = ({ selectedCrewId, onSelect }: { selectedCrewId?: number | null; onSelect: (crewId: number) => void }) => (
+    <div className="space-y-3">
+      <Select value={selectedCrewId?.toString() || ""} onValueChange={(value) => onSelect(parseInt(value))}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select a crew..." />
+        </SelectTrigger>
+        <SelectContent>
+          {crews?.map((c) => (
+            <SelectItem key={c.id} value={c.id.toString()}>
+              {c.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button
+        className="w-full"
+        disabled={assignCrewMutation.isPending}
+      >
+        {assignCrewMutation.isPending ? "Assigning..." : "Confirm Assignment"}
+      </Button>
+    </div>
+  );
 
   const getCrewWithMembers = () => {
     if (!crew) return null;
@@ -159,22 +201,51 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
             {/* Assigned Crew */}
             {crew && (
               <Card className="blueprint-card border-border/50">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
                     Assigned Crew
                   </CardTitle>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingCrew(!editingCrew)}
+                    >
+                      {editingCrew ? "Cancel" : "Change"}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeCrewMutation.mutate({ projectId })}
+                      disabled={removeCrewMutation.isPending}
+                    >
+                      {removeCrewMutation.isPending ? "Removing..." : "Remove"}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm text-foreground/60 mb-2">Crew Name</p>
-                    <p className="text-foreground font-semibold text-lg">{crew.name}</p>
-                  </div>
-                  {crew.description && (
-                    <div>
-                      <p className="text-sm text-foreground/60 mb-2">Description</p>
-                      <p className="text-foreground/80">{crew.description}</p>
-                    </div>
+                  {!editingCrew ? (
+                    <>
+                      <div>
+                        <p className="text-sm text-foreground/60 mb-2">Crew Name</p>
+                        <p className="text-foreground font-semibold text-lg">{crew.name}</p>
+                      </div>
+                      {crew.description && (
+                        <div>
+                          <p className="text-sm text-foreground/60 mb-2">Description</p>
+                          <p className="text-foreground/80">{crew.description}</p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <CrewSelector
+                      selectedCrewId={project.crewId}
+                      onSelect={(crewId) => {
+                        assignCrewMutation.mutate({ projectId, crewId });
+                        setEditingCrew(false);
+                      }}
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -201,7 +272,26 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/60">No crew assigned to this project</p>
+                  {!editingCrew ? (
+                    <div className="flex items-center justify-between">
+                      <p className="text-foreground/60">No crew assigned to this project</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingCrew(true)}
+                      >
+                        Assign Crew
+                      </Button>
+                    </div>
+                  ) : (
+                    <CrewSelector
+                      selectedCrewId={undefined}
+                      onSelect={(crewId) => {
+                        assignCrewMutation.mutate({ projectId, crewId });
+                        setEditingCrew(false);
+                      }}
+                    />
+                  )}
                 </CardContent>
               </Card>
             )}

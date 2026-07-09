@@ -1069,3 +1069,57 @@ export async function getCustomerProjectSummary(customerId: number): Promise<{
   
   return { totalProjects, activeProjects, completedProjects, totalValue };
 }
+
+
+export async function assignCrewToProject(projectId: number, crewId: number, userId: number): Promise<any> {
+  const db = await getDb() as any;
+  if (!db) throw new Error("Database not available");
+
+  // Verify project belongs to user
+  const project = await db.query.projects.findFirst({
+    where: (p: any, { eq: eqFn, and: andFn }: any) => andFn(eqFn(p.id, projectId), eqFn(p.userId, userId)),
+  });
+
+  if (!project) {
+    throw new Error("Project not found or unauthorized");
+  }
+
+  // Verify crew exists
+  const crew = await db.query.crews.findFirst({
+    where: (c: any, { eq: eqFn }: any) => eqFn(c.id, crewId),
+  });
+
+  if (!crew) {
+    throw new Error("Crew not found");
+  }
+
+  // Update project with crew
+  await db
+    .update(projects)
+    .set({ crewId })
+    .where(eq(projects.id, projectId));
+
+  return { success: true, projectId, crewId };
+}
+
+export async function removeCrewFromProject(projectId: number, userId: number): Promise<any> {
+  const db = await getDb() as any;
+  if (!db) throw new Error("Database not available");
+
+  // Verify project belongs to user
+  const project = await db.query.projects.findFirst({
+    where: (p: any, { eq: eqFn, and: andFn }: any) => andFn(eqFn(p.id, projectId), eqFn(p.userId, userId)),
+  });
+
+  if (!project) {
+    throw new Error("Project not found or unauthorized");
+  }
+
+  // Update project to remove crew
+  await db
+    .update(projects)
+    .set({ crewId: null })
+    .where(eq(projects.id, projectId));
+
+  return { success: true, projectId };
+}
