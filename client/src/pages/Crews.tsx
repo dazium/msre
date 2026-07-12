@@ -14,9 +14,11 @@ import { Link } from "wouter";
 
 function CrewCard({ crew, onEdit, onDelete }: { crew: any; onEdit: (crew: any) => void; onDelete: (id: number) => void }) {
   const { data: members, refetch: refetchMembers } = trpc.crews.getMembers.useQuery({ crewId: crew.id });
+  const { data: projects } = trpc.crews.getProjects.useQuery({ crewId: crew.id });
   const utils = trpc.useUtils();
   const setCrewLeadMutation = trpc.crews.setCrewLead.useMutation();
   const [showMembers, setShowMembers] = useState(false);
+  const [showProjects, setShowProjects] = useState(false);
 
   const crewLead = members?.find(m => m.id === crew.crewLeadId);
   const teamMembers = members?.filter((m: any) => m.id !== crew.crewLeadId) || [];
@@ -135,6 +137,47 @@ function CrewCard({ crew, onEdit, onDelete }: { crew: any; onEdit: (crew: any) =
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Projects Section */}
+          {projects && projects.length > 0 && (
+            <div className="border-t pt-4">
+              <button
+                onClick={() => setShowProjects(!showProjects)}
+                className="flex items-center gap-2 text-sm font-semibold hover:text-primary transition-colors"
+              >
+                {showProjects ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                📋 {projects.length} Assigned Project{projects.length !== 1 ? 's' : ''}
+              </button>
+
+              {showProjects && (
+                <div className="mt-3 space-y-2">
+                  {projects.map((project: any) => (
+                    <div key={project.id} className="ml-6 p-3 bg-background rounded-lg border border-border hover:border-primary/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <Link href={`/projects/${project.id}`} asChild>
+                            <a className="font-semibold text-sm text-primary hover:underline">{project.title}</a>
+                          </Link>
+                          <p className="text-xs text-foreground/60 mt-1">{project.description}</p>
+                          <div className="flex gap-2 mt-2">
+                            <Badge variant="outline" className="text-xs">{project.status}</Badge>
+                            {project.estimatedValue && (
+                              <Badge variant="secondary" className="text-xs">${project.estimatedValue}</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {projects && projects.length === 0 && (
+            <div className="border-t pt-4">
+              <p className="text-sm text-foreground/60">📋 No projects assigned</p>
             </div>
           )}
 

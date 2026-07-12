@@ -1123,3 +1123,12 @@ export async function removeCrewFromProject(projectId: number, userId: number): 
 
   return { success: true, projectId };
 }
+
+
+export async function getProjectsByCrew(crewId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(projects)
+    .where(and(eq(projects.crewId, crewId), eq(projects.userId, userId)))
+    .orderBy(desc(projects.createdAt));
+}

@@ -507,6 +507,9 @@ export const appRouter = router({
     })).mutation(({ ctx, input }) =>
       db.updateCrew(input.crewId, ctx.user.id, { crewLeadId: input.crewLeadId })
     ),
+    getProjects: protectedProcedure.input(z.object({ crewId: z.number() })).query(({ ctx, input }) =>
+      db.getProjectsByCrew(input.crewId, ctx.user.id)
+    ),
     getCrewWithMembers: protectedProcedure.input(z.object({ crewId: z.number() })).query(async ({ ctx, input }) => {
       const crew = await db.getCrewById(input.crewId, ctx.user.id);
       if (!crew) return null;
