@@ -1132,3 +1132,12 @@ export async function getProjectsByCrew(crewId: number, userId: number) {
     .where(and(eq(projects.crewId, crewId), eq(projects.userId, userId)))
     .orderBy(desc(projects.createdAt));
 }
+
+
+export async function getInvoicesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(invoices)
+    .where(eq(invoices.userId, userId))
+    .orderBy(desc(invoices.createdAt));
+}

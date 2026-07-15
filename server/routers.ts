@@ -519,6 +519,9 @@ export const appRouter = router({
   }),
 
   invoices: router({
+    list: protectedProcedure.query(({ ctx }) =>
+      db.getInvoicesByUserId(ctx.user.id)
+    ),
     listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ input }) =>
       db.getInvoicesByProject(input.projectId)
     ),
