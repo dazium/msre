@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,8 +94,7 @@ export default function Damages() {
   const selectedProjectData = projects?.find((p) => p.id === parseInt(selectedProject));
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="blueprint-section">
           <div className="blueprint-header flex items-center justify-between">
@@ -108,7 +106,7 @@ export default function Damages() {
                   Record Damage
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-full sm:max-w-2xl w-[95vw] sm:w-auto max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Record Roof Damage</DialogTitle>
                 </DialogHeader>
@@ -317,7 +315,6 @@ export default function Damages() {
             )}
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

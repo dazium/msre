@@ -9,7 +9,7 @@
 - [x] Design and implement blueprint aesthetic with CSS (deep royal blue, grid pattern, white CAD-style lines)
 - [x] Set up global theming and color variables
 - [x] Create DashboardLayout component with sidebar navigation
-- [ ] Implement responsive mobile navigation
+- [x] Implement responsive mobile navigation (sidebar trigger, back/forward buttons)
 - [x] Add Google Fonts for bold sans-serif typography
 - [x] Create reusable card and section components with blueprint styling
 - [x] Set up loading states and error boundaries
@@ -125,9 +125,20 @@
 - [ ] Implement search result highlighting
 
 ## Mobile Responsiveness
-- [ ] Test all pages on mobile devices
-- [ ] Optimize touch interactions for mobile
-- [ ] Implement mobile-friendly forms
+- [x] Remove duplicate DashboardLayout wrappers from all pages
+- [x] Make Estimates form responsive (dialog width, line items stack vertically)
+- [x] Make Projects form responsive (dialog width, fields stack)
+- [x] Make Customers form responsive (dialog width, grids collapse)
+- [x] Make Invoices form responsive (dialog width, grids collapse)
+- [x] Make Damages form responsive (dialog width)
+- [ ] Test all pages on mobile devices (viewport 375px, 768px, 1024px)
+- [ ] Optimize touch interactions for mobile (larger tap targets, spacing)
+- [ ] Make Crews page responsive
+- [ ] Make CustomerDetail page responsive
+- [ ] Make Calendar view responsive
+- [ ] Make Maps view responsive
+- [ ] Make Photos gallery responsive
+- [ ] Make ProjectDetail page responsive
 - [ ] Create mobile-optimized photo upload
 - [ ] Build mobile calendar view
 - [ ] Test map functionality on mobile

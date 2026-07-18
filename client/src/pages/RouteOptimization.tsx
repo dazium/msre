@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -170,8 +169,7 @@ export default function RouteOptimization() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-8">
+    <div className="space-y-6 p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Route Optimization</h1>
           <Button onClick={() => setLocation("/calendar")} variant="outline">
@@ -324,7 +322,6 @@ export default function RouteOptimization() {
             </Card>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

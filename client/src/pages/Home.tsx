@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { BarChart3, Calendar, FileText, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +18,7 @@ export default function Home() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-8">
         {/* Welcome Section */}
         <div className="blueprint-section">
@@ -186,18 +185,16 @@ export default function Home() {
           </div>
         </div>
       </div>
-
       <CustomerDetailModal
         customerId={selectedCustomerId}
         isOpen={selectedCustomerId !== null}
         onClose={() => setSelectedCustomerId(null)}
       />
-
       <AddressMapModal
         address={selectedAddress}
         isOpen={mapOpen}
         onClose={() => setMapOpen(false)}
       />
-    </DashboardLayout>
+    </>
   );
 }

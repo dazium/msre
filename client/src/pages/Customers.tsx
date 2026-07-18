@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -91,8 +91,8 @@ export default function Customers() {
   });
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <>
+    <div className="space-y-6">
         {/* Header */}
         <div className="blueprint-section">
           <div className="blueprint-header flex items-center justify-between">
@@ -104,12 +104,12 @@ export default function Customers() {
                   Add Customer
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-full sm:max-w-2xl w-[95vw] sm:w-auto max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add New Customer</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="firstName">First Name *</Label>
                       <Input
@@ -130,7 +130,7 @@ export default function Customers() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="phone">Phone *</Label>
                       <Input
@@ -171,7 +171,7 @@ export default function Customers() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="city">City</Label>
                       <Input
@@ -324,12 +324,11 @@ export default function Customers() {
           </div>
         </div>
       </div>
-
-      <AddressMapModal
-        address={selectedAddress}
-        isOpen={mapOpen}
-        onClose={() => setMapOpen(false)}
-      />
-    </DashboardLayout>
+    <AddressMapModal
+      address={selectedAddress}
+      isOpen={mapOpen}
+      onClose={() => setMapOpen(false)}
+    />
+    </>
   );
 }

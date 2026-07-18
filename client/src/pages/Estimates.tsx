@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+
 import { generateEstimatePDF } from "@/lib/pdf-export";
 import RoofSpecifications from "@/components/RoofSpecifications";
 import { RoofMeasurementTool } from "@/components/RoofMeasurementTool";
@@ -171,8 +171,7 @@ export default function Estimates() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Estimates</h1>
           <Button onClick={() => setShowDialog(true)} className="gap-2">
@@ -230,14 +229,14 @@ export default function Estimates() {
 
         {/* Create Estimate Dialog */}
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-auto">
             <DialogHeader>
               <DialogTitle>Create New Estimate</DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleCreateEstimate} className="space-y-6">
               {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="estimateNumber">Estimate Number</Label>
                   <Input
@@ -331,8 +330,8 @@ export default function Estimates() {
                 ) : (
                   <div className="space-y-3">
                     {lineItems.map((item, index) => (
-                      <div key={index} className="flex gap-3 items-end p-3 border border-border/50 rounded-lg">
-                        <div className="flex-1">
+                      <div key={index} className="grid grid-cols-1 sm:grid-cols-2 md:flex md:gap-3 md:items-end gap-3 p-3 border border-border/50 rounded-lg">
+                        <div className="col-span-1 sm:col-span-2 md:flex-1">
                           <Label className="text-xs">Material</Label>
                           <Select
                             value={item.materialId?.toString() || ""}
@@ -351,7 +350,7 @@ export default function Estimates() {
                           </Select>
                         </div>
 
-                        <div className="w-20">
+                        <div className="md:w-20">
                           <Label className="text-xs">Qty</Label>
                           <Input
                             type="number"
@@ -362,7 +361,7 @@ export default function Estimates() {
                           />
                         </div>
 
-                        <div className="w-24">
+                        <div className="md:w-24">
                           <Label className="text-xs">Unit Price</Label>
                           <Input
                             type="number"
@@ -373,7 +372,7 @@ export default function Estimates() {
                           />
                         </div>
 
-                        <div className="w-24">
+                        <div className="md:w-24">
                           <Label className="text-xs">Total</Label>
                           <div className="p-2 bg-muted rounded text-sm font-semibold">
                             ${calculateLineItemTotal(item)}
@@ -385,6 +384,7 @@ export default function Estimates() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleRemoveLineItem(index)}
+                          className="md:self-end"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -454,7 +454,6 @@ export default function Estimates() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }
