@@ -277,10 +277,10 @@ export default function Crews() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Crews</h1>
-          <p className="text-foreground/60">Manage your roofing crews and team members</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold">Crews</h1>
+          <p className="text-foreground/60 text-sm">Manage your roofing crews and team members</p>
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
@@ -289,7 +289,7 @@ export default function Crews() {
               Add Crew
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-full sm:max-w-2xl w-[95vw] sm:w-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingId ? "Edit Crew" : "Add New Crew"}</DialogTitle>
               <DialogDescription>
@@ -356,11 +356,11 @@ export default function Crews() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className="w-full sm:w-auto">
                   {editingId ? "Update Crew" : "Create Crew"}
                 </Button>
               </div>

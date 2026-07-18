@@ -131,22 +131,29 @@
 - [x] Make Customers form responsive (dialog width, grids collapse)
 - [x] Make Invoices form responsive (dialog width, grids collapse)
 - [x] Make Damages form responsive (dialog width)
+- [x] Make Crews page responsive (dialog width, buttons stack)
+- [x] Make Calendar view responsive (dialog width, time grid collapses)
+- [x] Make Photos page responsive (header stacks, text responsive)
+- [x] Make ProjectDetail page responsive (removed duplicate DashboardLayout, header stacks)
+- [x] Make CustomerDetail modal responsive (dialog width, header stacks)
 - [ ] Test all pages on mobile devices (viewport 375px, 768px, 1024px)
 - [ ] Optimize touch interactions for mobile (larger tap targets, spacing)
-- [ ] Make Crews page responsive
-- [ ] Make CustomerDetail page responsive
-- [ ] Make Calendar view responsive
 - [ ] Make Maps view responsive
-- [ ] Make Photos gallery responsive
-- [ ] Make ProjectDetail page responsive
+- [ ] Make PhotoGallery component responsive
 - [ ] Create mobile-optimized photo upload
 - [ ] Build mobile calendar view
 - [ ] Test map functionality on mobile
 - [ ] Ensure fast loading on mobile networks
+- [ ] Verify all buttons have adequate touch targets (min 44px)
+- [ ] Test form input focus states on mobile
+- [ ] Verify dialog scrolling works smoothly on mobile
 
 ## Testing & Quality
 - [x] Write vitest tests for database queries
 - [x] Create tests for tRPC procedures
+- [x] All 100 tests passing
+- [x] No TypeScript errors
+- [x] Dev server running smoothly
 - [x] Test customer management workflows
 - [x] Test project tracking workflows
 - [x] Test damage assessment workflows

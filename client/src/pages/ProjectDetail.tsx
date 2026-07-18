@@ -106,27 +106,22 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   if (projectLoading || customerLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <p className="text-foreground/60">Loading project details...</p>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-foreground/60">Loading project details...</p>
+      </div>
     );
   }
 
   if (!project) {
     return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-          <p className="text-foreground/60">Project not found</p>
-          <Button onClick={() => setLocation("/projects")}>Back to Projects</Button>
-        </div>
-      </DashboardLayout>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-foreground/60">Project not found</p>
+        <Button onClick={() => setLocation("/projects")}>Back to Projects</Button>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
       <div className="space-y-6">
         {/* Header with back button */}
         <div className="flex items-center gap-4">
@@ -143,9 +138,9 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
         {/* Project Title and Status */}
         <div className="blueprint-section">
-          <div className="blueprint-header p-6 flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
+          <div className="blueprint-header p-6 flex flex-col sm:flex-row items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{project.title}</h1>
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(project.status)}`}>
                 {project.status.replace("_", " ").toUpperCase()}
               </span>
@@ -438,6 +433,5 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   );
 }

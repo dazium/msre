@@ -116,18 +116,18 @@ export default function Photos() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setLocation("/projects")}
-          className="h-8 w-8"
+          className="h-8 w-8 flex-shrink-0"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Project Photos</h1>
-          <p className="text-muted-foreground">Project ID: {projectId}</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold break-words">Project Photos</h1>
+          <p className="text-muted-foreground text-sm">Project ID: {projectId}</p>
         </div>
       </div>
 

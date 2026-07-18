@@ -50,11 +50,11 @@ export function CustomerDetailModal({ customerId, isOpen, onClose }: CustomerDet
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-full sm:max-w-2xl w-[95vw] sm:w-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>{customer.firstName} {customer.lastName}</span>
-              <Button variant="ghost" size="sm" onClick={onClose}>
+            <DialogTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className="break-words">{customer.firstName} {customer.lastName}</span>
+              <Button variant="ghost" size="sm" onClick={onClose} className="flex-shrink-0">
                 <X className="h-4 w-4" />
               </Button>
             </DialogTitle>

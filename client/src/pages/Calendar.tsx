@@ -106,9 +106,9 @@ export default function Calendar() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Calendar & Scheduling</h1>
-        <Button onClick={() => { setSelectedDate(new Date()); setShowDialog(true); }} className="gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold">Calendar & Scheduling</h1>
+        <Button onClick={() => { setSelectedDate(new Date()); setShowDialog(true); }} className="gap-2 w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           New Appointment
         </Button>
@@ -116,8 +116,8 @@ export default function Calendar() {
 
       <Card className="border-border/50 bg-background/50 backdrop-blur">
         <CardHeader className="border-b border-border/50">
-          <div className="flex items-center justify-between">
-            <CardTitle>{monthName}</CardTitle>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <CardTitle className="text-lg sm:text-xl">{monthName}</CardTitle>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handlePrevMonth}>
                 <ChevronLeft className="h-4 w-4" />
@@ -129,59 +129,61 @@ export default function Calendar() {
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {/* Day headers */}
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="p-2 text-center font-semibold text-sm text-muted-foreground">
-                {day}
-              </div>
-            ))}
-
-            {/* Empty days */}
-            {emptyDays.map((i) => (
-              <div key={`empty-${i}`} className="p-2 bg-muted/30 rounded" />
-            ))}
-
-            {/* Calendar days */}
-            {days.map((day) => {
-              const dayAppointments = getAppointmentsForDate(day);
-              const isToday =
-                new Date().toDateString() ===
-                new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
-
-              return (
-                <div
-                  key={day}
-                  onClick={() => {
-                    setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
-                    setShowDialog(true);
-                  }}
-                  className={`p-2 rounded border cursor-pointer transition-colors ${
-                    isToday
-                      ? "border-primary bg-primary/10"
-                      : "border-border/50 hover:bg-muted/50"
-                  }`}
-                >
-                  <div className="font-semibold text-sm mb-1">{day}</div>
-                  <div className="space-y-1">
-                    {dayAppointments.slice(0, 2).map((apt) => (
-                      <div
-                        key={apt.id}
-                        className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-1 py-0.5 rounded truncate"
-                      >
-                        {apt.title}
-                      </div>
-                    ))}
-                    {dayAppointments.length > 2 && (
-                      <div className="text-xs text-muted-foreground">
-                        +{dayAppointments.length - 2} more
-                      </div>
-                    )}
-                  </div>
+          {/* Calendar grid - responsive with horizontal scroll on mobile */}
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-7 gap-1 min-w-full">
+              {/* Day headers */}
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="p-2 text-center font-semibold text-sm text-muted-foreground">
+                  {day}
                 </div>
-              );
-            })}
+              ))}
+
+              {/* Empty days */}
+              {emptyDays.map((i) => (
+                <div key={`empty-${i}`} className="p-2 bg-muted/30 rounded" />
+              ))}
+
+              {/* Calendar days */}
+              {days.map((day) => {
+                const dayAppointments = getAppointmentsForDate(day);
+                const isToday =
+                  new Date().toDateString() ===
+                  new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
+
+                return (
+                  <div
+                    key={day}
+                    onClick={() => {
+                      setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
+                      setShowDialog(true);
+                    }}
+                    className={`p-2 rounded border cursor-pointer transition-colors ${
+                      isToday
+                        ? "border-primary bg-primary/10"
+                        : "border-border/50 hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="font-semibold text-sm mb-1">{day}</div>
+                    <div className="space-y-1">
+                      {dayAppointments.slice(0, 2).map((apt) => (
+                        <div
+                          key={apt.id}
+                          className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-1 py-0.5 rounded truncate"
+                        >
+                          {apt.title}
+                        </div>
+                      ))}
+                      {dayAppointments.length > 2 && (
+                        <div className="text-xs text-muted-foreground">
+                          +{dayAppointments.length - 2} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -247,7 +249,7 @@ export default function Calendar() {
 
       {/* Create appointment dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-full sm:max-w-md w-[95vw] sm:w-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Appointment</DialogTitle>
           </DialogHeader>
@@ -284,7 +286,7 @@ export default function Calendar() {
               <Input id="location" name="location" placeholder="Address or job site" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="startHour">Start Time (Hour)</Label>
                 <Select name="startHour" defaultValue="9">
@@ -322,12 +324,12 @@ export default function Calendar() {
               <Textarea id="notes" name="notes" placeholder="Additional notes..." />
             </div>
 
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1">
-                Create Appointment
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="w-full sm:w-auto">
                 Cancel
+              </Button>
+              <Button type="submit" className="w-full sm:flex-1">
+                Create Appointment
               </Button>
             </div>
           </form>
