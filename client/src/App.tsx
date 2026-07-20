@@ -24,6 +24,7 @@ import InvoiceTemplates from "@/pages/InvoiceTemplates";
 import FinancialDashboard from "@/pages/FinancialDashboard";
 import CustomerDetail from "@/pages/CustomerDetail";
 import CrewDetail from "@/pages/CrewDetail";
+import EstimateDetail from "@/pages/EstimateDetail";
 
 function Router() {
   return (
@@ -37,6 +38,7 @@ function Router() {
         <Route path={"/damages"} component={Damages} />
         <Route path={"/photos/:projectId"} component={Photos} />
         <Route path={"/estimates"} component={Estimates} />
+        <Route path={"/estimates/:id"} component={EstimateDetail} />
         <Route path={"/calendar"} component={Calendar} />
         <Route path={"/maps"} component={Maps} />
         <Route path={"/route-optimization"} component={RouteOptimization} />
