@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
+import { FormError } from "@/components/FormError";
+import { FormField } from "@/components/FormField";
+import { validateField, validators, errorsToMap, type ValidationError } from "@/lib/validation";
 
 import { generateEstimatePDF } from "@/lib/pdf-export";
 import RoofSpecifications from "@/components/RoofSpecifications";
@@ -27,6 +30,11 @@ export default function Estimates() {
   const [roofSpecs, setRoofSpecs] = useState<RoofSpecs | null>(null);
   const [roofCalcs, setRoofCalcs] = useState<RoofCalculations | null>(null);
   const [showMeasurementTool, setShowMeasurementTool] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [estimateNumber, setEstimateNumber] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   const { data: estimatesData, isLoading } = trpc.estimates.list.useQuery();
   const { data: projectsData } = trpc.projects.list.useQuery();
@@ -125,44 +133,70 @@ export default function Estimates() {
 
   const handleCreateEstimate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormErrors({});
 
-    if (!selectedProject || lineItems.length === 0) {
-      toast.error("Please select a project and add line items");
+    const errors: ValidationError[] = [];
+
+    if (!selectedProject) {
+      errors.push({ field: "project", message: "Please select a project" });
+    }
+
+    const estimateNumberError = validateField(estimateNumber, [
+      validators.required("Estimate Number"),
+    ]);
+    if (estimateNumberError) {
+      errors.push({ field: "estimateNumber", message: estimateNumberError });
+    }
+
+    const titleError = validateField(title, [
+      validators.required("Title"),
+      validators.minLength("Title", 3),
+    ]);
+    if (titleError) {
+      errors.push({ field: "title", message: titleError });
+    }
+
+    if (lineItems.length === 0) {
+      errors.push({ field: "lineItems", message: "Please add at least one line item" });
+    }
+
+    if (errors.length > 0) {
+      setFormErrors(errorsToMap(errors));
+      toast.error(`Please fix ${errors.length} validation error(s)`);
       return;
     }
 
-    const formData = new FormData(e.currentTarget);
-    const subtotal = calculateSubtotal();
-    const total = calculateTotal();
-
+    setIsSubmitting(true);
     try {
       const selectedProjectData = projectsData?.find(p => p.id === selectedProject);
+      const subtotal = calculateSubtotal();
+      const total = calculateTotal();
+
       const estimate = await createMutation.mutateAsync({
-        projectId: selectedProject,
+        projectId: selectedProject as number,
         customerId: selectedProjectData?.customerId || 0,
-        estimateNumber: formData.get("estimateNumber") as string,
-        title: formData.get("title") as string || "Estimate",
-        description: formData.get("description") as string,
+        estimateNumber: estimateNumber,
+        title: title || "Estimate",
+        description: description,
         subtotal: subtotal,
         total: total,
         status: "draft",
       });
 
-      // Create line items for the estimate
-      // Note: The estimate ID will be available after mutation completes
-      // For now, we'll refetch the estimates to get the new ID
-      // In a production app, you'd want the mutation to return the created estimate ID
-
       toast.success("Estimate created successfully");
       setShowDialog(false);
       setLineItems([]);
       setSelectedProject(null);
+      setFormErrors({});
+      setEstimateNumber("");
+      setTitle("");
+      setDescription("");
       (e.target as HTMLFormElement).reset();
-      // Refetch estimates to show the new one
-      // This will be handled by the mutation's onSuccess callback
     } catch (error) {
       console.error(error);
       toast.error("Failed to create estimate");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -238,18 +272,20 @@ export default function Estimates() {
               {/* Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="estimateNumber">Estimate Number</Label>
-                  <Input
-                    id="estimateNumber"
+                  <FormField
+                    label="Estimate Number"
                     name="estimateNumber"
                     placeholder="EST-001"
+                    value={estimateNumber}
+                    onChange={(v) => setEstimateNumber(v.toString())}
+                    error={formErrors.estimateNumber}
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="project">Project</Label>
+                  <Label htmlFor="project">Project *</Label>
                   <Select value={selectedProject?.toString() || ""} onValueChange={(v) => setSelectedProject(parseInt(v))}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.project ? "border-red-500" : ""}>
                       <SelectValue placeholder="Select a project" />
                     </SelectTrigger>
                     <SelectContent>
@@ -260,15 +296,18 @@ export default function Estimates() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.project && <FormError message={formErrors.project} />}
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="title">Estimate Title</Label>
-                <Input
-                  id="title"
+                <FormField
+                  label="Estimate Title"
                   name="title"
                   placeholder="e.g., Roof Replacement - Main Street"
+                  value={title}
+                  onChange={(v) => setTitle(v.toString())}
+                  error={formErrors.title}
                   required
                 />
               </div>
@@ -280,6 +319,8 @@ export default function Estimates() {
                   name="description"
                   placeholder="Add any additional details about this estimate"
                   rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
 
