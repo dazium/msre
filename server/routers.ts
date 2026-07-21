@@ -327,6 +327,28 @@ export const appRouter = router({
         status: input.status,
       });
     }),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
+      db.getEstimateById(input.id, ctx.user.id)
+    ),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      subtotal: z.string().optional(),
+      total: z.string().optional(),
+    })).mutation(({ input }) => {
+      const { id, ...data } = input;
+      return db.updateEstimate(id, data);
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ input }) =>
+      db.deleteEstimate(input.id)
+    ),
+    updateStatus: protectedProcedure.input(z.object({
+      id: z.number(),
+      status: z.enum(["draft", "sent", "accepted", "rejected"]),
+    })).mutation(({ input }) =>
+      db.updateEstimateStatus(input.id, input.status)
+    ),
   }),
 
   estimateLineItems: router({

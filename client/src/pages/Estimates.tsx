@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
+import { FormError } from "@/components/FormError";
+import { validateField, validators, errorsToMap, type ValidationError } from "@/lib/validation";
 
 import { generateEstimatePDF } from "@/lib/pdf-export";
 import RoofSpecifications from "@/components/RoofSpecifications";
@@ -27,6 +29,8 @@ export default function Estimates() {
   const [roofSpecs, setRoofSpecs] = useState<RoofSpecs | null>(null);
   const [roofCalcs, setRoofCalcs] = useState<RoofCalculations | null>(null);
   const [showMeasurementTool, setShowMeasurementTool] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: estimatesData, isLoading } = trpc.estimates.list.useQuery();
   const { data: projectsData } = trpc.projects.list.useQuery();
