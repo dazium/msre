@@ -11,6 +11,9 @@ export default function Home() {
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const { data: customers } = trpc.customers.list.useQuery();
+  const { data: projects } = trpc.projects.list.useQuery();
+  const { data: estimates } = trpc.estimates.list.useQuery();
+  const { data: appointments } = trpc.appointments.list.useQuery();
 
   const handleAddressClick = (address: string) => {
     setSelectedAddress(address);
@@ -39,7 +42,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Total Customers</p>
-                <p className="blueprint-value">0</p>
+                <p className="blueprint-value">{customers?.length || 0}</p>
               </div>
               <Users className="w-12 h-12 text-primary/20" />
             </div>
@@ -49,7 +52,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Active Projects</p>
-                <p className="blueprint-value">0</p>
+                <p className="blueprint-value">{projects?.filter(p => p.status !== 'completed').length || 0}</p>
               </div>
               <BarChart3 className="w-12 h-12 text-primary/20" />
             </div>
@@ -59,7 +62,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Pending Estimates</p>
-                <p className="blueprint-value">0</p>
+                <p className="blueprint-value">{estimates?.filter(e => e.status === 'draft').length || 0}</p>
               </div>
               <FileText className="w-12 h-12 text-primary/20" />
             </div>
@@ -117,9 +120,20 @@ export default function Home() {
               </h2>
             </div>
             <div className="p-6">
-              <p className="text-foreground/60 text-center py-8">
-                No appointments scheduled. Check your calendar to add one.
-              </p>
+              {appointments && appointments.length > 0 ? (
+                <div className="space-y-2">
+                  {appointments.slice(0, 5).map((apt) => (
+                    <div key={apt.id} className="p-3 bg-background/50 rounded border border-border">
+                      <p className="font-semibold text-foreground">{apt.title}</p>
+                      <p className="text-xs text-foreground/60 mt-1">{new Date(apt.startTime).toLocaleDateString()}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-foreground/60 text-center py-8">
+                  No appointments scheduled. Check your calendar to add one.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -133,9 +147,20 @@ export default function Home() {
             </h2>
           </div>
           <div className="p-6">
-            <p className="text-foreground/60 text-center py-8">
-              No active projects. Create a new project to get started.
-            </p>
+            {projects && projects.filter(p => p.status !== 'completed').length > 0 ? (
+              <div className="space-y-2">
+                {projects.filter(p => p.status !== 'completed').slice(0, 5).map((proj) => (
+                  <div key={proj.id} className="p-3 bg-background/50 rounded border border-border">
+                    <p className="font-semibold text-foreground">{proj.title}</p>
+                    <p className="text-xs text-foreground/60 mt-1">Status: {proj.status}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-foreground/60 text-center py-8">
+                No active projects. Create a new project to get started.
+              </p>
+            )}
           </div>
         </div>
 
