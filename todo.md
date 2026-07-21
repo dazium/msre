@@ -449,3 +449,14 @@
 - [x] Crew members tRPC procedures (getMembers, addMember, updateMember, deleteMember)
 - [x] Home page error - Fixed SUM(totalCost) query to use SUM(total) column
 - [x] All 74 tests passing
+
+## Phase 4: Form Validation & Error Handling (COMPLETED)
+- [x] Create validation utility library with common validators
+- [x] Create FormError component for displaying errors
+- [x] Create FormField component with built-in validation
+- [x] Create validation test suite
+- [x] Apply validation to Estimates form (estimate number, title, project, line items)
+- [x] Add visual error indicators (red borders, error messages)
+- [x] Add loading states during form submission
+- [ ] Apply validation to remaining forms (Projects, Customers, Invoices, Damages, Crews)
+- [ ] Test all form validations end-to-end
