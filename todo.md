@@ -91,11 +91,11 @@
 - [ ] Add map filtering by appointment type and status
 
 ## Dashboard
-- [ ] Create dashboard overview page
-- [ ] Display active projects widget
-- [ ] Show recent leads widget
-- [ ] Add upcoming appointments widget
-- [ ] Create quick stats (total customers, active projects, revenue)
+- [x] Create dashboard overview page
+- [x] Display active projects widget
+- [x] Show recent leads widget
+- [x] Add upcoming appointments widget
+- [x] Create quick stats (total customers, active projects, revenue)
 - [ ] Build activity feed showing recent changes
 - [ ] Add key metrics and KPIs display
 
