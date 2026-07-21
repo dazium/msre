@@ -377,6 +377,7 @@ export const appRouter = router({
     ),
     update: protectedProcedure.input(z.object({
       id: z.number(),
+      description: z.string().optional(),
       quantity: z.string().optional(),
       unitPrice: z.string().optional(),
       total: z.string().optional(),

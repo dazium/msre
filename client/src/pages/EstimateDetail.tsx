@@ -104,6 +104,7 @@ export default function EstimateDetail() {
       try {
         await updateLineItemMutation.mutateAsync({
           id: itemId,
+          description: item.description,
           quantity: item.quantity.toString(),
           unitPrice: item.unitPrice.toString(),
           total: (item.quantity * item.unitPrice).toFixed(2),

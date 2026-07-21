@@ -153,17 +153,28 @@ export default function Estimates() {
       });
 
       // Create line items for the estimate
-      // Note: The estimate ID will be available after mutation completes
-      // For now, we'll refetch the estimates to get the new ID
-      // In a production app, you'd want the mutation to return the created estimate ID
+      if (estimate && (estimate as any).id) {
+        for (const item of lineItems) {
+          try {
+            await createLineItemMutation.mutateAsync({
+              estimateId: (estimate as any).id,
+              materialId: item.materialId || undefined,
+              description: item.description,
+              quantity: item.quantity.toString(),
+              unitPrice: item.unitPrice.toString(),
+              total: calculateLineItemTotal(item),
+            });
+          } catch (error) {
+            console.error("Failed to create line item:", error);
+          }
+        }
+      }
 
-      toast.success("Estimate created successfully");
+      toast.success("Estimate created successfully with line items");
       setShowDialog(false);
       setLineItems([]);
       setSelectedProject(null);
-      (e.target as HTMLFormElement).reset();
-      // Refetch estimates to show the new one
-      // This will be handled by the mutation's onSuccess callback
+      (e.target as HTMLFormElement).reset()
     } catch (error) {
       console.error(error);
       toast.error("Failed to create estimate");

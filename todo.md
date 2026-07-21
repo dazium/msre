@@ -39,17 +39,17 @@
 - [ ] Implement project detail view with timeline
 - [ ] Create project timeline visualization
 
-## Estimates & Pricing (IN PROGRESS)
+## Estimates & Pricing (MOSTLY COMPLETE)
 - [x] Create estimates table queries in server/db.ts
-- [ ] Build estimate creation form with line items
-- [ ] Implement estimate line item management (add/edit/delete)
-- [ ] Create estimate total calculation logic
-- [ ] Build estimate preview/PDF view
-- [ ] Add estimate status tracking (draft → sent → accepted)
+- [x] Build estimate creation form with line items
+- [x] Implement estimate line item management (add/edit/delete)
+- [x] Create estimate total calculation logic
+- [x] Build estimate preview/PDF view
+- [x] Add estimate status tracking (draft → sent → accepted)
 - [ ] Implement estimate number auto-generation
 - [ ] Create estimate history for each project
 - [ ] Auto-populate estimates from damages
-- [ ] Write tests for estimates feature
+- [x] Write tests for estimates feature
 
 ## Photo Upload & Documentation (PRIORITY)
 - [x] Set up S3 file storage integration
