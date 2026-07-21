@@ -179,18 +179,6 @@ export async function listEstimates() {
 
 // Appointment queries
 
-export async function updateEstimate(id: number, data: Partial<InsertEstimate>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const result = await db
-    .update(estimates)
-    .set(data)
-    .where(eq(estimates.id, id));
-  
-  return result;
-}
-
 export async function deleteEstimate(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -411,21 +399,6 @@ export async function updateEstimate(id: number, data: Partial<InsertEstimate>) 
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.update(estimates).set(data).where(eq(estimates.id, id));
-}
-
-export async function deleteEstimate(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  // Delete line items first
-  await db.delete(estimateLineItems).where(eq(estimateLineItems.estimateId, id));
-  // Then delete the estimate
-  return db.delete(estimates).where(eq(estimates.id, id));
-}
-
-export async function updateEstimateStatus(id: number, status: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  return db.update(estimates).set({ status: status as any }).where(eq(estimates.id, id));
 }
 
 // Crew queries
