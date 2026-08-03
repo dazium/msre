@@ -39,7 +39,7 @@ export default function Projects() {
     }
 
     try {
-      await createMutation.mutateAsync({
+      const project = await createMutation.mutateAsync({
         customerId: parseInt(formData.customerId),
         title: formData.title,
         description: formData.description,
@@ -48,7 +48,7 @@ export default function Projects() {
         endDate: formData.endDate ? new Date(formData.endDate) : undefined,
         estimatedValue: formData.estimatedValue,
       });
-      toast.success("Project created successfully");
+      toast.success("Project created! Redirecting to details...");
       setFormData({
         customerId: "",
         title: "",
@@ -59,7 +59,12 @@ export default function Projects() {
         crewId: "unassigned",
       });
       setIsOpen(false);
-      refetch();
+      // Redirect to project detail page
+      if (project && 'id' in project) {
+        setLocation(`/projects/${project.id}`);
+      } else {
+        refetch();
+      }
     } catch (error) {
       toast.error("Failed to create project");
     }

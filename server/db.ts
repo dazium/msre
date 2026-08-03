@@ -1,4 +1,4 @@
-import { and, eq, sql, desc } from "drizzle-orm";
+import { and, eq, like, gte, lte, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -138,7 +138,13 @@ export async function getProjectById(id: number, userId: number) {
 export async function createProject(data: InsertProject) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(projects).values(data);
+  const result = await db.insert(projects).values(data);
+  // Return the inserted project by fetching it
+  const inserted = await db.select().from(projects)
+    .where(and(eq(projects.userId, data.userId), eq(projects.title, data.title)))
+    .orderBy(desc(projects.id))
+    .limit(1);
+  return inserted[0];
 }
 
 export async function updateProject(id: number, userId: number, data: Partial<InsertProject>) {
