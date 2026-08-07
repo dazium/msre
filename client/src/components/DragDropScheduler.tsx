@@ -13,8 +13,6 @@ import { toast } from "sonner";
 interface ScheduleSlot {
   id: string;
   time: string;
-  crew?: { id: number; name: string };
-  appointment?: { id: number; title: string };
 }
 
 export default function DragDropScheduler() {
@@ -22,10 +20,12 @@ export default function DragDropScheduler() {
   const [draggedJob, setDraggedJob] = useState<any>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
-  const [newJob, setNewJob] = useState({ title: "", crewId: "", startTime: "" });
+  const [newJob, setNewJob] = useState({ title: "", customerId: "", startTime: "" });
+  const [conflicts, setConflicts] = useState<any[]>([]);
 
-  const { data: appointments } = trpc.appointments.list.useQuery();
-  const { data: crews } = trpc.crews.list.useQuery();
+  const { data: appointments, refetch: refetchAppointments } = trpc.appointments.list.useQuery();
+  const { data: customers } = trpc.customers.list.useQuery();
+  const createAppointmentMutation = trpc.appointments.create.useMutation();
   const updateAppointmentMutation = trpc.appointments.update.useMutation();
 
   // Generate time slots for the day (8 AM to 6 PM, 1-hour slots)
@@ -39,6 +39,27 @@ export default function DragDropScheduler() {
     const aptDate = new Date(apt.startTime).toISOString().split('T')[0];
     return aptDate === selectedDate;
   }) || [];
+
+  // Detect time overlaps
+  useEffect(() => {
+    const foundConflicts = [];
+    for (let i = 0; i < dayAppointments.length; i++) {
+      for (let j = i + 1; j < dayAppointments.length; j++) {
+        const apt1 = dayAppointments[i];
+        const apt2 = dayAppointments[j];
+        const start1 = new Date(apt1.startTime).getTime();
+        const end1 = new Date(apt1.endTime || apt1.startTime).getTime();
+        const start2 = new Date(apt2.startTime).getTime();
+        const end2 = new Date(apt2.endTime || apt2.startTime).getTime();
+
+        // Check for overlap
+        if (start1 < end2 && end1 > start2) {
+          foundConflicts.push({ apt1, apt2 });
+        }
+      }
+    }
+    setConflicts(foundConflicts);
+  }, [dayAppointments]);
 
   // Check if slot is occupied
   const isSlotOccupied = (time: string) => {
@@ -70,8 +91,9 @@ export default function DragDropScheduler() {
     e.preventDefault();
     if (!draggedJob) return;
 
-    // Check if slot is occupied
-    if (isSlotOccupied(time) && getAppointmentAtSlot(time)?.id !== draggedJob.id) {
+    // Check if slot is occupied by different appointment
+    const slotAppointment = getAppointmentAtSlot(time);
+    if (slotAppointment && slotAppointment.id !== draggedJob.id) {
       toast.error("Time slot is already occupied");
       return;
     }
@@ -85,33 +107,48 @@ export default function DragDropScheduler() {
       },
       {
         onSuccess: () => {
-          toast.success("Job scheduled successfully");
+          toast.success("Job rescheduled successfully");
           setDraggedJob(null);
+          refetchAppointments();
         },
         onError: () => {
-          toast.error("Failed to schedule job");
+          toast.error("Failed to reschedule job");
         },
       }
     );
   };
 
   const handleCreateJob = async () => {
-    if (!newJob.title || !newJob.crewId || !selectedSlot) {
+    if (!newJob.title || !newJob.customerId || !selectedSlot) {
       toast.error("Please fill in all fields");
       return;
     }
 
     const startTime = new Date(`${selectedDate}T${selectedSlot.time}:00`);
-    
-    try {
-      // Create appointment (you may need to adjust this based on your API)
-      toast.success("Job created and scheduled");
-      setShowCreateDialog(false);
-      setNewJob({ title: "", crewId: "", startTime: "" });
-      setSelectedSlot(null);
-    } catch (error) {
-      toast.error("Failed to create job");
-    }
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+    createAppointmentMutation.mutate(
+      {
+        customerId: parseInt(newJob.customerId),
+        title: newJob.title,
+        startTime,
+        endTime,
+        type: "other",
+        status: "scheduled",
+      },
+      {
+        onSuccess: () => {
+          toast.success("Job created and scheduled");
+          setShowCreateDialog(false);
+          setNewJob({ title: "", customerId: "", startTime: "" });
+          setSelectedSlot(null);
+          refetchAppointments();
+        },
+        onError: () => {
+          toast.error("Failed to create job");
+        },
+      }
+    );
   };
 
   return (
@@ -134,8 +171,8 @@ export default function DragDropScheduler() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {dayAppointments
-                .filter(apt => !apt.startTime)
+              {appointments
+                ?.filter(apt => !apt.startTime)
                 .map(apt => (
                   <div
                     key={apt.id}
@@ -147,7 +184,7 @@ export default function DragDropScheduler() {
                     <p className="text-xs text-foreground/60">{apt.description}</p>
                   </div>
                 ))}
-              {dayAppointments.filter(apt => !apt.startTime).length === 0 && (
+              {!appointments?.some(apt => !apt.startTime) && (
                 <p className="text-foreground/60 text-center py-4">No unscheduled jobs</p>
               )}
             </div>
@@ -171,8 +208,10 @@ export default function DragDropScheduler() {
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, time)}
                     onClick={() => {
-                      setSelectedSlot({ id: time, time });
-                      setShowCreateDialog(true);
+                      if (!isOccupied) {
+                        setSelectedSlot({ id: time, time });
+                        setShowCreateDialog(true);
+                      }
                     }}
                     className={`p-4 rounded border-2 border-dashed transition-colors cursor-pointer min-h-24 flex flex-col justify-between ${
                       isOccupied
@@ -211,18 +250,22 @@ export default function DragDropScheduler() {
         </Card>
 
         {/* Conflict Alerts */}
-        {dayAppointments.length > timeSlots.length && (
+        {conflicts.length > 0 && (
           <Card className="border-red-500/50 bg-red-950/20 backdrop-blur">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-red-500" />
-                <CardTitle className="text-red-500">Scheduling Conflicts</CardTitle>
+                <CardTitle className="text-red-500">Scheduling Conflicts ({conflicts.length})</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-foreground/80">
-                More jobs than available time slots. Some jobs may overlap.
-              </p>
+              <div className="space-y-2">
+                {conflicts.map((conflict, idx) => (
+                  <div key={idx} className="text-sm text-foreground/80">
+                    <strong>{conflict.apt1.title}</strong> overlaps with <strong>{conflict.apt2.title}</strong>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -245,15 +288,15 @@ export default function DragDropScheduler() {
             </div>
 
             <div>
-              <Label>Assign Crew</Label>
-              <Select value={newJob.crewId} onValueChange={(v) => setNewJob({ ...newJob, crewId: v })}>
+              <Label>Customer</Label>
+              <Select value={newJob.customerId} onValueChange={(v) => setNewJob({ ...newJob, customerId: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select crew..." />
+                  <SelectValue placeholder="Select customer..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {crews?.map(crew => (
-                    <SelectItem key={crew.id} value={crew.id.toString()}>
-                      {crew.name}
+                  {customers?.map(customer => (
+                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                      {customer.firstName} {customer.lastName}
                     </SelectItem>
                   ))}
                 </SelectContent>

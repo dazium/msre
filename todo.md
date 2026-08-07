@@ -243,9 +243,9 @@
 - [x] Project detail crew display - Show assigned crew with members
 - [x] Crew filter dropdown - Filter projects by assigned crew on projects list
 - [x] Crew display on project cards - Show crew name on each project in list
-- [ ] Crew availability calendar - Visual crew availability
-- [ ] Job scheduling - Drag-and-drop scheduling interface
-- [ ] Schedule conflict alerts - Warn on double-booking
+- [x] Crew availability calendar - Visual crew availability
+- [x] Job scheduling - Drag-and-drop scheduling interface
+- [x] Schedule conflict alerts - Warn on double-booking
 
 ## Materials - Phase 1
 - [ ] Material allocation - Assign materials to projects
