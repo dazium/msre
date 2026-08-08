@@ -36,6 +36,7 @@ const menuItems = [
   { icon: FileText, label: "Invoices", path: "/invoices" },
   { icon: Settings, label: "Invoice Templates", path: "/invoice-templates" },
   { icon: BarChart3, label: "Financial Dashboard", path: "/financial-dashboard" },
+  { icon: BarChart3, label: "Financial Reports", path: "/financial-reports" },
   { icon: Calendar, label: "Calendar", path: "/calendar" },
   { icon: Navigation, label: "Route Optimization", path: "/route-optimization" },
   { icon: Package, label: "Materials", path: "/materials" },

@@ -22,6 +22,7 @@ import Invoices from "@/pages/Invoices";
 import InvoiceDetail from "@/pages/InvoiceDetail";
 import InvoiceTemplates from "@/pages/InvoiceTemplates";
 import FinancialDashboard from "@/pages/FinancialDashboard";
+import FinancialReports from "@/pages/FinancialReports";
 import CustomerDetail from "@/pages/CustomerDetail";
 import CrewDetail from "@/pages/CrewDetail";
 import EstimateDetail from "@/pages/EstimateDetail";
@@ -51,8 +52,9 @@ function Router() {
         <Route path={"/invoices"} component={Invoices} />
         <Route path={"/invoices/:id"} component={InvoiceDetail} />
         <Route path={"/invoice-templates"} component={InvoiceTemplates} />
-        <Route path={"/financial-dashboard"} component={FinancialDashboard} />
-        <Route path={"/404"} component={NotFound} />
+        <Route path="/financial-dashboard" component={FinancialDashboard} />
+        <Route path="/financial-reports" component={FinancialReports} />
+        <Route path="/404" component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
       </Switch>
