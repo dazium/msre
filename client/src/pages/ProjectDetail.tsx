@@ -292,12 +292,19 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
             )}
 
             {/* Damages */}
-            {damages && damages.length > 0 && (
-              <Card className="blueprint-card border-border/50">
-                <CardHeader>
-                  <CardTitle>Damages ({damages.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
+            <Card className="blueprint-card border-border/50">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Damages & Inspections ({damages?.length || 0})</CardTitle>
+                <Button size="sm" variant="outline" onClick={() => setLocation("/damages")}>
+                  Manage Damages
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {(!damages || damages.length === 0) ? (
+                  <p className="text-sm text-foreground/60 py-2">
+                    No damages or inspection records for this project yet. Visit the Damages section to add assessments.
+                  </p>
+                ) : (
                   <div className="space-y-3">
                     {damages.map((damage) => (
                       <div key={damage.id} className="p-3 rounded-lg bg-foreground/5 border border-border/30">
@@ -319,17 +326,24 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </CardContent>
+            </Card>
 
             {/* Estimates */}
-            {projectEstimates && projectEstimates.length > 0 && (
-              <Card className="blueprint-card border-border/50">
-                <CardHeader>
-                  <CardTitle>Estimates ({projectEstimates.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
+            <Card className="blueprint-card border-border/50">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Estimates ({projectEstimates?.length || 0})</CardTitle>
+                <Button size="sm" variant="outline" onClick={() => setLocation("/estimates")}>
+                  Manage Estimates
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {(!projectEstimates || projectEstimates.length === 0) ? (
+                  <p className="text-sm text-foreground/60 py-2">
+                    No estimates created for this project yet. Visit Estimates to create one.
+                  </p>
+                ) : (
                   <div className="space-y-3">
                     {projectEstimates.map((estimate) => (
                       <div key={estimate.id} className="p-3 rounded-lg bg-foreground/5 border border-border/30">
@@ -348,9 +362,9 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right column - Customer info and financials */}

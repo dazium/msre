@@ -127,6 +127,36 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* Mobile-optimized touch targets - min 44px */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  a[href],
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply min-h-11 md:min-h-10;
+  }
+
+  /* Form inputs - mobile friendly */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    @apply min-h-11 md:min-h-10 px-3 py-2 text-base md:text-sm;
+    /* Prevent iOS zoom on input focus */
+    font-size: 16px;
+  }
+
+  /* Focus states for mobile */
+  input:focus,
+  textarea:focus,
+  select:focus,
+  button:focus,
+  [role="button"]:focus {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
   
   body {
     @apply bg-background text-foreground;
@@ -170,6 +200,16 @@
   input[type="checkbox"]:not(:disabled),
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
+  }
+
+  /* Mobile-specific spacing */
+  @media (max-width: 640px) {
+    button,
+    [role="button"],
+    input[type="checkbox"],
+    input[type="radio"] {
+      @apply min-w-11 min-h-11;
+    }
   }
 }
 
