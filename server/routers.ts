@@ -135,6 +135,7 @@ export const appRouter = router({
       actualValue: z.string().optional(),
       startDate: z.date().optional(),
       endDate: z.date().optional(),
+      crewId: z.number().optional(),
     })).mutation(({ ctx, input }) =>
       db.createProject({
         userId: ctx.user.id,
@@ -146,6 +147,7 @@ export const appRouter = router({
         actualValue: input.actualValue,
         startDate: input.startDate,
         endDate: input.endDate,
+        crewId: input.crewId,
       })
     ),
     update: protectedProcedure.input(z.object({
