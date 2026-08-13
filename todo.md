@@ -460,3 +460,8 @@
 - [x] Add loading states during form submission
 - [ ] Apply validation to remaining forms (Projects, Customers, Invoices, Damages, Crews)
 - [ ] Test all form validations end-to-end
+
+## Current Request
+- [x] Add Home page quick summary dashboard for active projects and pending estimates
+- [x] Verify Home summary links, empty states, responsive layout, and live data
+- [x] Add or update Vitest coverage for Home summary calculations

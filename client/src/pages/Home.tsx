@@ -1,10 +1,11 @@
 import { Card } from "@/components/ui/card";
-import { BarChart3, Calendar, FileText, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, BarChart3, Calendar, ClipboardList, FileText, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { CustomerDetailModal } from "@/components/CustomerDetailModal";
 import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
+import { getActiveProjects, getPendingEstimates } from "@/lib/dashboardSummary";
 
 export default function Home() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
@@ -14,6 +15,8 @@ export default function Home() {
   const { data: projects } = trpc.projects.list.useQuery();
   const { data: estimates } = trpc.estimates.list.useQuery();
   const { data: appointments } = trpc.appointments.list.useQuery();
+  const activeProjects = getActiveProjects(projects);
+  const pendingEstimates = getPendingEstimates(estimates);
 
   const handleAddressClick = (address: string) => {
     setSelectedAddress(address);
@@ -52,7 +55,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Active Projects</p>
-                <p className="blueprint-value">{projects?.filter(p => p.status !== 'completed').length || 0}</p>
+                <p className="blueprint-value">{activeProjects.length}</p>
               </div>
               <BarChart3 className="w-12 h-12 text-primary/20" />
             </div>
@@ -62,11 +65,80 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Pending Estimates</p>
-                <p className="blueprint-value">{estimates?.filter(e => e.status === 'draft').length || 0}</p>
+                <p className="blueprint-value">{pendingEstimates.length}</p>
               </div>
               <FileText className="w-12 h-12 text-primary/20" />
             </div>
           </div>
+        </div>
+
+        {/* Quick Summary Dashboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <section className="blueprint-section" aria-labelledby="active-projects-summary-title">
+            <div className="blueprint-header flex items-center justify-between gap-3">
+              <h2 id="active-projects-summary-title" className="text-xl font-bold flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Active Projects
+              </h2>
+              <a href="/projects" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                View all <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+            <div className="p-6">
+              <div className="mb-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="blueprint-label">Current workload</p>
+                  <p className="text-4xl font-bold text-primary">{activeProjects.length}</p>
+                </div>
+                <BarChart3 className="h-12 w-12 text-primary/20" aria-hidden="true" />
+              </div>
+              {activeProjects.length > 0 ? (
+                <div className="space-y-2">
+                  {activeProjects.slice(0, 3).map((project) => (
+                    <a key={project.id} href={`/projects/${project.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
+                      <span className="min-w-0 truncate font-semibold text-foreground">{project.title}</span>
+                      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-foreground/60">{project.status.replace("_", " ")}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded border border-dashed border-border p-4 text-sm text-foreground/60">No active projects right now. Create a project to start tracking work.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="blueprint-section" aria-labelledby="pending-estimates-summary-title">
+            <div className="blueprint-header flex items-center justify-between gap-3">
+              <h2 id="pending-estimates-summary-title" className="text-xl font-bold flex items-center gap-2">
+                <ClipboardList className="w-5 h-5" />
+                Pending Estimates
+              </h2>
+              <a href="/estimates" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                View all <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+            <div className="p-6">
+              <div className="mb-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="blueprint-label">Awaiting action</p>
+                  <p className="text-4xl font-bold text-primary">{pendingEstimates.length}</p>
+                </div>
+                <FileText className="h-12 w-12 text-primary/20" aria-hidden="true" />
+              </div>
+              {pendingEstimates.length > 0 ? (
+                <div className="space-y-2">
+                  {pendingEstimates.slice(0, 3).map((estimate) => (
+                    <a key={estimate.id} href={`/estimates/${estimate.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
+                      <span className="min-w-0 truncate font-semibold text-foreground">{estimate.title}</span>
+                      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-foreground/60">Draft</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded border border-dashed border-border p-4 text-sm text-foreground/60">No pending estimates. New drafts will appear here for follow-up.</p>
+              )}
+            </div>
+          </section>
         </div>
 
         {/* Recent Activity Section */}
@@ -147,9 +219,9 @@ export default function Home() {
             </h2>
           </div>
           <div className="p-6">
-            {projects && projects.filter(p => p.status !== 'completed').length > 0 ? (
+            {activeProjects.length > 0 ? (
               <div className="space-y-2">
-                {projects.filter(p => p.status !== 'completed').slice(0, 5).map((proj) => (
+                {activeProjects.slice(0, 5).map((proj) => (
                   <div key={proj.id} className="p-3 bg-background/50 rounded border border-border">
                     <p className="font-semibold text-foreground">{proj.title}</p>
                     <p className="text-xs text-foreground/60 mt-1">Status: {proj.status}</p>
