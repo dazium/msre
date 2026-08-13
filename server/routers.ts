@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { storagePut } from "./storage";
 
 export const appRouter = router({
   system: systemRouter,
@@ -205,6 +206,25 @@ export const appRouter = router({
   }),
 
   photos: router({
+    uploadFile: protectedProcedure.input(z.object({
+      projectId: z.number(),
+      fileName: z.string().min(1),
+      fileKey: z.string().min(1),
+      mimeType: z.string().optional(),
+      fileData: z.string().min(1), // base64 string
+    })).mutation(async ({ ctx, input }) => {
+      const buffer = Buffer.from(input.fileData, "base64");
+      const { key, url } = await storagePut(input.fileKey, buffer, input.mimeType || "image/jpeg");
+      const photo = await db.createPhoto({
+        userId: ctx.user.id,
+        projectId: input.projectId,
+        fileName: input.fileName,
+        fileUrl: url,
+        fileKey: key,
+        mimeType: input.mimeType || "image/jpeg",
+      });
+      return { url, key, photo };
+    }),
     listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(({ ctx, input }) =>
       db.getPhotosByProjectId(input.projectId, ctx.user.id)
     ),

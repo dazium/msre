@@ -265,7 +265,10 @@ export async function getPhotosByProjectId(projectId: number, userId: number) {
 export async function createPhoto(data: InsertPhoto) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(photos).values(data);
+  const result = await db.insert(photos).values(data);
+  const insertId = (result as any)[0]?.insertId || 1;
+  const rows = await db.select().from(photos).where(eq(photos.id, insertId));
+  return rows[0] || { id: insertId, ...data };
 }
 
 export async function updatePhoto(id: number, userId: number, data: Partial<InsertPhoto>) {

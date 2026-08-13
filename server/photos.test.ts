@@ -332,3 +332,28 @@ describe("Photo Integration Tests", () => {
     expect(true).toBe(true);
   });
 });
+
+  it("should link photo to damage record", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const photo = await caller.photos.create({
+      projectId: 105,
+      fileName: "hail_damage.jpg",
+      fileUrl: "https://example.com/photos/hail_damage.jpg",
+      fileKey: "projects/105/photos/hail_damage.jpg",
+      mimeType: "image/jpeg",
+      caption: "Hail denting on shingle",
+    });
+
+    const link = await caller.photos.linkToDamage({
+      photoId: photo.id,
+      damageId: 1,
+    });
+
+    expect(link).toBeDefined();
+
+    const damagePhotos = await caller.photos.getDamagePhotos({ damageId: 1 });
+    expect(Array.isArray(damagePhotos)).toBe(true);
+    expect(damagePhotos.length).toBeGreaterThan(0);
+  });

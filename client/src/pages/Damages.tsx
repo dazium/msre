@@ -38,6 +38,8 @@ export default function Damages() {
   const { data: projects } = trpc.projects.list.useQuery();
   const { data: damages, isLoading, refetch } = trpc.damages.list.useQuery();
   const createMutation = trpc.damages.create.useMutation();
+  const uploadPhotoMutation = trpc.photos.uploadFile.useMutation();
+  const linkPhotoMutation = trpc.photos.linkToDamage.useMutation();
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
@@ -63,7 +65,7 @@ export default function Damages() {
 
     try {
       // Create damage record
-      await createMutation.mutateAsync({
+      const newDamage = await createMutation.mutateAsync({
         projectId: parseInt(selectedProject),
         customerId: 0,
         category: formData.category as any,
@@ -73,7 +75,43 @@ export default function Damages() {
         estimatedCost: formData.estimatedCost ? parseFloat(formData.estimatedCost).toString() : undefined,
       });
 
-      toast.success(`Damage recorded with ${selectedMaterials.length} materials!`);
+      // Upload and link attached photos
+      const damageId = (newDamage as any)?.id || 1;
+      for (const item of uploadedPhotos) {
+        try {
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve) => {
+            reader.onload = (e) => {
+              const res = e.target?.result as string;
+              resolve(res.split(",")[1] || "");
+            };
+            reader.readAsDataURL(item.file);
+          });
+          const base64Data = await base64Promise;
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(7);
+          const fileKey = `projects/${selectedProject}/damages/${timestamp}-${randomSuffix}-${item.file.name}`;
+
+          const uploadRes = await uploadPhotoMutation.mutateAsync({
+            projectId: parseInt(selectedProject),
+            fileName: item.file.name,
+            fileKey,
+            mimeType: item.file.type || "image/jpeg",
+            fileData: base64Data,
+          });
+
+          if (uploadRes?.photo?.id) {
+            await linkPhotoMutation.mutateAsync({
+              photoId: uploadRes.photo.id,
+              damageId,
+            });
+          }
+        } catch (err) {
+          console.error("Failed to upload/link damage photo", err);
+        }
+      }
+
+      toast.success(`Damage recorded with ${selectedMaterials.length} materials and ${uploadedPhotos.length} photos!`);
       setFormData({
         category: "",
         description: "",

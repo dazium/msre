@@ -68,8 +68,8 @@
 - [x] Add damage description input with predefined categories
 - [x] Support all damage categories and severity levels
 - [x] Comprehensive tests for all damage operations
-- [ ] Implement photo attachment to damage items
-- [ ] Create damage list view with photos
+- [x] Implement photo attachment to damage items
+- [x] Create damage list view with photos
 
 ## Calendar & Scheduling (COMPLETE)
 - [x] Create appointments table queries in server/db.ts
