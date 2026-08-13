@@ -95,6 +95,7 @@ export default function Inspections() {
     onSuccess: () => {
       setNewLabel("");
       void utils.inspections.getById.invalidate({ id: selectedInspectionId ?? 0 });
+      toast.success("Custom inspection point added", { description: "The new checkpoint was appended to this checklist." });
     },
     onError: (error) => toast.error("Could not add checklist item", { description: error.message }),
   });
@@ -131,8 +132,18 @@ export default function Inspections() {
   };
 
   const handleAddItem = () => {
-    if (!selectedInspectionId || !newLabel.trim()) return;
-    createItem.mutate({ inspectionId: selectedInspectionId, category: newCategory, label: newLabel.trim() });
+    const category = newCategory.trim();
+    const label = newLabel.trim();
+    if (!selectedInspectionId) return;
+    if (!category) {
+      toast.error("Enter a category", { description: "Custom inspection points need a category." });
+      return;
+    }
+    if (!label) {
+      toast.error("Enter an inspection point", { description: "Add a short description of what should be checked." });
+      return;
+    }
+    createItem.mutate({ inspectionId: selectedInspectionId, category, label });
   };
 
   if (inspectionsQuery.isLoading || projectsQuery.isLoading || customersQuery.isLoading) {
@@ -209,7 +220,7 @@ export default function Inspections() {
                 {item.status === "pass" && <p className="mt-2 flex items-center gap-2 text-sm text-emerald-600"><CheckCircle2 className="h-4 w-4" />Passed inspection point.</p>}
               </div>)}
             </div>
-            <div className="rounded-lg border border-dashed p-4"><p className="mb-3 text-sm font-semibold">Add checklist item</p><div className="grid gap-3 sm:grid-cols-[0.8fr_1.5fr_auto]"><Input value={newCategory} onChange={(event) => setNewCategory(event.target.value)} placeholder="Category" /><Input value={newLabel} onChange={(event) => setNewLabel(event.target.value)} placeholder="Inspection point" /><Button onClick={handleAddItem} disabled={createItem.isPending || !newLabel.trim()} className="min-h-11"><Plus className="mr-2 h-4 w-4" />Add</Button></div></div>
+            <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4"><p className="text-sm font-semibold">Add custom inspection point</p><p className="mb-3 mt-1 text-xs text-muted-foreground">Append a project-specific checkpoint without changing the standardized roof-type template.</p><div className="grid gap-3 sm:grid-cols-[0.8fr_1.5fr_auto]"><Input value={newCategory} onChange={(event) => setNewCategory(event.target.value)} maxLength={100} placeholder="Category, e.g. Customer concern" aria-label="Custom inspection point category" /><Input value={newLabel} onChange={(event) => setNewLabel(event.target.value)} maxLength={255} placeholder="Inspection point" aria-label="Custom inspection point label" /><Button onClick={handleAddItem} disabled={createItem.isPending || !newCategory.trim() || !newLabel.trim()} className="min-h-11"><Plus className="mr-2 h-4 w-4" />{createItem.isPending ? "Adding..." : "Add point"}</Button></div></div>
             {selected.status !== "completed" && <Button onClick={() => updateInspection.mutate({ id: selected.id, status: "completed" })} disabled={updateInspection.isPending} className="min-h-11"><CheckCircle2 className="mr-2 h-4 w-4" />Mark inspection complete</Button>}
             {selected.status === "completed" && <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700"><Circle className="h-4 w-4 fill-current" />Inspection completed and timestamped.</div>}
           </CardContent>

@@ -279,8 +279,8 @@ export const appRouter = router({
     }),
     createItem: protectedProcedure.input(z.object({
       inspectionId: z.number(),
-      category: z.string().min(1).max(100),
-      label: z.string().min(1).max(255),
+      category: z.string().trim().min(1).max(100),
+      label: z.string().trim().min(1).max(255),
       status: z.enum(["pending", "pass", "attention", "fail", "not_applicable"]).default("pending"),
       notes: z.string().optional(),
     })).mutation(async ({ ctx, input }) => {
@@ -293,8 +293,8 @@ export const appRouter = router({
     updateItem: protectedProcedure.input(z.object({
       id: z.number(),
       inspectionId: z.number(),
-      category: z.string().min(1).max(100).optional(),
-      label: z.string().min(1).max(255).optional(),
+      category: z.string().trim().min(1).max(100).optional(),
+      label: z.string().trim().min(1).max(255).optional(),
       status: z.enum(["pending", "pass", "attention", "fail", "not_applicable"]).optional(),
       notes: z.string().optional(),
     })).mutation(async ({ ctx, input }) => {

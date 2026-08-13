@@ -497,3 +497,8 @@
 - [x] Add tests for template coverage and roof-type persistence
 - [ ] Implement damage classification and inspection report PDF export
 - [ ] Implement material allocation and cost auto-calculation
+
+## Inspection Checklist Customization
+- [x] Allow users to append custom inspection points to an existing roof-type checklist
+- [x] Validate and persist custom inspection point category and label
+- [x] Add tests for custom inspection-point creation and UI workflow
