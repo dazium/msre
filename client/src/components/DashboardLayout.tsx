@@ -213,7 +213,7 @@ function DashboardLayoutContent({
                     MSRE
                   </span>
                   <span className="text-xs text-sidebar-foreground/70 truncate">
-                    Munro & Sons
+MUNRO & Sons
                   </span>
                 </div>
               ) : null}

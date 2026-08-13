@@ -474,3 +474,7 @@
 - [x] Apply generated estimate numbers to every estimate creation entry point, including EstimateForm.tsx
 - [x] Add server-side estimate-number fallback or uniqueness validation
 - [x] Add feature tests covering estimate creation from each UI flow with generated numbers
+
+## Branding Correction
+- [x] Correct all user-facing company branding to “MUNRO and Sons Roofing Experts”
+- [x] Verify browser title, Home welcome text, sidebar brand, and shared app title
