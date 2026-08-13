@@ -41,6 +41,7 @@ const menuItems = [
   { icon: Navigation, label: "Route Optimization", path: "/route-optimization" },
   { icon: Package, label: "Materials", path: "/materials" },
   { icon: Users, label: "Crews", path: "/crews" },
+  { icon: BarChart3, label: "Crew Productivity", path: "/crew-productivity" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

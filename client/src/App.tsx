@@ -26,7 +26,8 @@ import FinancialReports from "@/pages/FinancialReports";
 import CustomerDetail from "@/pages/CustomerDetail";
 import CrewDetail from "@/pages/CrewDetail";
 import EstimateDetail from "@/pages/EstimateDetail";
-import CrewAvailability from "@/pages/CrewAvailability";
+import CrewAvailability from "./pages/CrewAvailability";
+import CrewProductivity from "./pages/CrewProductivity";
 
 function Router() {
   return (
@@ -49,6 +50,7 @@ function Router() {
         <Route path={"/crews"} component={Crews} />
         <Route path={"/crews/:id"} component={CrewDetail} />
         <Route path={"/crew-availability"} component={CrewAvailability} />
+        <Route path={"/crew-productivity"} component={CrewProductivity} />
         <Route path={"/invoices"} component={Invoices} />
         <Route path={"/invoices/:id"} component={InvoiceDetail} />
         <Route path={"/invoice-templates"} component={InvoiceTemplates} />

@@ -468,6 +468,9 @@ export const appRouter = router({
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
       db.deleteCrew(input.id, ctx.user.id)
     ),
+    productivity: protectedProcedure.query(({ ctx }) =>
+      db.getCrewProductivity(ctx.user.id)
+    ),
     getMembers: protectedProcedure.input(z.object({ crewId: z.number() })).query(({ input }) =>
       db.getCrewMembers(input.crewId)
     ),
