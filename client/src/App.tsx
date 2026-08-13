@@ -27,6 +27,7 @@ import CustomerDetail from "@/pages/CustomerDetail";
 import CrewDetail from "@/pages/CrewDetail";
 import EstimateDetail from "@/pages/EstimateDetail";
 import CrewAvailability from "@/pages/CrewAvailability";
+import Inspections from "@/pages/Inspections";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
         <Route path={"/projects"} component={Projects} />
         <Route path={"/projects/:id"} component={ProjectDetail} />
         <Route path={"/damages"} component={Damages} />
+        <Route path={"/inspections"} component={Inspections} />
         <Route path={"/photos/:projectId"} component={Photos} />
         <Route path={"/estimates"} component={Estimates} />
         <Route path={"/estimates/:id"} component={EstimateDetail} />

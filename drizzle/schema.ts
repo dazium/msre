@@ -82,6 +82,7 @@ export const projects = mysqlTable("projects", {
   zipCode: varchar("zipCode", { length: 20 }),
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  roofType: mysqlEnum("roofType", ["asphalt_shingle", "metal", "flat", "tile", "cedar"]).default("asphalt_shingle").notNull(),
   status: mysqlEnum("status", ["lead", "scheduled", "in_progress", "completed", "on_hold", "cancelled"]).default("lead").notNull(),
   startDate: date("startDate"),
   endDate: date("endDate"),
@@ -204,6 +205,38 @@ export const damagePhotos = mysqlTable("damagePhotos", {
 
 export type DamagePhoto = typeof damagePhotos.$inferSelect;
 export type InsertDamagePhoto = typeof damagePhotos.$inferInsert;
+
+// Roof inspections and reusable checklist items
+export const inspections = mysqlTable("inspections", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  projectId: int("projectId").notNull(),
+  customerId: int("customerId").notNull(),
+  roofType: mysqlEnum("roofType", ["asphalt_shingle", "metal", "flat", "tile", "cedar"]).default("asphalt_shingle").notNull(),
+  status: mysqlEnum("status", ["draft", "in_progress", "completed"]).default("draft").notNull(),
+  inspectorName: varchar("inspectorName", { length: 150 }),
+  inspectedAt: timestamp("inspectedAt"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Inspection = typeof inspections.$inferSelect;
+export type InsertInspection = typeof inspections.$inferInsert;
+
+export const inspectionItems = mysqlTable("inspectionItems", {
+  id: int("id").autoincrement().primaryKey(),
+  inspectionId: int("inspectionId").notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["pending", "pass", "attention", "fail", "not_applicable"]).default("pending").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InspectionItem = typeof inspectionItems.$inferSelect;
+export type InsertInspectionItem = typeof inspectionItems.$inferInsert;
 
 // Activity log for tracking changes
 export const activityLog = mysqlTable("activityLog", {

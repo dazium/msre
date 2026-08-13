@@ -298,7 +298,7 @@
 - [ ] Accounts receivable aging - Money owed and when due
 
 ## Inspections & Damage Assessment - Phase 2
-- [ ] Inspection checklist - Standardized forms by roof type
+- [x] Inspection checklist - Standardized forms by roof type
 - [ ] Damage classification - Categorize by type (hail, wind, age, leak)
 - [ ] Damage severity levels - Cosmetic, functional, structural
 - [ ] Inspection photos - Organize by roof section with annotations
@@ -478,3 +478,22 @@
 ## Branding Correction
 - [x] Correct all user-facing company branding to “MUNRO and Sons Roofing Experts”
 - [x] Verify browser title, Home welcome text, sidebar brand, and shared app title
+
+## Inspection Checklist Backlog
+- [x] Add persisted inspection records and checklist items
+- [x] Add inspection checklist route, navigation, and empty states
+- [x] Add tests for inspection checklist create, update, and completion flows
+
+
+## Inspection Checklist Backlog
+- [x] Add persisted inspection records and checklist items
+- [x] Add inspection checklist route, navigation, and empty states
+- [x] Add tests for inspection checklist create, update, and completion flows
+
+## Phase 2 Continuation - Roof-Type Inspection Templates
+- [x] Add persisted roof type to projects and inspections
+- [x] Generate standardized inspection templates for asphalt shingle, metal, flat, tile, and cedar roofs
+- [x] Auto-populate inspection items from the selected project's roof type
+- [x] Add tests for template coverage and roof-type persistence
+- [ ] Implement damage classification and inspection report PDF export
+- [ ] Implement material allocation and cost auto-calculation

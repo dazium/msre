@@ -1,0 +1,2 @@
+ALTER TABLE `inspections` ADD `roofType` enum('asphalt_shingle','metal','flat','tile','cedar') DEFAULT 'asphalt_shingle' NOT NULL;--> statement-breakpoint
+ALTER TABLE `projects` ADD `roofType` enum('asphalt_shingle','metal','flat','tile','cedar') DEFAULT 'asphalt_shingle' NOT NULL;

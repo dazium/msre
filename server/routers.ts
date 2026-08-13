@@ -137,6 +137,7 @@ export const appRouter = router({
       actualValue: z.string().optional(),
       startDate: z.date().optional(),
       endDate: z.date().optional(),
+      roofType: z.enum(["asphalt_shingle", "metal", "flat", "tile", "cedar"]).optional(),
     })).mutation(({ ctx, input }) =>
       db.createProject({
         userId: ctx.user.id,
@@ -148,6 +149,7 @@ export const appRouter = router({
         actualValue: input.actualValue,
         startDate: input.startDate,
         endDate: input.endDate,
+        roofType: input.roofType,
       })
     ),
     update: protectedProcedure.input(z.object({
@@ -159,6 +161,7 @@ export const appRouter = router({
       actualValue: z.string().optional(),
       startDate: z.date().optional(),
       endDate: z.date().optional(),
+      roofType: z.enum(["asphalt_shingle", "metal", "flat", "tile", "cedar"]).optional(),
     })).mutation(({ ctx, input }) => {
       const { id, ...data } = input;
       return db.updateProject(id, ctx.user.id, data);
@@ -204,6 +207,109 @@ export const appRouter = router({
         estimatedCost: input.estimatedCost,
       })
     ),
+  }),
+
+  inspections: router({
+    list: protectedProcedure.query(({ ctx }) =>
+      db.getInspectionsByUserId(ctx.user.id)
+    ),
+    listByProject: protectedProcedure.input(z.object({ projectId: z.number() })).query(async ({ ctx, input }) => {
+      const project = await db.getProjectById(input.projectId, ctx.user.id);
+      if (!project) throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
+      const rows = await db.getInspectionsByUserId(ctx.user.id);
+      return rows.filter((inspection) => inspection.projectId === input.projectId);
+    }),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
+      const inspection = await db.getInspectionById(input.id, ctx.user.id);
+      if (!inspection) throw new TRPCError({ code: "NOT_FOUND", message: "Inspection not found" });
+      const items = await db.getInspectionItems(inspection.id);
+      return { inspection, items };
+    }),
+    create: protectedProcedure.input(z.object({
+      projectId: z.number(),
+      customerId: z.number(),
+      roofType: z.enum(["asphalt_shingle", "metal", "flat", "tile", "cedar"]).optional(),
+      inspectorName: z.string().max(150).optional(),
+      notes: z.string().optional(),
+      items: z.array(z.object({
+        category: z.string().min(1).max(100),
+        label: z.string().min(1).max(255),
+      })).default([]),
+    })).mutation(async ({ ctx, input }) => {
+      const [project, customer] = await Promise.all([
+        db.getProjectById(input.projectId, ctx.user.id),
+        db.getCustomerById(input.customerId, ctx.user.id),
+      ]);
+      if (!project || !customer) throw new TRPCError({ code: "NOT_FOUND", message: "Project or customer not found" });
+      if (project.customerId !== input.customerId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Customer does not match the selected project" });
+      }
+      const inspection = await db.createInspection({
+        userId: ctx.user.id,
+        projectId: input.projectId,
+        customerId: input.customerId,
+        roofType: input.roofType ?? project.roofType ?? "asphalt_shingle",
+        inspectorName: input.inspectorName,
+        notes: input.notes,
+        status: "draft",
+      });
+      if (!inspection) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create inspection" });
+      const createdItems = [];
+      for (const item of input.items) {
+        const id = await db.createInspectionItem({ inspectionId: inspection.id, category: item.category, label: item.label, status: "pending" });
+        createdItems.push({ id, ...item, inspectionId: inspection.id, status: "pending" as const });
+      }
+      return { inspection, items: createdItems };
+    }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      status: z.enum(["draft", "in_progress", "completed"]).optional(),
+      inspectorName: z.string().max(150).optional(),
+      inspectedAt: z.date().nullable().optional(),
+      notes: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+      const inspection = await db.getInspectionById(id, ctx.user.id);
+      if (!inspection) throw new TRPCError({ code: "NOT_FOUND", message: "Inspection not found" });
+      const nextData = data.status === "completed" && data.inspectedAt === undefined
+        ? { ...data, inspectedAt: new Date() }
+        : data;
+      await db.updateInspection(id, ctx.user.id, nextData);
+      return db.getInspectionById(id, ctx.user.id);
+    }),
+    createItem: protectedProcedure.input(z.object({
+      inspectionId: z.number(),
+      category: z.string().min(1).max(100),
+      label: z.string().min(1).max(255),
+      status: z.enum(["pending", "pass", "attention", "fail", "not_applicable"]).default("pending"),
+      notes: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const inspection = await db.getInspectionById(input.inspectionId, ctx.user.id);
+      if (!inspection) throw new TRPCError({ code: "NOT_FOUND", message: "Inspection not found" });
+      const { inspectionId, ...data } = input;
+      const id = await db.createInspectionItem({ inspectionId, ...data });
+      return { id, inspectionId, ...data };
+    }),
+    updateItem: protectedProcedure.input(z.object({
+      id: z.number(),
+      inspectionId: z.number(),
+      category: z.string().min(1).max(100).optional(),
+      label: z.string().min(1).max(255).optional(),
+      status: z.enum(["pending", "pass", "attention", "fail", "not_applicable"]).optional(),
+      notes: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const inspection = await db.getInspectionById(input.inspectionId, ctx.user.id);
+      if (!inspection) throw new TRPCError({ code: "NOT_FOUND", message: "Inspection not found" });
+      const { id, inspectionId, ...data } = input;
+      await db.updateInspectionItem(id, inspectionId, data);
+      return { id, inspectionId, ...data };
+    }),
+    deleteItem: protectedProcedure.input(z.object({ id: z.number(), inspectionId: z.number() })).mutation(async ({ ctx, input }) => {
+      const inspection = await db.getInspectionById(input.inspectionId, ctx.user.id);
+      if (!inspection) throw new TRPCError({ code: "NOT_FOUND", message: "Inspection not found" });
+      await db.deleteInspectionItem(input.id, input.inspectionId);
+      return { success: true };
+    }),
   }),
 
   photos: router({

@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { Plus, MapPin, Calendar } from "lucide-react";
+import { ROOF_TYPES, ROOF_TYPE_LABELS, type RoofType } from "@/lib/inspectionTemplates";
 
 export default function Projects() {
   const [, setLocation] = useLocation();
@@ -23,6 +24,7 @@ export default function Projects() {
     startDate: "",
     endDate: "",
     estimatedValue: "",
+    roofType: "asphalt_shingle" as RoofType,
     crewId: "unassigned",
   });
 
@@ -52,6 +54,7 @@ export default function Projects() {
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined,
         estimatedValue: formData.estimatedValue,
+        roofType: formData.roofType,
       });
       toast.success("Project created! Redirecting to details...");
       setFormData({
@@ -61,6 +64,7 @@ export default function Projects() {
         startDate: "",
         endDate: "",
         estimatedValue: "",
+        roofType: "asphalt_shingle",
         crewId: "unassigned",
       });
       setIsOpen(false);
@@ -190,6 +194,17 @@ export default function Projects() {
                       onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value })}
                       placeholder="5000.00"
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="roofType">Roof Type</Label>
+                    <Select value={formData.roofType} onValueChange={(value) => setFormData({ ...formData, roofType: value as RoofType })}>
+                      <SelectTrigger id="roofType"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ROOF_TYPES.map((roofType) => <SelectItem key={roofType} value={roofType}>{ROOF_TYPE_LABELS[roofType]}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-1 text-xs text-muted-foreground">Used to prefill standardized inspection checklists.</p>
                   </div>
 
                   <div>

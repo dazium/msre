@@ -127,6 +127,20 @@
       "when": 1782386336418,
       "tag": "0017_lame_bloodaxe",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1786634414155,
+      "tag": "0018_shallow_fat_cobra",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1786634957074,
+      "tag": "0019_graceful_vanisher",
+      "breakpoints": true
     }
   ]
 }

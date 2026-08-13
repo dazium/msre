@@ -1,6 +1,6 @@
 import { and, eq, like, gte, lte, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote, inspections, InsertInspection, inspectionItems, InsertInspectionItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -375,6 +375,68 @@ export async function deleteDamagePhoto(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.delete(damagePhotos).where(eq(damagePhotos.id, id));
+}
+
+// Inspection queries
+export async function getInspectionsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(inspections).where(eq(inspections.userId, userId)).orderBy(desc(inspections.createdAt));
+}
+
+export async function getInspectionById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(inspections).where(
+    and(eq(inspections.id, id), eq(inspections.userId, userId))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createInspection(data: InsertInspection) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(inspections).values(data);
+  const inspectionId = Number(result[0]?.insertId);
+  if (!inspectionId) throw new Error("Failed to create inspection");
+  return getInspectionById(inspectionId, data.userId);
+}
+
+export async function updateInspection(id: number, userId: number, data: Partial<InsertInspection>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(inspections).set(data).where(
+    and(eq(inspections.id, id), eq(inspections.userId, userId))
+  );
+}
+
+export async function getInspectionItems(inspectionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(inspectionItems).where(eq(inspectionItems.inspectionId, inspectionId)).orderBy(inspectionItems.id);
+}
+
+export async function createInspectionItem(data: InsertInspectionItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(inspectionItems).values(data);
+  return Number(result[0]?.insertId);
+}
+
+export async function updateInspectionItem(id: number, inspectionId: number, data: Partial<InsertInspectionItem>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(inspectionItems).set(data).where(
+    and(eq(inspectionItems.id, id), eq(inspectionItems.inspectionId, inspectionId))
+  );
+}
+
+export async function deleteInspectionItem(id: number, inspectionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(inspectionItems).where(
+    and(eq(inspectionItems.id, id), eq(inspectionItems.inspectionId, inspectionId))
+  );
 }
 
 // Materials functions
