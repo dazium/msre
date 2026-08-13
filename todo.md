@@ -465,3 +465,8 @@
 - [x] Add Home page quick summary dashboard for active projects and pending estimates
 - [x] Verify Home summary links, empty states, responsive layout, and live data
 - [x] Add or update Vitest coverage for Home summary calculations
+
+## Current Request
+- [x] Add a dashboard quick action to create a new project
+- [x] Add a dashboard quick action to create a new estimate
+- [x] Verify quick-action navigation, mobile touch targets, and existing form workflows

@@ -1,11 +1,12 @@
 import { Card } from "@/components/ui/card";
-import { ArrowRight, BarChart3, Calendar, ClipboardList, FileText, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, BarChart3, Calendar, ClipboardList, FileText, Plus, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { CustomerDetailModal } from "@/components/CustomerDetailModal";
 import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
 import { getActiveProjects, getPendingEstimates } from "@/lib/dashboardSummary";
+import { getDashboardCreatePath } from "@/lib/dashboardQuickActions";
 
 export default function Home() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
@@ -242,6 +243,34 @@ export default function Home() {
             <h2 className="text-xl font-bold">Quick Actions</h2>
           </div>
           <div className="p-6">
+            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <a
+                href={getDashboardCreatePath("project")}
+                aria-label="Create a new project"
+                className="blueprint-card flex min-h-14 items-center gap-3 border-primary/50 bg-primary/10 p-4 text-left transition-all hover:blueprint-glow"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Plus className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block font-semibold text-foreground">Create New Project</span>
+                  <span className="block text-xs text-foreground/60">Start a job and assign a customer</span>
+                </span>
+              </a>
+              <a
+                href={getDashboardCreatePath("estimate")}
+                aria-label="Create a new estimate"
+                className="blueprint-card flex min-h-14 items-center gap-3 border-primary/50 bg-primary/10 p-4 text-left transition-all hover:blueprint-glow"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Plus className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block font-semibold text-foreground">Create New Estimate</span>
+                  <span className="block text-xs text-foreground/60">Prepare pricing for a project</span>
+                </span>
+              </a>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <a 
                 href="/customers" 

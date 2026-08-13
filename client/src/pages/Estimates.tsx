@@ -39,6 +39,11 @@ export default function Estimates() {
   const createLineItemMutation = trpc.estimateLineItems.create.useMutation();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") setShowDialog(true);
+  }, []);
+
+  useEffect(() => {
     if (estimatesData) {
       setEstimates(estimatesData);
     }
