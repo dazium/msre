@@ -182,7 +182,7 @@ describe("Invoice Data Validation", () => {
     const invalidData = {
       projectId: 1,
       customerId: 1,
-      invoiceNumber: "INV-202604-0001",
+      invoiceNumber: `INV-202604-${Math.floor(1000 + Math.random() * 9000)}`,
       issueDate: new Date(),
       dueDate: new Date(),
       subtotal: "1000.00",
@@ -217,7 +217,7 @@ describe("Invoice Data Validation", () => {
       userId: 1,
       projectId: 1,
       customerId: 1,
-      invoiceNumber: `INV-202604-${Math.random().toString().slice(2, 6)}`,
+      invoiceNumber: `INV-202604-${Math.floor(1000 + Math.random() * 9000)}`,
       issueDate: new Date(),
       dueDate: new Date(),
       subtotal: "1234.56",

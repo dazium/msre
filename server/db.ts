@@ -171,6 +171,31 @@ export async function getEstimateById(id: number, userId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function generateEstimateNumber() {
+  const db = await getDb();
+  if (!db) return "EST-001";
+
+  const existing = await db.select({ estimateNumber: estimates.estimateNumber }).from(estimates);
+  const highestNumber = existing.reduce((highest, estimate) => {
+    const match = estimate.estimateNumber?.trim().match(/^EST-(\\d+)$/i);
+    if (!match) return highest;
+
+    const parsed = Number.parseInt(match[1], 10);
+    return Number.isFinite(parsed) ? Math.max(highest, parsed) : highest;
+  }, 0);
+
+  return `EST-${String(highestNumber + 1).padStart(3, "0")}`;
+}
+
+export async function estimateNumberExists(estimateNumber: string) {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select({ id: estimates.id }).from(estimates)
+    .where(eq(estimates.estimateNumber, estimateNumber))
+    .limit(1);
+  return result.length > 0;
+}
+
 export async function createEstimate(data: InsertEstimate) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

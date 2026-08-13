@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { storagePut } from "./storage";
 
@@ -328,18 +329,37 @@ export const appRouter = router({
     create: protectedProcedure.input(z.object({
       projectId: z.number(),
       customerId: z.number(),
-      estimateNumber: z.string(),
+      estimateNumber: z.string().trim().optional(),
       title: z.string(),
       description: z.string().optional(),
       subtotal: z.string(),
       total: z.string(),
       status: z.enum(["draft", "sent", "accepted", "rejected"]).default("draft"),
-    })).mutation(({ ctx, input }) => {
+    })).mutation(async ({ ctx, input }) => {
+      let estimateNumber = input.estimateNumber?.trim() || await db.generateEstimateNumber();
+
+      if (await db.estimateNumberExists(estimateNumber)) {
+        if (input.estimateNumber) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `Estimate number ${estimateNumber} already exists.`,
+          });
+        }
+
+        estimateNumber = `EST-${Date.now()}`;
+        if (await db.estimateNumberExists(estimateNumber)) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Unable to generate a unique estimate number. Please try again.",
+          });
+        }
+      }
+
       return db.createEstimate({
         projectId: input.projectId,
         customerId: input.customerId,
         userId: ctx.user.id,
-        estimateNumber: input.estimateNumber,
+        estimateNumber,
         title: input.title,
         description: input.description,
         subtotal: input.subtotal,

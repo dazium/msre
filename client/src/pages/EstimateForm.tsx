@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus } from "lucide-react";
+import { getNextEstimateNumber } from "@/lib/estimateNumber";
 
 interface LineItem {
   id?: number;
@@ -24,7 +25,7 @@ export default function EstimateForm({ projectId, customerId }: { projectId: num
     title: "",
     description: "",
     validUntil: "",
-    estimateNumber: "EST-001",
+    estimateNumber: "",
   });
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [newItem, setNewItem] = useState<LineItem>({
@@ -35,7 +36,16 @@ export default function EstimateForm({ projectId, customerId }: { projectId: num
   });
 
   const createMutation = trpc.estimates.create.useMutation();
-  const { refetch: refetchEstimates } = trpc.estimates.list.useQuery();
+  const { data: estimatesData, refetch: refetchEstimates } = trpc.estimates.list.useQuery();
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData((current) => ({
+        ...current,
+        estimateNumber: getNextEstimateNumber(estimatesData ?? []),
+      }));
+    }
+  }, [isOpen, estimatesData]);
 
   const calculateTotal = (quantity: number, unitPrice: string): number => {
     return quantity * (parseFloat(unitPrice) || 0);
@@ -67,14 +77,14 @@ export default function EstimateForm({ projectId, customerId }: { projectId: num
       await createMutation.mutateAsync({
         projectId,
         customerId,
-        estimateNumber: formData.estimateNumber,
+        estimateNumber: formData.estimateNumber || undefined,
         title: formData.title,
         description: formData.description,
         subtotal: subtotal.toString(),
         total: total.toString(),
       });
       setIsOpen(false);
-      setFormData({ title: "", description: "", validUntil: "", estimateNumber: "EST-001" });
+      setFormData({ title: "", description: "", validUntil: "", estimateNumber: "" });
       setLineItems([]);
       refetchEstimates();
     } catch (error) {

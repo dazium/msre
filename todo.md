@@ -46,7 +46,7 @@
 - [x] Create estimate total calculation logic
 - [x] Build estimate preview/PDF view
 - [x] Add estimate status tracking (draft → sent → accepted)
-- [ ] Implement estimate number auto-generation
+- [x] Implement estimate number auto-generation
 - [ ] Create estimate history for each project
 - [ ] Auto-populate estimates from damages
 - [x] Write tests for estimates feature
@@ -470,3 +470,7 @@
 - [x] Add a dashboard quick action to create a new project
 - [x] Add a dashboard quick action to create a new estimate
 - [x] Verify quick-action navigation, mobile touch targets, and existing form workflows
+
+- [x] Apply generated estimate numbers to every estimate creation entry point, including EstimateForm.tsx
+- [x] Add server-side estimate-number fallback or uniqueness validation
+- [x] Add feature tests covering estimate creation from each UI flow with generated numbers

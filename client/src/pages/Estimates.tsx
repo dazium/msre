@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Download } from "lucide-react";
 import { FormError } from "@/components/FormError";
 import { validateField, validators, errorsToMap, type ValidationError } from "@/lib/validation";
+import { getNextEstimateNumber } from "@/lib/estimateNumber";
 
 import { generateEstimatePDF } from "@/lib/pdf-export";
 import RoofSpecifications from "@/components/RoofSpecifications";
@@ -31,6 +32,7 @@ export default function Estimates() {
   const [showMeasurementTool, setShowMeasurementTool] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [estimateNumber, setEstimateNumber] = useState("");
 
   const { data: estimatesData, isLoading } = trpc.estimates.list.useQuery();
   const { data: projectsData } = trpc.projects.list.useQuery();
@@ -48,6 +50,12 @@ export default function Estimates() {
       setEstimates(estimatesData);
     }
   }, [estimatesData]);
+
+  useEffect(() => {
+    if (showDialog) {
+      setEstimateNumber(getNextEstimateNumber(estimates));
+    }
+  }, [showDialog, estimates]);
 
   useEffect(() => {
     if (materialsData) {
@@ -149,7 +157,7 @@ export default function Estimates() {
       const estimate = await createMutation.mutateAsync({
         projectId: selectedProject,
         customerId: selectedProjectData?.customerId || 0,
-        estimateNumber: formData.get("estimateNumber") as string,
+        estimateNumber: estimateNumber.trim(),
         title: formData.get("title") as string || "Estimate",
         description: formData.get("description") as string,
         subtotal: subtotal,
@@ -179,6 +187,7 @@ export default function Estimates() {
       setShowDialog(false);
       setLineItems([]);
       setSelectedProject(null);
+      setEstimateNumber("");
       (e.target as HTMLFormElement).reset()
     } catch (error) {
       console.error(error);
@@ -262,6 +271,8 @@ export default function Estimates() {
                   <Input
                     id="estimateNumber"
                     name="estimateNumber"
+                    value={estimateNumber}
+                    onChange={(event) => setEstimateNumber(event.target.value)}
                     placeholder="EST-001"
                     required
                   />

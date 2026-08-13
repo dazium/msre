@@ -481,3 +481,51 @@ describe("Integration Tests - Full Workflow", () => {
     expect(customers2.length).toBe(initialCount + 1);
   });
 });
+
+
+describe("Estimates Router - Generated Numbers", () => {
+  it("generates an estimate number when the client omits it", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    const title = `Generated estimate ${Date.now()}`;
+
+    await caller.estimates.create({
+      projectId: 1,
+      customerId: 1,
+      title,
+      subtotal: "100.00",
+      total: "100.00",
+    });
+
+    const estimates = await caller.estimates.list();
+    const created = estimates.find((estimate) => estimate.title === title);
+
+    expect(created?.estimateNumber).toMatch(/^EST-\d+$/);
+  });
+
+  it("rejects a duplicate explicit estimate number", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    const estimateNumber = `EST-TEST-${Date.now()}`;
+
+    await caller.estimates.create({
+      projectId: 1,
+      customerId: 1,
+      estimateNumber,
+      title: "Duplicate-number source estimate",
+      subtotal: "100.00",
+      total: "100.00",
+    });
+
+    await expect(
+      caller.estimates.create({
+        projectId: 1,
+        customerId: 1,
+        estimateNumber,
+        title: "Duplicate-number estimate",
+        subtotal: "100.00",
+        total: "100.00",
+      }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+});
