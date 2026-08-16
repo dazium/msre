@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Download, Mail, ChevronLeft } from "lucide-react";
+import { generateInvoicePDF } from "@/lib/pdf-export";
+import { toast } from "sonner";
 
 export default function InvoiceDetail() {
   const params = useParams();
@@ -21,37 +23,26 @@ export default function InvoiceDetail() {
     { enabled: !!invoiceId }
   );
 
-  const exportPDFMutation = trpc.invoices.exportPDF.useQuery(
-    { id: invoiceId || 0 },
-    { enabled: false }
-  );
-
   const sendEmailMutation = trpc.invoices.sendEmail.useMutation({
     onSuccess: () => {
-      console.log("Email sent successfully");
+      toast.success("Invoice email sent");
       setIsEmailDialogOpen(false);
       setEmailRecipient("");
     },
     onError: (error) => {
       console.error("Failed to send email:", error.message);
+      toast.error("Could not send invoice email", { description: error.message });
     },
   });
 
-  const handleExportPDF = async () => {
-    if (!invoiceId) return;
+  const handleExportPDF = () => {
+    if (!invoice) return;
     try {
-      // In a real implementation, this would fetch the PDF from the server
-      // For now, we'll show a placeholder
-      console.log("Exporting PDF for invoice:", invoiceId);
-      // const response = await fetch(`/api/invoices/${invoiceId}/pdf`);
-      // const blob = await response.blob();
-      // const url = window.URL.createObjectURL(blob);
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = `invoice-${invoice?.invoiceNumber}.pdf`;
-      // a.click();
+      generateInvoicePDF(invoice);
+      toast.success("PDF exported successfully");
     } catch (error) {
-      console.error("Failed to export PDF:", error);
+      console.error("Failed to export invoice PDF", error);
+      toast.error("Could not export invoice PDF", { description: "Please try again." });
     }
   };
 

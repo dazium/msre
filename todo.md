@@ -517,3 +517,8 @@
 - [x] Verify the custom inspection-point form is visible and usable on inspection records
 - [x] Verify custom points validate, persist, and appear in the checklist
 - [x] Re-run focused inspection tests and publish any correction
+
+## PDF Generator Bug Fix
+- [x] Diagnose the broken estimate and invoice PDF export paths
+- [x] Repair PDF generation and user-visible error handling
+- [x] Add regression coverage for PDF output generation

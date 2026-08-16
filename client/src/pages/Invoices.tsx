@@ -86,6 +86,16 @@ export default function Invoices() {
     });
   };
 
+  const handleExportPDF = (invoice: unknown) => {
+    try {
+      generateInvoicePDF(invoice);
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error("Invoice PDF export failed", error);
+      toast.error("Could not export invoice PDF", { description: "Please try again." });
+    }
+  };
+
   const filteredInvoices = filterInvoices(invoices, searchTerm, filterStatus);
 
   return (
@@ -270,7 +280,7 @@ export default function Invoices() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => generateInvoicePDF(invoice)}
+                        onClick={() => handleExportPDF(invoice)}
                         className="min-h-11"
                       >
                       <Download className="h-4 w-4 mr-2" />

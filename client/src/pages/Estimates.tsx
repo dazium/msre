@@ -195,6 +195,16 @@ export default function Estimates() {
     }
   };
 
+  const handleExportPDF = (estimate: unknown) => {
+    try {
+      generateEstimatePDF(estimate);
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error("Estimate PDF export failed", error);
+      toast.error("Could not export estimate PDF", { description: "Please try again." });
+    }
+  };
+
   if (isLoading) {
     return <div className="p-8">Loading estimates...</div>;
   }
@@ -243,7 +253,8 @@ export default function Estimates() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => generateEstimatePDF(estimate)}
+                        onClick={() => handleExportPDF(estimate)}
+                        className="min-h-11"
                       >
                         <Download className="h-4 w-4 mr-2" />
                         Export PDF
