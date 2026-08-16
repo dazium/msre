@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { format } from "date-fns";
 import { Download } from "lucide-react";
 import { generateInvoicePDF } from "@/lib/pdf-export";
+import { filterInvoices } from "@/lib/invoiceFilters";
+import { toast } from "sonner";
 
 export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,9 +33,9 @@ export default function Invoices() {
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     if (type === 'success') {
-      console.log('✓', message);
+      toast.success(message);
     } else {
-      console.error('✗', message);
+      toast.error(message);
     }
   };
 
@@ -83,11 +86,7 @@ export default function Invoices() {
     });
   };
 
-  const filteredInvoices = invoices.filter((invoice: any) => {
-    const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !filterStatus || invoice.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredInvoices = filterInvoices(invoices, searchTerm, filterStatus);
 
   return (
     <div className="space-y-6">
@@ -100,7 +99,7 @@ export default function Invoices() {
           <DialogTrigger asChild>
             <Button>Create Invoice</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-full w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Invoice</DialogTitle>
               <DialogDescription>
@@ -208,7 +207,7 @@ export default function Invoices() {
                 />
               </div>
 
-              <Button onClick={handleCreateInvoice} disabled={createInvoiceMutation.isPending} className="w-full">
+              <Button onClick={handleCreateInvoice} disabled={createInvoiceMutation.isPending} className="min-h-11 w-full">
                 {createInvoiceMutation.isPending ? "Creating..." : "Create Invoice"}
               </Button>
             </div>
@@ -227,12 +226,12 @@ export default function Invoices() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Select value={filterStatus || ""} onValueChange={(value) => setFilterStatus(value || null)}>
+          <Select value={filterStatus ?? "all"} onValueChange={(value) => setFilterStatus(value === "all" ? null : value)}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
               <SelectItem value="sent">Sent</SelectItem>
               <SelectItem value="viewed">Viewed</SelectItem>
@@ -265,11 +264,15 @@ export default function Invoices() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateInvoicePDF(invoice)}
-                    >
+                      <Button asChild size="sm" variant="outline" className="min-h-11">
+                        <Link href={`/invoices/${invoice.id}`}>Open</Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generateInvoicePDF(invoice)}
+                        className="min-h-11"
+                      >
                       <Download className="h-4 w-4 mr-2" />
                       PDF
                     </Button>
