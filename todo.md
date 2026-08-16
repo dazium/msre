@@ -512,3 +512,8 @@
 - [x] Diagnose the broken invoice workflow and identify the failing path
 - [x] Restore invoice list, creation, detail, and payment behavior as applicable
 - [x] Add regression coverage for the repaired invoice flow
+
+## Custom Inspection Points Verification
+- [x] Verify the custom inspection-point form is visible and usable on inspection records
+- [x] Verify custom points validate, persist, and appear in the checklist
+- [x] Re-run focused inspection tests and publish any correction
