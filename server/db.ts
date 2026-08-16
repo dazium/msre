@@ -1,4 +1,4 @@
-import { and, eq, like, gte, lte, desc, sql } from "drizzle-orm";
+import { and, eq, like, gte, inArray, lte, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote, inspections, InsertInspection, inspectionItems, InsertInspectionItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -511,6 +511,87 @@ export async function getCrewById(id: number, userId: number) {
     and(eq(crews.id, id), eq(crews.userId, userId))
   );
   return result.length > 0 ? result[0] : undefined;
+}
+
+export type CrewProductivity = {
+  id: number;
+  name: string;
+  status: "active" | "inactive";
+  memberCount: number;
+  totalJobs: number;
+  eligibleJobs: number;
+  completedJobs: number;
+  activeJobs: number;
+  scheduledJobs: number;
+  completionRate: number;
+  completedValue: number;
+  averageCompletedValue: number;
+  pipelineValue: number;
+  jobsPerMember: number;
+};
+
+/**
+ * Aggregates the operational workload and completed-job output for every crew
+ * owned by a user. Completion is based on non-cancelled assigned projects.
+ */
+export async function getCrewProductivity(userId: number): Promise<CrewProductivity[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const crewRows = await db.select().from(crews).where(eq(crews.userId, userId));
+  if (crewRows.length === 0) return [];
+
+  const crewIds = crewRows.map((crew) => crew.id);
+  const [projectRows, memberRows] = await Promise.all([
+    db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.userId, userId), inArray(projects.crewId, crewIds))),
+    db.select().from(crewMembers).where(inArray(crewMembers.crewId, crewIds)),
+  ]);
+
+  const memberCounts = new Map<number, number>();
+  for (const member of memberRows) {
+    memberCounts.set(member.crewId, (memberCounts.get(member.crewId) ?? 0) + 1);
+  }
+
+  return crewRows
+    .map((crew) => {
+      const crewProjects = projectRows.filter((project) => project.crewId === crew.id);
+      const completedProjects = crewProjects.filter((project) => project.status === "completed");
+      const scheduledJobs = crewProjects.filter((project) => project.status === "scheduled").length;
+      const activeJobs = crewProjects.filter((project) =>
+        ["scheduled", "in_progress", "on_hold"].includes(project.status),
+      ).length;
+      const eligibleJobs = crewProjects.filter((project) => project.status !== "cancelled").length;
+      const completedValue = completedProjects.reduce(
+        (total, project) => total + Number(project.actualValue ?? project.estimatedValue ?? 0),
+        0,
+      );
+      const pipelineValue = crewProjects
+        .filter((project) => project.status !== "completed" && project.status !== "cancelled")
+        .reduce((total, project) => total + Number(project.estimatedValue ?? 0), 0);
+      const memberCount = memberCounts.get(crew.id) ?? 0;
+      const completedJobs = completedProjects.length;
+
+      return {
+        id: crew.id,
+        name: crew.name,
+        status: crew.status,
+        memberCount,
+        totalJobs: crewProjects.length,
+        eligibleJobs,
+        completedJobs,
+        activeJobs,
+        scheduledJobs,
+        completionRate: eligibleJobs > 0 ? Math.round((completedJobs / eligibleJobs) * 100) : 0,
+        completedValue,
+        averageCompletedValue: completedJobs > 0 ? completedValue / completedJobs : 0,
+        pipelineValue,
+        jobsPerMember: memberCount > 0 ? completedJobs / memberCount : 0,
+      };
+    })
+    .sort((left, right) => right.completedJobs - left.completedJobs || right.completedValue - left.completedValue);
 }
 
 export async function createCrew(data: InsertCrew) {

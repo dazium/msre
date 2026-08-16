@@ -138,6 +138,7 @@ export const appRouter = router({
       startDate: z.date().optional(),
       endDate: z.date().optional(),
       roofType: z.enum(["asphalt_shingle", "metal", "flat", "tile", "cedar"]).optional(),
+      crewId: z.number().optional(),
     })).mutation(({ ctx, input }) =>
       db.createProject({
         userId: ctx.user.id,
@@ -150,6 +151,7 @@ export const appRouter = router({
         startDate: input.startDate,
         endDate: input.endDate,
         roofType: input.roofType,
+        crewId: input.crewId,
       })
     ),
     update: protectedProcedure.input(z.object({
@@ -611,6 +613,9 @@ export const appRouter = router({
     }),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
       db.deleteCrew(input.id, ctx.user.id)
+    ),
+    productivity: protectedProcedure.query(({ ctx }) =>
+      db.getCrewProductivity(ctx.user.id)
     ),
     getMembers: protectedProcedure.input(z.object({ crewId: z.number() })).query(({ input }) =>
       db.getCrewMembers(input.crewId)
