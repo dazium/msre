@@ -1199,29 +1199,33 @@ export async function assignCrewToProject(projectId: number, crewId: number, use
   const db = await getDb() as any;
   if (!db) throw new Error("Database not available");
 
-  // Verify project belongs to user
-  const project = await db.query.projects.findFirst({
-    where: (p: any, { eq: eqFn, and: andFn }: any) => andFn(eqFn(p.id, projectId), eqFn(p.userId, userId)),
-  });
+  // Verify project belongs to the current user using the same query API as the rest of this module.
+  const projectRows = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .limit(1);
 
-  if (!project) {
+  if (projectRows.length === 0) {
     throw new Error("Project not found or unauthorized");
   }
 
-  // Verify crew exists
-  const crew = await db.query.crews.findFirst({
-    where: (c: any, { eq: eqFn }: any) => eqFn(c.id, crewId),
-  });
+  // Verify the crew exists before changing the project.
+  const crewRows = await db
+    .select({ id: crews.id })
+    .from(crews)
+    .where(eq(crews.id, crewId))
+    .limit(1);
 
-  if (!crew) {
+  if (crewRows.length === 0) {
     throw new Error("Crew not found");
   }
 
-  // Update project with crew
+  // Update only the authorized project with the selected crew.
   await db
     .update(projects)
     .set({ crewId })
-    .where(eq(projects.id, projectId));
+    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
 
   return { success: true, projectId, crewId };
 }
@@ -1230,20 +1234,22 @@ export async function removeCrewFromProject(projectId: number, userId: number): 
   const db = await getDb() as any;
   if (!db) throw new Error("Database not available");
 
-  // Verify project belongs to user
-  const project = await db.query.projects.findFirst({
-    where: (p: any, { eq: eqFn, and: andFn }: any) => andFn(eqFn(p.id, projectId), eqFn(p.userId, userId)),
-  });
+  // Verify project belongs to the current user using the same query API as the rest of this module.
+  const projectRows = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .limit(1);
 
-  if (!project) {
+  if (projectRows.length === 0) {
     throw new Error("Project not found or unauthorized");
   }
 
-  // Update project to remove crew
+  // Remove the crew only from the authorized project.
   await db
     .update(projects)
     .set({ crewId: null })
-    .where(eq(projects.id, projectId));
+    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
 
   return { success: true, projectId };
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Calendar, DollarSign, MapPin, FileText, Users } from "lucide-react";
+import { canConfirmCrewAssignment } from "@/lib/crewAssignment";
 const formatDate = (date: Date | string) => {
   const d = new Date(date);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -14,6 +15,7 @@ const formatDate = (date: Date | string) => {
 export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [, setLocation] = useLocation();
   const [editingCrew, setEditingCrew] = useState(false);
+  const [pendingCrewId, setPendingCrewId] = useState<number | null>(null);
   const projectId = parseInt(params.id);
 
   const { data: project, isLoading: projectLoading } = trpc.projects.getById.useQuery(
@@ -40,18 +42,21 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   );
 
   const { data: crews } = trpc.crews.list.useQuery();
+  const utils = trpc.useUtils();
 
   const assignCrewMutation = trpc.projects.assignCrew.useMutation({
     onSuccess: () => {
-      trpc.useUtils().projects.getById.invalidate({ id: projectId });
-      trpc.useUtils().crews.getById.invalidate();
+      void utils.projects.getById.invalidate({ id: projectId });
+      void utils.crews.getById.invalidate();
+      setEditingCrew(false);
+      setPendingCrewId(null);
     },
   });
 
   const removeCrewMutation = trpc.projects.removeCrew.useMutation({
     onSuccess: () => {
-      trpc.useUtils().projects.getById.invalidate({ id: projectId });
-      trpc.useUtils().crews.getById.invalidate();
+      void utils.projects.getById.invalidate({ id: projectId });
+      void utils.crews.getById.invalidate();
     },
   });
 
@@ -69,8 +74,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const CrewSelector = ({ selectedCrewId, onSelect }: { selectedCrewId?: number | null; onSelect: (crewId: number) => void }) => (
     <div className="space-y-3">
-      <Select value={selectedCrewId?.toString() || ""} onValueChange={(value) => onSelect(parseInt(value))}>
-        <SelectTrigger>
+      <Select value={selectedCrewId?.toString() || ""} onValueChange={(value) => onSelect(parseInt(value, 10))}>
+        <SelectTrigger className="min-h-11 w-full">
           <SelectValue placeholder="Select a crew..." />
         </SelectTrigger>
         <SelectContent>
@@ -82,8 +87,10 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         </SelectContent>
       </Select>
       <Button
-        className="w-full"
-        disabled={assignCrewMutation.isPending}
+        type="button"
+        className="min-h-11 w-full"
+        onClick={() => selectedCrewId && assignCrewMutation.mutate({ projectId, crewId: selectedCrewId })}
+        disabled={!canConfirmCrewAssignment(selectedCrewId, assignCrewMutation.isPending)}
       >
         {assignCrewMutation.isPending ? "Assigning..." : "Confirm Assignment"}
       </Button>
@@ -205,7 +212,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingCrew(!editingCrew)}
+                      onClick={() => { setPendingCrewId(project.crewId ?? null); setEditingCrew(!editingCrew); }}
                     >
                       {editingCrew ? "Cancel" : "Change"}
                     </Button>
@@ -235,11 +242,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                     </>
                   ) : (
                     <CrewSelector
-                      selectedCrewId={project.crewId}
-                      onSelect={(crewId) => {
-                        assignCrewMutation.mutate({ projectId, crewId });
-                        setEditingCrew(false);
-                      }}
+                      selectedCrewId={pendingCrewId ?? project.crewId}
+                      onSelect={(crewId) => setPendingCrewId(crewId)}
                     />
                   )}
                 </CardContent>
@@ -273,18 +277,15 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setEditingCrew(true)}
+                        onClick={() => { setPendingCrewId(null); setEditingCrew(true); }}
                       >
                         Assign Crew
                       </Button>
                     </div>
                   ) : (
                     <CrewSelector
-                      selectedCrewId={undefined}
-                      onSelect={(crewId) => {
-                        assignCrewMutation.mutate({ projectId, crewId });
-                        setEditingCrew(false);
-                      }}
+                      selectedCrewId={pendingCrewId ?? undefined}
+                      onSelect={(crewId) => setPendingCrewId(crewId)}
                     />
                   )}
                 </CardContent>

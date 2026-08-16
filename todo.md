@@ -502,3 +502,8 @@
 - [x] Allow users to append custom inspection points to an existing roof-type checklist
 - [x] Validate and persist custom inspection point category and label
 - [x] Add tests for custom inspection-point creation and UI workflow
+
+## Crew Assignment Bug Fix
+- [x] Restore a visible and usable crew-assignment confirmation/submit control
+- [x] Verify crew assignment works from ProjectDetail on mobile and desktop layouts
+- [x] Add regression coverage for the crew-assignment interaction
