@@ -1,10 +1,12 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { accountingProcedure, fieldOperationsProcedure, projectOperationsProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
+import { WORK_ORDER_JOB_TYPES, WORK_ORDER_STATUSES } from "../shared/subcontractor";
+import { randomUUID } from "crypto";
 import { storagePut } from "./storage";
 
 export const appRouter = router({
@@ -115,6 +117,395 @@ export const appRouter = router({
     }),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
       db.deleteCustomerNote(input.id, ctx.user.id)
+    ),
+  }),
+
+  companies: router({
+    list: protectedProcedure.input(z.object({
+      accountType: z.enum(["partner", "direct_customer"]).optional(),
+      status: z.enum(["active", "inactive", "on_hold"]).optional(),
+      search: z.string().max(255).optional(),
+    }).optional()).query(({ ctx, input }) => db.listCompanies(ctx.user.id, input ?? {})),
+    getById: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(({ ctx, input }) =>
+      db.getCompanyById(input.id, ctx.user.id)
+    ),
+    create: protectedProcedure.input(z.object({
+      name: z.string().trim().min(1).max(255),
+      legalName: z.string().trim().max(255).optional(),
+      accountType: z.enum(["partner", "direct_customer"]).default("partner"),
+      classification: z.string().trim().max(120).optional(),
+      email: z.string().trim().email().optional(),
+      phone: z.string().trim().max(30).optional(),
+      website: z.string().trim().url().max(500).optional(),
+      address: z.string().trim().max(2000).optional(),
+      city: z.string().trim().max(100).optional(),
+      province: z.string().trim().max(100).optional(),
+      postalCode: z.string().trim().max(20).optional(),
+      preferredContactMethod: z.enum(["phone", "email", "text", "in_person"]).default("email"),
+      paymentTerms: z.enum(["due_on_receipt", "net_7", "net_15", "net_30", "net_45", "net_60", "custom"]).default("net_30"),
+      standardLabourRate: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+      areasServed: z.string().trim().max(2000).optional(),
+      typicalWorkRequested: z.string().trim().max(5000).optional(),
+      contractInformation: z.string().trim().max(5000).optional(),
+      insuranceRequirements: z.string().trim().max(5000).optional(),
+      wsibRequirements: z.string().trim().max(5000).optional(),
+      safetyRequirements: z.string().trim().max(5000).optional(),
+      requiredDocumentation: z.string().trim().max(5000).optional(),
+      specialInstructions: z.string().trim().max(5000).optional(),
+      notes: z.string().trim().max(10000).optional(),
+      status: z.enum(["active", "inactive", "on_hold"]).default("active"),
+    })).mutation(({ ctx, input }) => db.createCompany({ ...input, userId: ctx.user.id })),
+    update: protectedProcedure.input(z.object({
+      id: z.number().int().positive(),
+      name: z.string().trim().min(1).max(255).optional(),
+      legalName: z.string().trim().max(255).optional(),
+      accountType: z.enum(["partner", "direct_customer"]).optional(),
+      classification: z.string().trim().max(120).optional(),
+      email: z.string().trim().email().optional(),
+      phone: z.string().trim().max(30).optional(),
+      website: z.string().trim().url().max(500).optional(),
+      address: z.string().trim().max(2000).optional(),
+      city: z.string().trim().max(100).optional(),
+      province: z.string().trim().max(100).optional(),
+      postalCode: z.string().trim().max(20).optional(),
+      preferredContactMethod: z.enum(["phone", "email", "text", "in_person"]).optional(),
+      paymentTerms: z.enum(["due_on_receipt", "net_7", "net_15", "net_30", "net_45", "net_60", "custom"]).optional(),
+      standardLabourRate: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+      areasServed: z.string().trim().max(2000).optional(),
+      typicalWorkRequested: z.string().trim().max(5000).optional(),
+      contractInformation: z.string().trim().max(5000).optional(),
+      insuranceRequirements: z.string().trim().max(5000).optional(),
+      wsibRequirements: z.string().trim().max(5000).optional(),
+      safetyRequirements: z.string().trim().max(5000).optional(),
+      requiredDocumentation: z.string().trim().max(5000).optional(),
+      specialInstructions: z.string().trim().max(5000).optional(),
+      notes: z.string().trim().max(10000).optional(),
+      status: z.enum(["active", "inactive", "on_hold"]).optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, ...data } = input;
+      return db.updateCompany(id, ctx.user.id, data);
+    }),
+    contacts: router({
+      list: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(({ ctx, input }) =>
+        db.listCompanyContacts(input.companyId, ctx.user.id)
+      ),
+      create: protectedProcedure.input(z.object({
+        companyId: z.number().int().positive(),
+        firstName: z.string().trim().min(1).max(100),
+        lastName: z.string().trim().min(1).max(100),
+        role: z.enum(["owner", "project_manager", "site_supervisor", "dispatcher", "estimator", "accounts_payable", "accounts_receivable", "safety_coordinator", "other"]).default("other"),
+        position: z.string().trim().max(120).optional(),
+        phone: z.string().trim().max(30).optional(),
+        mobile: z.string().trim().max(30).optional(),
+        email: z.string().trim().email().optional(),
+        preferredContactMethod: z.enum(["phone", "email", "text", "in_person"]).default("email"),
+        notes: z.string().trim().max(5000).optional(),
+        isPrimary: z.boolean().default(false),
+        status: z.enum(["active", "inactive"]).default("active"),
+      })).mutation(({ ctx, input }) => db.createCompanyContact(input, ctx.user.id)),
+      update: protectedProcedure.input(z.object({
+        id: z.number().int().positive(),
+        firstName: z.string().trim().min(1).max(100).optional(),
+        lastName: z.string().trim().min(1).max(100).optional(),
+        role: z.enum(["owner", "project_manager", "site_supervisor", "dispatcher", "estimator", "accounts_payable", "accounts_receivable", "safety_coordinator", "other"]).optional(),
+        position: z.string().trim().max(120).optional(),
+        phone: z.string().trim().max(30).optional(),
+        mobile: z.string().trim().max(30).optional(),
+        email: z.string().trim().email().optional(),
+        preferredContactMethod: z.enum(["phone", "email", "text", "in_person"]).optional(),
+        notes: z.string().trim().max(5000).optional(),
+        isPrimary: z.boolean().optional(),
+        status: z.enum(["active", "inactive"]).optional(),
+      })).mutation(({ ctx, input }) => {
+        const { id, ...data } = input;
+        return db.updateCompanyContact(id, ctx.user.id, data);
+      }),
+    }),
+    notes: router({
+      list: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(({ ctx, input }) =>
+        db.listCompanyNotes(input.companyId, ctx.user.id)
+      ),
+      create: protectedProcedure.input(z.object({
+        companyId: z.number().int().positive(),
+        noteType: z.enum(["general", "communication", "financial", "operations", "safety", "dispute"]).default("general"),
+        content: z.string().trim().min(1).max(10000),
+      })).mutation(({ ctx, input }) => db.createCompanyNote({ ...input, userId: ctx.user.id })),
+    }),
+    jobSites: router({
+      list: protectedProcedure.input(z.object({ companyId: z.number().int().positive(), includeInactive: z.boolean().default(false) })).query(({ ctx, input }) =>
+        db.listJobSites(input.companyId, ctx.user.id, input.includeInactive)
+      ),
+      getById: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(({ ctx, input }) =>
+        db.getJobSiteById(input.id, ctx.user.id)
+      ),
+      create: protectedProcedure.input(z.object({
+        companyId: z.number().int().positive(),
+        name: z.string().trim().max(255).optional(),
+        address: z.string().trim().min(1).max(2000),
+        city: z.string().trim().max(100).optional(),
+        province: z.string().trim().max(100).optional(),
+        postalCode: z.string().trim().max(20).optional(),
+        propertyType: z.enum(["residential", "commercial", "industrial", "multi_residential", "institutional", "other"]).default("residential"),
+        siteContactName: z.string().trim().max(200).optional(),
+        siteContactPhone: z.string().trim().max(30).optional(),
+        accessInstructions: z.string().trim().max(5000).optional(),
+        parkingInformation: z.string().trim().max(5000).optional(),
+        roofInformation: z.string().trim().max(5000).optional(),
+        safetyHazards: z.string().trim().max(5000).optional(),
+        requiredEquipment: z.string().trim().max(5000).optional(),
+        notes: z.string().trim().max(10000).optional(),
+        isActive: z.boolean().default(true),
+      })).mutation(({ ctx, input }) => db.createJobSite(input, ctx.user.id)),
+      update: protectedProcedure.input(z.object({
+        id: z.number().int().positive(),
+        name: z.string().trim().max(255).optional(),
+        address: z.string().trim().min(1).max(2000).optional(),
+        city: z.string().trim().max(100).optional(),
+        province: z.string().trim().max(100).optional(),
+        postalCode: z.string().trim().max(20).optional(),
+        propertyType: z.enum(["residential", "commercial", "industrial", "multi_residential", "institutional", "other"]).optional(),
+        siteContactName: z.string().trim().max(200).optional(),
+        siteContactPhone: z.string().trim().max(30).optional(),
+        accessInstructions: z.string().trim().max(5000).optional(),
+        parkingInformation: z.string().trim().max(5000).optional(),
+        roofInformation: z.string().trim().max(5000).optional(),
+        safetyHazards: z.string().trim().max(5000).optional(),
+        requiredEquipment: z.string().trim().max(5000).optional(),
+        notes: z.string().trim().max(10000).optional(),
+        isActive: z.boolean().optional(),
+      })).mutation(({ ctx, input }) => {
+        const { id, ...data } = input;
+        return db.updateJobSite(id, ctx.user.id, data);
+      }),
+    }),
+    history: protectedProcedure.input(z.object({ companyId: z.number().int().positive() })).query(({ ctx, input }) =>
+      db.getAccountHistory(input.companyId, ctx.user.id)
+    ),
+    financials: accountingProcedure.input(z.object({ companyId: z.number().int().positive() })).query(({ ctx, input }) =>
+      db.getCompanyFinancials(input.companyId, ctx.user.id)
+    ),
+  }),
+
+  workOrders: router({
+    list: protectedProcedure.input(z.object({
+      companyId: z.number().int().positive().optional(),
+      jobSiteId: z.number().int().positive().optional(),
+      status: z.enum(WORK_ORDER_STATUSES).optional(),
+      search: z.string().max(255).optional(),
+      deadlineFrom: z.date().optional(),
+      deadlineTo: z.date().optional(),
+    }).optional()).query(({ ctx, input }) => db.listWorkOrders(ctx.user.id, input ?? {})),
+    getById: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(({ ctx, input }) =>
+      db.getWorkOrderDetail(input.id, ctx.user.id)
+    ),
+    generateNumber: protectedProcedure.query(({ ctx }) => db.generateWorkOrderNumber(ctx.user.id)),
+    create: projectOperationsProcedure.input(z.object({
+      companyId: z.number().int().positive(),
+      jobSiteId: z.number().int().positive(),
+      contactId: z.number().int().positive().optional(),
+      projectId: z.number().int().positive().optional(),
+      workOrderNumber: z.string().trim().min(1).max(64).optional(),
+      purchaseOrderNumber: z.string().trim().max(100).optional(),
+      receivedAt: z.date().optional(),
+      requestedStartDate: z.date().optional(),
+      deadline: z.date().optional(),
+      scheduledStartDate: z.date().optional(),
+      scheduledEndDate: z.date().optional(),
+      jobType: z.enum(WORK_ORDER_JOB_TYPES),
+      scopeSummary: z.string().trim().min(1).max(20000),
+      materialsSummary: z.string().trim().max(10000).optional(),
+      labourRequirements: z.string().trim().max(10000).optional(),
+      crewRequirements: z.string().trim().max(10000).optional(),
+      specialInstructions: z.string().trim().max(10000).optional(),
+      estimatedValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+      agreedPrice: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+      additionalCharges: z.string().regex(/^\d+(\.\d{1,2})?$/).default("0.00"),
+      taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/).default("13.00"),
+      scopes: z.array(z.object({
+        category: z.enum(WORK_ORDER_JOB_TYPES),
+        description: z.string().trim().min(1).max(10000),
+        quantity: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+        unit: z.string().trim().max(40).optional(),
+      })).default([]),
+    })).mutation(async ({ ctx, input }) => {
+      const { scopes, workOrderNumber, ...workOrderData } = input;
+      const number = workOrderNumber || await db.generateWorkOrderNumber(ctx.user.id);
+      return db.createWorkOrder({
+        ...workOrderData,
+        userId: ctx.user.id,
+        createdByUserId: ctx.user.id,
+        workOrderNumber: number,
+      }, scopes);
+    }),
+    update: projectOperationsProcedure.input(z.object({
+      id: z.number().int().positive(),
+      companyId: z.number().int().positive().optional(),
+      jobSiteId: z.number().int().positive().optional(),
+      contactId: z.number().int().positive().nullable().optional(),
+      projectId: z.number().int().positive().nullable().optional(),
+      purchaseOrderNumber: z.string().trim().max(100).nullable().optional(),
+      requestedStartDate: z.date().nullable().optional(),
+      deadline: z.date().nullable().optional(),
+      scheduledStartDate: z.date().nullable().optional(),
+      scheduledEndDate: z.date().nullable().optional(),
+      jobType: z.enum(WORK_ORDER_JOB_TYPES).optional(),
+      scopeSummary: z.string().trim().min(1).max(20000).optional(),
+      materialsSummary: z.string().trim().max(10000).nullable().optional(),
+      labourRequirements: z.string().trim().max(10000).nullable().optional(),
+      crewRequirements: z.string().trim().max(10000).nullable().optional(),
+      specialInstructions: z.string().trim().max(10000).nullable().optional(),
+      estimatedValue: z.string().regex(/^\d+(\.\d{1,2})?$/).nullable().optional(),
+      agreedPrice: z.string().regex(/^\d+(\.\d{1,2})?$/).nullable().optional(),
+      additionalCharges: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+      taxRate: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+      statusReason: z.string().trim().max(10000).nullable().optional(),
+    })).mutation(({ ctx, input }) => {
+      const { id, ...data } = input;
+      return db.updateWorkOrder(id, ctx.user.id, data);
+    }),
+    replaceScopes: projectOperationsProcedure.input(z.object({
+      workOrderId: z.number().int().positive(),
+      scopes: z.array(z.object({
+        category: z.enum(WORK_ORDER_JOB_TYPES),
+        description: z.string().trim().min(1).max(10000),
+        quantity: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+        unit: z.string().trim().max(40).optional(),
+      })).max(100),
+    })).mutation(({ ctx, input }) => db.replaceWorkOrderScopes(input.workOrderId, ctx.user.id, input.scopes)),
+    transitionStatus: projectOperationsProcedure.input(z.object({
+      id: z.number().int().positive(),
+      status: z.enum(WORK_ORDER_STATUSES),
+      reason: z.string().trim().min(1).max(10000).optional(),
+    })).mutation(({ ctx, input }) => db.transitionWorkOrderStatus(input.id, ctx.user.id, input.status, input.reason)),
+    assignments: router({
+      list: protectedProcedure.input(z.object({ workOrderId: z.number().int().positive() })).query(({ ctx, input }) =>
+        db.listWorkOrderAssignments(input.workOrderId, ctx.user.id)
+      ),
+      create: projectOperationsProcedure.input(z.object({
+        workOrderId: z.number().int().positive(),
+        crewId: z.number().int().positive(),
+        scheduledStart: z.date(),
+        scheduledEnd: z.date(),
+        notes: z.string().trim().max(10000).optional(),
+      })).mutation(({ ctx, input }) => db.createWorkOrderAssignment(input, ctx.user.id)),
+      update: fieldOperationsProcedure.input(z.object({
+        id: z.number().int().positive(),
+        scheduledStart: z.date().optional(),
+        scheduledEnd: z.date().optional(),
+        status: z.enum(["assigned", "accepted", "in_progress", "completed", "cancelled"]).optional(),
+        actualStart: z.date().nullable().optional(),
+        actualCompletion: z.date().nullable().optional(),
+        labourHours: z.string().regex(/^\d+(\.\d{1,2})?$/).nullable().optional(),
+        productionQuantity: z.string().regex(/^\d+(\.\d{1,2})?$/).nullable().optional(),
+        productionUnit: z.string().trim().max(40).nullable().optional(),
+        notes: z.string().trim().max(10000).nullable().optional(),
+      })).mutation(({ ctx, input }) => {
+        const { id, ...data } = input;
+        return db.updateWorkOrderAssignment(id, ctx.user.id, data);
+      }),
+    }),
+    completion: router({
+      record: fieldOperationsProcedure.input(z.object({
+        workOrderId: z.number().int().positive(),
+        completionDate: z.date(),
+        completedScope: z.string().trim().min(1).max(20000),
+        quantityCompleted: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+        quantityUnit: z.string().trim().max(40).optional(),
+        labourHours: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+        productionQuantity: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+        productionUnit: z.string().trim().max(40).optional(),
+        materialsUsed: z.string().trim().max(10000).optional(),
+        deficiencies: z.string().trim().max(10000).optional(),
+        signOffName: z.string().trim().max(200).optional(),
+        crewNotes: z.string().trim().max(10000).optional(),
+        officeNotes: z.string().trim().max(10000).optional(),
+        callbackRequired: z.boolean().default(false),
+        callbackDetails: z.string().trim().max(10000).optional(),
+      }).superRefine((value, issueContext) => {
+        if (value.callbackRequired && !value.callbackDetails) {
+          issueContext.addIssue({ code: z.ZodIssueCode.custom, path: ["callbackDetails"], message: "Callback details are required when a callback is requested" });
+        }
+      })).mutation(({ ctx, input }) => {
+        const { workOrderId, ...completion } = input;
+        return db.recordWorkOrderCompletion(workOrderId, ctx.user.id, completion);
+      }),
+    }),
+    billing: router({
+      draft: protectedProcedure.input(z.object({ workOrderId: z.number().int().positive() })).query(({ ctx, input }) =>
+        db.getWorkOrderInvoiceDraft(input.workOrderId, ctx.user.id)
+      ),
+      createInvoice: accountingProcedure.input(z.object({
+        workOrderId: z.number().int().positive(),
+        dueDate: z.date(),
+        notes: z.string().trim().max(10000).optional(),
+        lineItems: z.array(z.object({
+          workOrderScopeId: z.number().int().positive().optional(),
+          description: z.string().trim().min(1).max(10000),
+          quantity: z.string().regex(/^\d+(\.\d{1,2})?$/),
+          unit: z.string().trim().max(40).optional(),
+          unitPrice: z.string().regex(/^\d+(\.\d{1,2})?$/),
+        })).min(1).max(100),
+      })).mutation(({ ctx, input }) =>
+        db.createInvoiceFromWorkOrder(input.workOrderId, ctx.user.id, input.dueDate, input.lineItems, input.notes)
+      ),
+      invoiceLineItems: protectedProcedure.input(z.object({ invoiceId: z.number().int().positive() })).query(({ ctx, input }) =>
+        db.getInvoiceLineItems(input.invoiceId, ctx.user.id)
+      ),
+      recordPayment: accountingProcedure.input(z.object({
+        invoiceId: z.number().int().positive(),
+        amount: z.string().regex(/^\d+(\.\d{1,2})?$/),
+        paymentDate: z.date(),
+        paymentMethod: z.enum(["cheque", "bank_transfer", "cash", "credit_card", "debit_card", "e_transfer", "other"]),
+        referenceNumber: z.string().trim().max(100).optional(),
+        description: z.string().trim().max(10000).optional(),
+      })).mutation(({ ctx, input }) => db.recordInvoicePayment(input.invoiceId, ctx.user.id, input)),
+    }),
+    documents: router({
+      list: protectedProcedure.input(z.object({ workOrderId: z.number().int().positive() })).query(({ ctx, input }) =>
+        db.listWorkOrderDocuments(input.workOrderId, ctx.user.id)
+      ),
+      upload: fieldOperationsProcedure.input(z.object({
+        workOrderId: z.number().int().positive(),
+        documentType: z.enum(["contract", "purchase_order", "drawing", "blueprint", "specification", "safety_document", "insurance_certificate", "wsib_wcb_certificate", "invoice", "receipt", "completion_document", "email_pdf", "photo", "other"]),
+        fileName: z.string().trim().min(1).max(255),
+        mimeType: z.string().trim().min(3).max(150),
+        dataBase64: z.string().min(4).max(11_200_000),
+        revisionNumber: z.string().trim().max(64).optional(),
+        revisionNotes: z.string().trim().max(10000).optional(),
+        notes: z.string().trim().max(10000).optional(),
+      })).mutation(async ({ ctx, input }) => {
+        const workOrder = await db.getWorkOrderById(input.workOrderId, ctx.user.id);
+        if (!workOrder) throw new Error("Work order not found");
+        const content = Buffer.from(input.dataBase64, "base64");
+        if (content.length === 0 || content.length > 8 * 1024 * 1024) throw new Error("Document must be between 1 byte and 8 MB");
+        const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const fileKey = `work-orders/${input.workOrderId}/documents/${randomUUID()}-${safeName}`;
+        const stored = await storagePut(fileKey, content, input.mimeType);
+        return db.createWorkOrderDocument({
+          userId: ctx.user.id,
+          companyId: workOrder.companyId,
+          jobSiteId: workOrder.jobSiteId,
+          workOrderId: workOrder.id,
+          documentType: input.documentType,
+          fileName: input.fileName,
+          fileKey: stored.key,
+          fileUrl: stored.url,
+          mimeType: input.mimeType,
+          revisionNumber: input.revisionNumber,
+          revisionNotes: input.revisionNotes,
+          notes: input.notes,
+          uploadedByUserId: ctx.user.id,
+        }, ctx.user.id);
+      }),
+    }),
+  }),
+
+  subcontractorDashboard: router({
+    get: projectOperationsProcedure.input(z.object({
+      startDate: z.date(),
+      endDate: z.date(),
+    }).refine((value) => value.endDate >= value.startDate, { message: "End date must be on or after start date" })).query(({ ctx, input }) =>
+      db.getSubcontractorDashboard(ctx.user.id, input.startDate, input.endDate)
     ),
   }),
 

@@ -7,6 +7,11 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
 import Customers from "./pages/Customers";
+import Companies from "./pages/Companies";
+import CompanyDetail from "./pages/CompanyDetail";
+import WorkOrders from "./pages/WorkOrders";
+import WorkOrderDetail from "./pages/WorkOrderDetail";
+import SubcontractorDashboard from "./pages/SubcontractorDashboard";
 import Projects from "./pages/Projects";
 import Damages from "./pages/Damages";
 import Photos from "./pages/Photos";
@@ -37,6 +42,11 @@ function Router() {
         <Route path={"/"} component={Home} />
         <Route path={"/customers"} component={Customers} />
         <Route path={"/customers/:id"} component={CustomerDetail} />
+        <Route path={"/companies"} component={Companies} />
+        <Route path={"/companies/:id"} component={CompanyDetail} />
+        <Route path={"/subcontractor-dashboard"} component={SubcontractorDashboard} />
+        <Route path={"/work-orders"} component={WorkOrders} />
+        <Route path={"/work-orders/:id"} component={WorkOrderDetail} />
         <Route path={"/projects"} component={Projects} />
         <Route path={"/projects/:id"} component={ProjectDetail} />
         <Route path={"/damages"} component={Damages} />
