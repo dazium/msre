@@ -1,4 +1,4 @@
-import { decimal, int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, boolean, date } from "drizzle-orm/mysql-core";
+import { boolean, date, decimal, index, int, json, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 
 /**
@@ -13,7 +13,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "admin", "office_manager", "project_manager", "crew_leader", "worker", "accounting"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -145,6 +145,7 @@ export const photos = mysqlTable("photos", {
   userId: int("userId").notNull(),
   projectId: int("projectId"),
   customerId: int("customerId"),
+  workOrderId: int("workOrderId"),
   fileName: varchar("fileName", { length: 255 }).notNull(),
   fileUrl: text("fileUrl").notNull(),
   fileKey: varchar("fileKey", { length: 255 }).notNull(),
@@ -162,12 +163,14 @@ export const appointments = mysqlTable("appointments", {
   userId: int("userId").notNull(),
   customerId: int("customerId"),
   projectId: int("projectId"),
+  workOrderId: int("workOrderId"),
+  crewId: int("crewId"),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   startTime: timestamp("startTime").notNull(),
   endTime: timestamp("endTime").notNull(),
   location: text("location"),
-  type: mysqlEnum("type", ["estimate", "inspection", "consultation", "job_start", "follow_up", "other"]).default("other").notNull(),
+  type: mysqlEnum("type", ["estimate", "inspection", "consultation", "job_start", "follow_up", "work_order", "other"]).default("other").notNull(),
   status: mysqlEnum("status", ["scheduled", "completed", "cancelled", "no_show"]).default("scheduled").notNull(),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -313,8 +316,10 @@ export const invoices = mysqlTable("invoices", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   estimateId: int("estimateId"),
-  projectId: int("projectId").notNull(),
-  customerId: int("customerId").notNull(),
+  projectId: int("projectId"),
+  customerId: int("customerId"),
+  companyId: int("companyId"),
+  workOrderId: int("workOrderId"),
   invoiceNumber: varchar("invoiceNumber", { length: 50 }).notNull().unique(),
   issueDate: date("issueDate").notNull(),
   dueDate: date("dueDate").notNull(),
@@ -322,7 +327,7 @@ export const invoices = mysqlTable("invoices", {
   tax: decimal("tax", { precision: 10, scale: 2 }).default("0").notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   amountPaid: decimal("amountPaid", { precision: 10, scale: 2 }).default("0").notNull(),
-  status: mysqlEnum("status", ["draft", "sent", "viewed", "paid", "overdue", "cancelled"]).default("draft").notNull(),
+  status: mysqlEnum("status", ["draft", "sent", "viewed", "partially_paid", "paid", "overdue", "disputed", "written_off", "cancelled"]).default("draft").notNull(),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -330,6 +335,26 @@ export const invoices = mysqlTable("invoices", {
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
+
+export const invoiceLineItems = mysqlTable(
+  "invoiceLineItems",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    invoiceId: int("invoiceId").notNull(),
+    workOrderScopeId: int("workOrderScopeId"),
+    description: text("description").notNull(),
+    quantity: decimal("quantity", { precision: 12, scale: 2 }).notNull(),
+    unit: varchar("unit", { length: 40 }),
+    unitPrice: decimal("unitPrice", { precision: 12, scale: 2 }).notNull(),
+    total: decimal("total", { precision: 12, scale: 2 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("invoice_line_items_invoice_idx").on(table.invoiceId)],
+);
+
+export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
+export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
 
 // Invoice Templates table - for customizable invoice layouts
 export const invoiceTemplates = mysqlTable("invoiceTemplates", {
@@ -397,12 +422,14 @@ export const payments = mysqlTable("payments", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   invoiceId: int("invoiceId").notNull(),
-  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }).notNull().unique(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }).unique(),
   stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  currency: varchar("currency", { length: 3 }).default("CAD").notNull(),
   status: mysqlEnum("status", ["pending", "succeeded", "failed", "cancelled", "refunded"]).default("pending").notNull(),
-  paymentMethod: varchar("paymentMethod", { length: 50 }), // card, bank_account, etc
+  paymentMethod: varchar("paymentMethod", { length: 50 }), // card, cheque, bank transfer, cash, or other
+  paymentDate: date("paymentDate"),
+  referenceNumber: varchar("referenceNumber", { length: 100 }),
   lastFourDigits: varchar("lastFourDigits", { length: 4 }),
   cardBrand: varchar("cardBrand", { length: 50 }), // visa, mastercard, etc
   description: text("description"),
@@ -515,3 +542,357 @@ export const customerNotes = mysqlTable("customerNotes", {
 
 export type CustomerNote = typeof customerNotes.$inferSelect;
 export type InsertCustomerNote = typeof customerNotes.$inferInsert;
+
+// -----------------------------------------------------------------------------
+// Subcontractor-centric operations model
+// -----------------------------------------------------------------------------
+
+export const companies = mysqlTable(
+  "companies",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    legalName: varchar("legalName", { length: 255 }),
+    accountType: mysqlEnum("accountType", ["partner", "direct_customer"]).default("partner").notNull(),
+    classification: varchar("classification", { length: 120 }),
+    email: varchar("email", { length: 320 }),
+    phone: varchar("phone", { length: 30 }),
+    website: varchar("website", { length: 500 }),
+    address: text("address"),
+    city: varchar("city", { length: 100 }),
+    province: varchar("province", { length: 100 }),
+    postalCode: varchar("postalCode", { length: 20 }),
+    preferredContactMethod: mysqlEnum("preferredContactMethod", ["phone", "email", "text", "in_person"]).default("email").notNull(),
+    paymentTerms: mysqlEnum("paymentTerms", ["due_on_receipt", "net_7", "net_15", "net_30", "net_45", "net_60", "custom"]).default("net_30").notNull(),
+    standardLabourRate: decimal("standardLabourRate", { precision: 10, scale: 2 }),
+    areasServed: text("areasServed"),
+    typicalWorkRequested: text("typicalWorkRequested"),
+    contractInformation: text("contractInformation"),
+    insuranceRequirements: text("insuranceRequirements"),
+    wsibRequirements: text("wsibRequirements"),
+    safetyRequirements: text("safetyRequirements"),
+    requiredDocumentation: text("requiredDocumentation"),
+    specialInstructions: text("specialInstructions"),
+    notes: text("notes"),
+    status: mysqlEnum("status", ["active", "inactive", "on_hold"]).default("active").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("companies_user_idx").on(table.userId), index("companies_type_status_idx").on(table.userId, table.accountType, table.status)],
+);
+
+export type Company = typeof companies.$inferSelect;
+export type InsertCompany = typeof companies.$inferInsert;
+
+export const companyContacts = mysqlTable(
+  "companyContacts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    companyId: int("companyId").notNull(),
+    firstName: varchar("firstName", { length: 100 }).notNull(),
+    lastName: varchar("lastName", { length: 100 }).notNull(),
+    role: mysqlEnum("role", ["owner", "project_manager", "site_supervisor", "dispatcher", "estimator", "accounts_payable", "accounts_receivable", "safety_coordinator", "other"]).default("other").notNull(),
+    position: varchar("position", { length: 120 }),
+    phone: varchar("phone", { length: 30 }),
+    mobile: varchar("mobile", { length: 30 }),
+    email: varchar("email", { length: 320 }),
+    preferredContactMethod: mysqlEnum("preferredContactMethod", ["phone", "email", "text", "in_person"]).default("email").notNull(),
+    notes: text("notes"),
+    isPrimary: boolean("isPrimary").default(false).notNull(),
+    status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("company_contacts_company_idx").on(table.companyId), index("company_contacts_active_idx").on(table.companyId, table.status)],
+);
+
+export type CompanyContact = typeof companyContacts.$inferSelect;
+export type InsertCompanyContact = typeof companyContacts.$inferInsert;
+
+export const companyNotes = mysqlTable(
+  "companyNotes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    companyId: int("companyId").notNull(),
+    userId: int("userId").notNull(),
+    noteType: mysqlEnum("noteType", ["general", "communication", "financial", "operations", "safety", "dispute"]).default("general").notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("company_notes_company_idx").on(table.companyId, table.createdAt)],
+);
+
+export type CompanyNote = typeof companyNotes.$inferSelect;
+export type InsertCompanyNote = typeof companyNotes.$inferInsert;
+
+export const jobSites = mysqlTable(
+  "jobSites",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    companyId: int("companyId").notNull(),
+    name: varchar("name", { length: 255 }),
+    address: text("address").notNull(),
+    city: varchar("city", { length: 100 }),
+    province: varchar("province", { length: 100 }),
+    postalCode: varchar("postalCode", { length: 20 }),
+    propertyType: mysqlEnum("propertyType", ["residential", "commercial", "industrial", "multi_residential", "institutional", "other"]).default("residential").notNull(),
+    siteContactName: varchar("siteContactName", { length: 200 }),
+    siteContactPhone: varchar("siteContactPhone", { length: 30 }),
+    accessInstructions: text("accessInstructions"),
+    parkingInformation: text("parkingInformation"),
+    roofInformation: text("roofInformation"),
+    safetyHazards: text("safetyHazards"),
+    requiredEquipment: text("requiredEquipment"),
+    notes: text("notes"),
+    isActive: boolean("isActive").default(true).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("job_sites_company_idx").on(table.companyId)],
+);
+
+export type JobSite = typeof jobSites.$inferSelect;
+export type InsertJobSite = typeof jobSites.$inferInsert;
+
+export const workOrders = mysqlTable(
+  "workOrders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    companyId: int("companyId").notNull(),
+    jobSiteId: int("jobSiteId").notNull(),
+    contactId: int("contactId"),
+    projectId: int("projectId"),
+    workOrderNumber: varchar("workOrderNumber", { length: 64 }).notNull(),
+    purchaseOrderNumber: varchar("purchaseOrderNumber", { length: 100 }),
+    receivedAt: timestamp("receivedAt").defaultNow().notNull(),
+    requestedStartDate: date("requestedStartDate"),
+    deadline: date("deadline"),
+    scheduledStartDate: date("scheduledStartDate"),
+    scheduledEndDate: date("scheduledEndDate"),
+    jobType: mysqlEnum("jobType", ["tear_off", "shingle_installation", "flat_roofing", "repair", "flashing", "ventilation", "ice_water_protection", "underlayment", "metal_work", "skylight", "soffit_fascia", "eavestrough", "emergency_repair", "snow_work", "other"]).default("other").notNull(),
+    scopeSummary: text("scopeSummary").notNull(),
+    materialsSummary: text("materialsSummary"),
+    labourRequirements: text("labourRequirements"),
+    crewRequirements: text("crewRequirements"),
+    specialInstructions: text("specialInstructions"),
+    estimatedValue: decimal("estimatedValue", { precision: 12, scale: 2 }),
+    agreedPrice: decimal("agreedPrice", { precision: 12, scale: 2 }),
+    additionalCharges: decimal("additionalCharges", { precision: 12, scale: 2 }).default("0.00").notNull(),
+    taxRate: decimal("taxRate", { precision: 5, scale: 2 }).default("13.00").notNull(),
+    status: mysqlEnum("status", ["new", "reviewed", "accepted", "scheduled", "assigned", "in_progress", "waiting", "completed", "ready_for_invoice", "invoiced", "partially_paid", "paid", "closed", "cancelled", "on_hold", "disputed", "callback_required"]).default("new").notNull(),
+    statusReason: text("statusReason"),
+    createdByUserId: int("createdByUserId").notNull(),
+    updatedByUserId: int("updatedByUserId"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("work_orders_user_number_unique").on(table.userId, table.workOrderNumber),
+    index("work_orders_company_idx").on(table.companyId, table.createdAt),
+    index("work_orders_site_idx").on(table.jobSiteId),
+    index("work_orders_status_deadline_idx").on(table.userId, table.status, table.deadline),
+  ],
+);
+
+export type WorkOrder = typeof workOrders.$inferSelect;
+export type InsertWorkOrder = typeof workOrders.$inferInsert;
+
+export const workOrderScopes = mysqlTable(
+  "workOrderScopes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workOrderId: int("workOrderId").notNull(),
+    category: mysqlEnum("category", ["tear_off", "shingle_installation", "flat_roofing", "repair", "flashing", "ventilation", "ice_water_protection", "underlayment", "metal_work", "skylight", "soffit_fascia", "eavestrough", "emergency_repair", "snow_work", "other"]).default("other").notNull(),
+    description: text("description").notNull(),
+    quantity: decimal("quantity", { precision: 12, scale: 2 }),
+    unit: varchar("unit", { length: 40 }),
+    completedQuantity: decimal("completedQuantity", { precision: 12, scale: 2 }),
+    isCompleted: boolean("isCompleted").default(false).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [index("work_order_scopes_order_idx").on(table.workOrderId)],
+);
+
+export type WorkOrderScope = typeof workOrderScopes.$inferSelect;
+export type InsertWorkOrderScope = typeof workOrderScopes.$inferInsert;
+
+export const workOrderAssignments = mysqlTable(
+  "workOrderAssignments",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workOrderId: int("workOrderId").notNull(),
+    crewId: int("crewId").notNull(),
+    assignedByUserId: int("assignedByUserId").notNull(),
+    appointmentId: int("appointmentId"),
+    status: mysqlEnum("status", ["assigned", "accepted", "in_progress", "completed", "cancelled"]).default("assigned").notNull(),
+    scheduledStart: timestamp("scheduledStart"),
+    scheduledEnd: timestamp("scheduledEnd"),
+    actualStart: timestamp("actualStart"),
+    actualCompletion: timestamp("actualCompletion"),
+    labourHours: decimal("labourHours", { precision: 10, scale: 2 }),
+    productionQuantity: decimal("productionQuantity", { precision: 12, scale: 2 }),
+    productionUnit: varchar("productionUnit", { length: 40 }),
+    notes: text("notes"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [uniqueIndex("work_order_assignments_unique").on(table.workOrderId, table.crewId), index("work_order_assignments_crew_status_idx").on(table.crewId, table.status)],
+);
+
+export type WorkOrderAssignment = typeof workOrderAssignments.$inferSelect;
+export type InsertWorkOrderAssignment = typeof workOrderAssignments.$inferInsert;
+
+export const workOrderCompletions = mysqlTable(
+  "workOrderCompletions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workOrderId: int("workOrderId").notNull(),
+    completedByUserId: int("completedByUserId").notNull(),
+    completionDate: timestamp("completionDate").notNull(),
+    completedScope: text("completedScope").notNull(),
+    quantityCompleted: decimal("quantityCompleted", { precision: 12, scale: 2 }),
+    quantityUnit: varchar("quantityUnit", { length: 40 }),
+    labourHours: decimal("labourHours", { precision: 10, scale: 2 }),
+    productionQuantity: decimal("productionQuantity", { precision: 12, scale: 2 }),
+    productionUnit: varchar("productionUnit", { length: 40 }),
+    materialsUsed: text("materialsUsed"),
+    deficiencies: text("deficiencies"),
+    signOffName: varchar("signOffName", { length: 200 }),
+    crewNotes: text("crewNotes"),
+    officeNotes: text("officeNotes"),
+    callbackRequired: boolean("callbackRequired").default(false).notNull(),
+    callbackDetails: text("callbackDetails"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [uniqueIndex("work_order_completions_order_unique").on(table.workOrderId)],
+);
+
+export type WorkOrderCompletion = typeof workOrderCompletions.$inferSelect;
+export type InsertWorkOrderCompletion = typeof workOrderCompletions.$inferInsert;
+
+export const changeOrders = mysqlTable(
+  "changeOrders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workOrderId: int("workOrderId").notNull(),
+    number: varchar("number", { length: 64 }).notNull(),
+    description: text("description").notNull(),
+    amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+    status: mysqlEnum("status", ["draft", "submitted", "approved", "rejected", "invoiced"]).default("draft").notNull(),
+    requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+    approvedAt: timestamp("approvedAt"),
+    notes: text("notes"),
+    createdByUserId: int("createdByUserId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [uniqueIndex("change_orders_work_order_number_unique").on(table.workOrderId, table.number), index("change_orders_work_order_idx").on(table.workOrderId, table.status)],
+);
+
+export type ChangeOrder = typeof changeOrders.$inferSelect;
+export type InsertChangeOrder = typeof changeOrders.$inferInsert;
+
+export const documents = mysqlTable(
+  "documents",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    companyId: int("companyId"),
+    jobSiteId: int("jobSiteId"),
+    workOrderId: int("workOrderId"),
+    documentType: mysqlEnum("documentType", ["contract", "purchase_order", "drawing", "blueprint", "specification", "safety_document", "insurance_certificate", "wsib_wcb_certificate", "invoice", "receipt", "completion_document", "email_pdf", "photo", "other"]).default("other").notNull(),
+    fileName: varchar("fileName", { length: 255 }).notNull(),
+    fileKey: varchar("fileKey", { length: 500 }).notNull(),
+    fileUrl: text("fileUrl").notNull(),
+    mimeType: varchar("mimeType", { length: 150 }).notNull(),
+    revisionNumber: varchar("revisionNumber", { length: 64 }),
+    revisionNotes: text("revisionNotes"),
+    notes: text("notes"),
+    uploadedByUserId: int("uploadedByUserId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [index("documents_company_idx").on(table.companyId), index("documents_site_idx").on(table.jobSiteId), index("documents_work_order_idx").on(table.workOrderId)],
+);
+
+export type Document = typeof documents.$inferSelect;
+export type InsertDocument = typeof documents.$inferInsert;
+
+export const workOrderStatusHistory = mysqlTable(
+  "workOrderStatusHistory",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workOrderId: int("workOrderId").notNull(),
+    changedByUserId: int("changedByUserId").notNull(),
+    fromStatus: varchar("fromStatus", { length: 40 }),
+    toStatus: varchar("toStatus", { length: 40 }).notNull(),
+    reason: text("reason"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [index("work_order_status_history_order_idx").on(table.workOrderId, table.createdAt)],
+);
+
+export type WorkOrderStatusHistory = typeof workOrderStatusHistory.$inferSelect;
+export type InsertWorkOrderStatusHistory = typeof workOrderStatusHistory.$inferInsert;
+
+export const companiesRelations = relations(companies, ({ many }) => ({
+  contacts: many(companyContacts),
+  notes: many(companyNotes),
+  jobSites: many(jobSites),
+  workOrders: many(workOrders),
+  documents: many(documents),
+}));
+
+export const companyContactsRelations = relations(companyContacts, ({ one, many }) => ({
+  company: one(companies, { fields: [companyContacts.companyId], references: [companies.id] }),
+  workOrders: many(workOrders),
+}));
+
+export const jobSitesRelations = relations(jobSites, ({ one, many }) => ({
+  company: one(companies, { fields: [jobSites.companyId], references: [companies.id] }),
+  workOrders: many(workOrders),
+  documents: many(documents),
+}));
+
+export const workOrdersRelations = relations(workOrders, ({ one, many }) => ({
+  company: one(companies, { fields: [workOrders.companyId], references: [companies.id] }),
+  jobSite: one(jobSites, { fields: [workOrders.jobSiteId], references: [jobSites.id] }),
+  contact: one(companyContacts, { fields: [workOrders.contactId], references: [companyContacts.id] }),
+  scopes: many(workOrderScopes),
+  assignments: many(workOrderAssignments),
+  documents: many(documents),
+  completions: many(workOrderCompletions),
+  changeOrders: many(changeOrders),
+  statusHistory: many(workOrderStatusHistory),
+}));
+
+export const workOrderScopesRelations = relations(workOrderScopes, ({ one }) => ({
+  workOrder: one(workOrders, { fields: [workOrderScopes.workOrderId], references: [workOrders.id] }),
+}));
+
+export const workOrderAssignmentsRelations = relations(workOrderAssignments, ({ one }) => ({
+  workOrder: one(workOrders, { fields: [workOrderAssignments.workOrderId], references: [workOrders.id] }),
+  crew: one(crews, { fields: [workOrderAssignments.crewId], references: [crews.id] }),
+}));
+
+export const workOrderCompletionsRelations = relations(workOrderCompletions, ({ one }) => ({
+  workOrder: one(workOrders, { fields: [workOrderCompletions.workOrderId], references: [workOrders.id] }),
+}));
+
+export const changeOrdersRelations = relations(changeOrders, ({ one }) => ({
+  workOrder: one(workOrders, { fields: [changeOrders.workOrderId], references: [workOrders.id] }),
+}));
+
+export const documentsRelations = relations(documents, ({ one }) => ({
+  company: one(companies, { fields: [documents.companyId], references: [companies.id] }),
+  jobSite: one(jobSites, { fields: [documents.jobSiteId], references: [jobSites.id] }),
+  workOrder: one(workOrders, { fields: [documents.workOrderId], references: [workOrders.id] }),
+}));
+
+export const workOrderStatusHistoryRelations = relations(workOrderStatusHistory, ({ one }) => ({
+  workOrder: one(workOrders, { fields: [workOrderStatusHistory.workOrderId], references: [workOrders.id] }),
+}));

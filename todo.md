@@ -470,7 +470,6 @@
 - [x] Add a dashboard quick action to create a new project
 - [x] Add a dashboard quick action to create a new estimate
 - [x] Verify quick-action navigation, mobile touch targets, and existing form workflows
-
 - [x] Apply generated estimate numbers to every estimate creation entry point, including EstimateForm.tsx
 - [x] Add server-side estimate-number fallback or uniqueness validation
 - [x] Add feature tests covering estimate creation from each UI flow with generated numbers
@@ -478,12 +477,6 @@
 ## Branding Correction
 - [x] Correct all user-facing company branding to “MUNRO and Sons Roofing Experts”
 - [x] Verify browser title, Home welcome text, sidebar brand, and shared app title
-
-## Inspection Checklist Backlog
-- [x] Add persisted inspection records and checklist items
-- [x] Add inspection checklist route, navigation, and empty states
-- [x] Add tests for inspection checklist create, update, and completion flows
-
 
 ## Inspection Checklist Backlog
 - [x] Add persisted inspection records and checklist items
@@ -525,3 +518,18 @@
 
 ## GitHub Synchronization
 - [x] Commit all completed CRM changes and push them to the configured GitHub repository
+
+## Subcontractor-First Operations System — VERIFIED
+- [x] Create long-lived company accounts with partner and direct-customer types
+- [x] Support multiple contacts, reusable job sites, requirements, notes, and account history
+- [x] Implement mobile-ready work-order intake, structured scope, search, filters, and lifecycle validation
+- [x] Implement crew dispatch with synchronized work-order calendar events
+- [x] Record completion scope, production, labour, materials, deficiencies, callback work, and sign-off
+- [x] Upload and retrieve secure work-order documents, completion records, and photos
+- [x] Create one protected invoice per completed work order with editable line items and tax calculation
+- [x] Record partial and final manual payments with invoice, work-order, account-balance, and aging reconciliation
+- [x] Add company-level balances, aging buckets, payment history, and average payment time
+- [x] Add date-filtered subcontractor operations dashboard, company performance, crew production, receivables, and exception queues
+- [x] Enforce office, project, field, and accounting role boundaries for new operations workflows
+- [x] Add database-backed workflow, financial, reporting, authorization, migration, type-check, and production-build verification
+

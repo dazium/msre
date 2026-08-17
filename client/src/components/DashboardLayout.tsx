@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BarChart3, Calendar, ClipboardCheck, FileText, Home, LogOut, PanelLeft, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, LogOut, PanelLeft, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -30,7 +30,10 @@ import { HeaderSearch } from './HeaderSearch';
 
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/" },
-  { icon: Users, label: "Customers", path: "/customers" },
+  { icon: BarChart3, label: "Subcontractor Operations", path: "/subcontractor-dashboard" },
+  { icon: Building2, label: "Companies & Accounts", path: "/companies" },
+  { icon: ClipboardList, label: "Work Orders", path: "/work-orders" },
+  { icon: Users, label: "Direct Customers", path: "/customers" },
   { icon: BarChart3, label: "Projects", path: "/projects" },
   { icon: FileText, label: "Estimates", path: "/estimates" },
   { icon: ClipboardCheck, label: "Inspections", path: "/inspections" },

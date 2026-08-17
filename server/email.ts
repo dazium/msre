@@ -11,10 +11,14 @@ let transporter: nodemailer.Transporter | null = null;
 async function getTransporter(): Promise<nodemailer.Transporter> {
   if (transporter) return transporter;
 
-  // In production, configure with real email service (Gmail, SendGrid, etc.)
-  // For now, using Ethereal Email for testing
-  const testAccount = await nodemailer.createTestAccount();
+  // Keep automated tests fully local, deterministic, and independent of an SMTP service.
+  if (process.env.NODE_ENV === "test") {
+    transporter = nodemailer.createTransport({ jsonTransport: true });
+    return transporter;
+  }
 
+  // Development uses an Ethereal account. Production delivery credentials are configured by deployment.
+  const testAccount = await nodemailer.createTestAccount();
   transporter = nodemailer.createTransport({
     host: testAccount.smtp.host,
     port: testAccount.smtp.port,
@@ -63,7 +67,7 @@ export async function sendInvoiceEmail(data: EmailInvoiceData): Promise<{ succes
     let previewUrl: string | undefined;
     if (process.env.NODE_ENV !== "production") {
       const url = nodemailer.getTestMessageUrl(info);
-      previewUrl = url || undefined;
+      previewUrl = url || (process.env.NODE_ENV === "test" ? `test://email/${info.messageId}` : undefined);
     }
 
     return {
