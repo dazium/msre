@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Banknote, Building2, CalendarDays, CheckCircle2, ClipboardList, ReceiptText, Users, Wrench } from "lucide-react";
 import { WORK_ORDER_STATUS_LABELS, type WorkOrderStatus } from "@shared/subcontractor";
+import { getSubcontractorDashboardErrorState } from "@/lib/subcontractorDashboardState";
 
 function toDateInput(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -29,10 +30,14 @@ export default function SubcontractorDashboard() {
   const [range, setRangeState] = useState(initialRange);
   const startDate = new Date(`${range.start}T00:00:00`);
   const endDate = new Date(`${range.end}T23:59:59`);
-  const { data, isLoading } = trpc.subcontractorDashboard.get.useQuery({ startDate, endDate }, { enabled: !!range.start && !!range.end && endDate >= startDate });
+  const { data, isLoading, isError, error, refetch } = trpc.subcontractorDashboard.get.useQuery({ startDate, endDate }, { enabled: !!range.start && !!range.end && endDate >= startDate, retry: false });
   const applyRange = (days: number) => setRangeState(setRange(days));
 
   if (isLoading) return <div className="py-20 text-center text-foreground/60">Loading subcontractor operations...</div>;
+  if (isError) {
+    const errorState = getSubcontractorDashboardErrorState({ code: error.data?.code, message: error.message });
+    return <div className="mx-auto max-w-xl py-20 text-center"><AlertTriangle className="mx-auto h-10 w-10 text-amber-300" /><h1 className="mt-4 text-xl font-bold">{errorState.title}</h1><p className="mt-2 text-sm text-foreground/60">{errorState.message}</p><Button className="mt-5" variant="outline" onClick={() => refetch()}>Try again</Button></div>;
+  }
   if (!data) return <div className="py-20 text-center text-foreground/60">Choose a valid reporting range to load the operations dashboard.</div>;
 
   return <div className="space-y-6">

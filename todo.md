@@ -533,3 +533,27 @@
 - [x] Enforce office, project, field, and accounting role boundaries for new operations workflows
 - [x] Add database-backed workflow, financial, reporting, authorization, migration, type-check, and production-build verification
 
+## GitHub and Preview Verification
+- [x] Verify the latest local commit and configured GitHub remote
+- [x] Push and verify the latest GitHub main branch
+- [x] Open the current web preview for review
+
+## Crew Assignment Preview Test
+- [ ] Open a project and the crew assignment control in the preview
+- [ ] Select a crew member and activate the confirmation button
+- [ ] Verify the assignment persists on the project detail view
+
+## Subcontractor Branch Inspection
+- [x] Inspect GitHub branches for subcontractor-related work without changing the active branch
+
+## Subcontractor Operations Merge
+- [x] Merge commit 965aff7 into the active CRM branch
+- [x] Apply the subcontractor schema migrations safely
+- [x] Validate subcontractor, company, and work-order workflows
+- [x] Correct the subcontractor navigation route discovered during preview verification
+- [ ] Publish the updated preview with subcontractor operations
+
+## Subcontractor Dashboard 404 Follow-up
+- [x] Verify the dashboard route and sidebar target resolve correctly
+- [x] Ensure an unauthorized preview shows a clear access state rather than an indefinite loader
+- [x] Add regression coverage for dashboard route aliases and access-state messaging

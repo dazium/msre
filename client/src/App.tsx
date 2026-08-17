@@ -34,6 +34,7 @@ import EstimateDetail from "@/pages/EstimateDetail";
 import CrewAvailability from "@/pages/CrewAvailability";
 import Inspections from "@/pages/Inspections";
 import CrewProductivity from "@/pages/CrewProductivity";
+import { SUBCONTRACTOR_DASHBOARD_PATHS } from "@/lib/subcontractorRoutes";
 
 function Router() {
   return (
@@ -44,7 +45,7 @@ function Router() {
         <Route path={"/customers/:id"} component={CustomerDetail} />
         <Route path={"/companies"} component={Companies} />
         <Route path={"/companies/:id"} component={CompanyDetail} />
-        <Route path={"/subcontractor-dashboard"} component={SubcontractorDashboard} />
+        {SUBCONTRACTOR_DASHBOARD_PATHS.map((path) => <Route key={path} path={path} component={SubcontractorDashboard} />)}
         <Route path={"/work-orders"} component={WorkOrders} />
         <Route path={"/work-orders/:id"} component={WorkOrderDetail} />
         <Route path={"/projects"} component={Projects} />
