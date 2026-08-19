@@ -12,6 +12,7 @@ import CompanyDetail from "./pages/CompanyDetail";
 import WorkOrders from "./pages/WorkOrders";
 import WorkOrderDetail from "./pages/WorkOrderDetail";
 import SubcontractorDashboard from "./pages/SubcontractorDashboard";
+import SubcontractorProfile from "./pages/SubcontractorProfile";
 import Projects from "./pages/Projects";
 import Damages from "./pages/Damages";
 import Photos from "./pages/Photos";
@@ -45,6 +46,7 @@ function Router() {
         <Route path={"/customers/:id"} component={CustomerDetail} />
         <Route path={"/companies"} component={Companies} />
         <Route path={"/companies/:id"} component={CompanyDetail} />
+        <Route path={"/subcontractors/:id"} component={SubcontractorProfile} />
         {SUBCONTRACTOR_DASHBOARD_PATHS.map((path) => <Route key={path} path={path} component={SubcontractorDashboard} />)}
         <Route path={"/work-orders"} component={WorkOrders} />
         <Route path={"/work-orders/:id"} component={WorkOrderDetail} />

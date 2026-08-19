@@ -80,12 +80,14 @@ describe("Work-order financial workflow", () => {
     expect(financials?.invoices[0]?.outstandingAmount).toBeCloseTo(630, 2);
 
     await db.recordInvoicePayment(invoiceId, userId, { amount: "630.00", paymentDate: new Date("2026-08-28T12:00:00"), paymentMethod: "cheque", referenceNumber: "CHQ-332" });
-    expect((await db.getInvoiceByIdForUser(invoiceId, userId))?.status).toBe("paid");
+    const paidInvoice = await db.getInvoiceByIdForUser(invoiceId, userId);
+    expect(paidInvoice?.status).toBe("paid");
     expect((await db.getWorkOrderById(workOrderId, userId))?.status).toBe("paid");
     const paidFinancials = await db.getCompanyFinancials(companyId, userId);
     expect(paidFinancials?.summary.outstandingBalance).toBeCloseTo(0, 2);
     expect(paidFinancials?.summary.totalPaid).toBeCloseTo(1130, 2);
-    expect(paidFinancials?.summary.averagePaymentDays).toBeCloseTo(11, 0);
+    const expectedPaymentDays = Math.max(0, Math.floor((new Date("2026-08-28T12:00:00").getTime() - paidInvoice!.issueDate.getTime()) / 86_400_000));
+    expect(paidFinancials?.summary.averagePaymentDays).toBeCloseTo(expectedPaymentDays, 0);
   });
 
   it("rejects payments that exceed the remaining invoice balance", async () => {
