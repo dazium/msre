@@ -562,3 +562,10 @@
 - [x] Add a detailed subcontractor profile page linked from dashboard company rows
 - [x] Present contacts, job sites, work-order history, documents, requirements, and financial context
 - [x] Add regression coverage for subcontractor profile navigation and data access
+
+## Site-wide Portrait-First Mobile Experience
+- [x] Audit global layout, navigation, and wide data screens for horizontal phone overflow
+- [x] Add reusable mobile table-to-card and compact-action patterns
+- [x] Convert high-traffic CRM pages to vertically stacked portrait layouts
+- [x] Add regression coverage for portrait-first layout safeguards
+- [x] Verify key routes at phone-width breakpoints without requiring landscape orientation

@@ -494,27 +494,36 @@ export default function Projects() {
               </p>
             </div>
           ) : viewMode === "board" ? (
-            <div className="-mx-2 overflow-x-auto px-2 pb-4">
-              <div className="grid min-w-[1320px] grid-cols-6 gap-4">
+            <>
+              <div className="space-y-4 md:hidden">
                 {boardColumns.map((column) => (
-                  <div key={column.value} className="rounded-lg bg-background/35 p-3">
+                  <section key={column.value} className="rounded-lg border border-border/70 bg-background/35 p-3">
                     <div className="mb-3 flex items-center justify-between gap-2">
                       <span className={`rounded px-2 py-1 text-xs font-semibold ${column.badge}`}>{column.label}</span>
-                      <span className="text-xs font-medium text-foreground/55">{column.projects.length}</span>
+                      <span className="text-xs font-medium text-foreground/55">{column.projects.length} project{column.projects.length === 1 ? "" : "s"}</span>
                     </div>
                     <div className="space-y-3">
-                      {column.projects.length > 0 ? (
-                        column.projects.map(projectCard)
-                      ) : (
-                        <div className="rounded-md border border-dashed border-border px-3 py-6 text-center text-xs text-foreground/45">
-                          No projects
-                        </div>
-                      )}
+                      {column.projects.length > 0 ? column.projects.map(projectCard) : <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-foreground/45">No projects</p>}
                     </div>
-                  </div>
+                  </section>
                 ))}
               </div>
-            </div>
+              <div className="hidden -mx-2 overflow-x-auto px-2 pb-4 md:block">
+                <div className="grid min-w-[1320px] grid-cols-6 gap-4">
+                  {boardColumns.map((column) => (
+                    <div key={column.value} className="rounded-lg bg-background/35 p-3">
+                      <div className="mb-3 flex items-center justify-between gap-2">
+                        <span className={`rounded px-2 py-1 text-xs font-semibold ${column.badge}`}>{column.label}</span>
+                        <span className="text-xs font-medium text-foreground/55">{column.projects.length}</span>
+                      </div>
+                      <div className="space-y-3">
+                        {column.projects.length > 0 ? column.projects.map(projectCard) : <div className="rounded-md border border-dashed border-border px-3 py-6 text-center text-xs text-foreground/45">No projects</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
             <div className="space-y-3">{filteredProjects.map(projectCard)}</div>
           )}

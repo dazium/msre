@@ -128,20 +128,19 @@ export default function Calendar() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
-          {/* Calendar grid - responsive with horizontal scroll on mobile */}
-          <div className="overflow-x-auto">
-            <div className="grid grid-cols-7 gap-1 min-w-full">
+        <CardContent className="p-3 sm:p-6">
+          <div>
+            <div className="grid grid-cols-7 gap-1">
               {/* Day headers */}
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="p-2 text-center font-semibold text-sm text-muted-foreground">
+                <div key={day} className="p-1 text-center text-[10px] font-semibold text-muted-foreground sm:p-2 sm:text-sm">
                   {day}
                 </div>
               ))}
 
               {/* Empty days */}
               {emptyDays.map((i) => (
-                <div key={`empty-${i}`} className="p-2 bg-muted/30 rounded" />
+                <div key={`empty-${i}`} className="min-h-12 rounded bg-muted/30 sm:min-h-20" />
               ))}
 
               {/* Calendar days */}
@@ -158,18 +157,18 @@ export default function Calendar() {
                       setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
                       setShowDialog(true);
                     }}
-                    className={`p-2 rounded border cursor-pointer transition-colors ${
+                    className={`min-h-12 min-w-0 rounded border p-1 cursor-pointer transition-colors sm:min-h-20 sm:p-2 ${
                       isToday
                         ? "border-primary bg-primary/10"
                         : "border-border/50 hover:bg-muted/50"
                     }`}
                   >
-                    <div className="font-semibold text-sm mb-1">{day}</div>
+                    <div className="mb-1 text-xs font-semibold sm:text-sm">{day}</div>
                     <div className="space-y-1">
                       {dayAppointments.slice(0, 2).map((apt) => (
                         <div
                           key={apt.id}
-                          className="text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-1 py-0.5 rounded truncate"
+                          className="truncate rounded bg-blue-500/20 px-1 py-0.5 text-[10px] text-blue-700 dark:text-blue-300 sm:text-xs"
                         >
                           {apt.title}
                         </div>
