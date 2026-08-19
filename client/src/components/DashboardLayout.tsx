@@ -294,8 +294,8 @@ MUNRO & Sons
       </div>
 
       <SidebarInset>
-        <div className="flex border-b border-border h-14 items-center justify-between bg-card/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40 px-4">
-          <div className="flex items-center gap-2">
+        <div className="flex border-b border-border h-14 min-w-0 items-center justify-between bg-card/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40 px-3 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2">
             {isMobile && <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />}
             <div className="flex items-center gap-1">
               <button
@@ -316,9 +316,9 @@ MUNRO & Sons
               </button>
             </div>
             {isMobile && (
-              <div className="flex items-center gap-3 ml-2">
+              <div className="ml-1 flex min-w-0 items-center gap-2">
                 <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground font-semibold text-sm">
+                  <span className="truncate tracking-tight text-foreground font-semibold text-sm">
                     {activeMenuItem?.label ?? "Roofing CRM"}
                   </span>
                 </div>
@@ -327,7 +327,7 @@ MUNRO & Sons
           </div>
           {!isMobile && <HeaderSearch />}
         </div>
-        <main className="flex-1 p-4 lg:p-8 bg-background">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden bg-background p-3 sm:p-4 lg:p-8">{children}</main>
       </SidebarInset>
     </>
   );

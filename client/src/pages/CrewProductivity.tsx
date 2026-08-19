@@ -299,7 +299,20 @@ export default function CrewProductivity() {
             <div className="blueprint-header">
               <h2 className="text-lg font-semibold">Crew Performance Detail</h2>
             </div>
-            <div className="overflow-x-auto">
+            <div className="space-y-3 p-4 sm:hidden">
+              {reportCrews.map((crew) => (
+                <article key={crew.id} className="mobile-data-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <button type="button" onClick={() => setLocation(`/crews/${crew.id}`)} className="text-left font-semibold text-foreground hover:text-primary">{crew.name}</button>
+                    <Badge variant={crew.status === "active" ? "default" : "secondary"} className="shrink-0 text-[10px] capitalize">{crew.status}</Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-foreground/65">{crew.memberCount} member{crew.memberCount === 1 ? "" : "s"} · {crew.activeJobs} active · {crew.scheduledJobs} scheduled</p>
+                  <div className="mt-4"><p className="mobile-data-label">Completion</p><p className="mt-1 text-sm font-medium">{crew.completedJobs} / {crew.totalJobs} jobs</p><div className="mt-2"><CompletionBar value={crew.completionRate} /></div></div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><p className="mobile-data-label">Completed value</p><p className="mt-1 font-semibold text-emerald-300">{currencyFormatter.format(crew.completedValue)}</p></div><div><p className="mobile-data-label">Open pipeline</p><p className="mt-1 font-semibold text-primary">{currencyFormatter.format(crew.pipelineValue)}</p></div><div className="col-span-2"><p className="mobile-data-label">Average completed job</p><p className="mt-1 text-foreground/75">{currencyFormatter.format(crew.averageCompletedValue)}</p></div></div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto sm:block">
               <table className="min-w-[1080px] w-full text-sm">
                 <thead className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-wide text-foreground/55">
                   <tr>
