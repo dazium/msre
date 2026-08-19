@@ -112,7 +112,13 @@ function DetailField({ label, value }: { label: string; value?: string | null })
   );
 }
 
-export default function CompanyDetail({ params }: { params: { id: string } }) {
+type CompanyDetailProps = {
+  params: { id: string };
+  returnPath?: string;
+  returnLabel?: string;
+};
+
+export default function CompanyDetail({ params, returnPath = "/companies", returnLabel = "Back to Companies" }: CompanyDetailProps) {
   const companyId = Number(params.id);
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
@@ -216,7 +222,7 @@ export default function CompanyDetail({ params }: { params: { id: string } }) {
     return (
       <div className="py-20 text-center">
         <p className="font-medium">Company account not found.</p>
-        <Button className="mt-4" onClick={() => setLocation("/companies")}>Back to Companies</Button>
+        <Button className="mt-4" onClick={() => setLocation(returnPath)}>{returnLabel}</Button>
       </div>
     );
   }
@@ -225,8 +231,8 @@ export default function CompanyDetail({ params }: { params: { id: string } }) {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" className="gap-2" onClick={() => setLocation("/companies")}>
-        <ArrowLeft className="h-4 w-4" /> Back to Companies
+      <Button variant="ghost" size="sm" className="gap-2" onClick={() => setLocation(returnPath)}>
+        <ArrowLeft className="h-4 w-4" /> {returnLabel}
       </Button>
 
       <section className="blueprint-section">

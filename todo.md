@@ -551,9 +551,14 @@
 - [x] Apply the subcontractor schema migrations safely
 - [x] Validate subcontractor, company, and work-order workflows
 - [x] Correct the subcontractor navigation route discovered during preview verification
-- [ ] Publish the updated preview with subcontractor operations
+- [x] Publish the updated preview with subcontractor operations
 
 ## Subcontractor Dashboard 404 Follow-up
 - [x] Verify the dashboard route and sidebar target resolve correctly
 - [x] Ensure an unauthorized preview shows a clear access state rather than an indefinite loader
 - [x] Add regression coverage for dashboard route aliases and access-state messaging
+
+## Detailed Subcontractor Profiles
+- [x] Add a detailed subcontractor profile page linked from dashboard company rows
+- [x] Present contacts, job sites, work-order history, documents, requirements, and financial context
+- [x] Add regression coverage for subcontractor profile navigation and data access
