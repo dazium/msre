@@ -588,3 +588,8 @@
 - [x] Reduce portrait estimate-card visual density without sacrificing key estimate information
 - [x] Open the selected estimate detail view when an estimate card is tapped
 - [x] Add regression coverage and validate the estimate interaction on a phone-width viewport; tapping the first list card opened `/estimates/30017`
+
+## Global Navigation and Mobile Drawer
+- [x] Make global navigation controls clearer on every page
+- [x] Add left-edge swipe-to-open behavior for the phone sidebar drawer
+- [x] Add regression coverage and validate drawer behavior in portrait view; verified the visible Menu control at 375px and covered left-edge swipe detection with focused Vitest tests
