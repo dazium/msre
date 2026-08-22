@@ -1,327 +1,255 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useCallback, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Navigation, Clock, Maximize2, ArrowUp, ArrowDown } from "lucide-react";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { MapView } from "@/components/Map";
+import { canCreateRoute, splitRoutePoints, type RoutePoint } from "@/lib/routePlanner";
+import { Crosshair, LocateFixed, MapPin, Navigation, Route, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
-interface Stop {
-  id: number;
-  title: string;
+type RouteStop = RoutePoint & {
+  id: string;
+  label: string;
   address: string;
-  latitude: number;
-  longitude: number;
-  type: "appointment" | "customer";
-  time?: string;
-  duration?: number;
-}
+};
 
-interface RouteInfo {
-  totalDistance: string;
-  totalDuration: string;
-  waypoints: Stop[];
+type CurrentLocation = RoutePoint & {
+  label: string;
+};
+
+const fallbackCenter = { lat: 42.3149, lng: -83.0364 };
+
+function routePointToLatLng(point: RoutePoint): google.maps.LatLngLiteral {
+  return { lat: point.latitude, lng: point.longitude };
 }
 
 export default function RouteOptimization() {
-  const [, setLocation] = useLocation();
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [stops, setStops] = useState<Stop[]>([]);
-  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
-  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<CurrentLocation | null>(null);
+  const [locationStatus, setLocationStatus] = useState("Use your current location to begin.");
+  const [stops, setStops] = useState<RouteStop[]>([]);
+  const [routeResult, setRouteResult] = useState<google.maps.DirectionsResult | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isRouting, setIsRouting] = useState(false);
+  const [isAddingStop, setIsAddingStop] = useState(false);
   const [mapKey, setMapKey] = useState(0);
+  const { data: customers = [] } = trpc.customers.list.useQuery();
+  const directionsRenderer = useRef<google.maps.DirectionsRenderer | null>(null);
 
-  const { data: appointments } = trpc.appointments.list.useQuery();
-  const { data: customers } = trpc.customers.list.useQuery();
-
-  // Filter appointments for selected date
-  const appointmentsForDate = appointments?.filter((apt) => {
-    const aptDate = new Date(apt.startTime).toISOString().split("T")[0];
-    return aptDate === selectedDate && apt.location;
-  }) || [];
-
-  // Add appointment to route
-  const handleAddAppointment = (appointment: any) => {
-    if (stops.find((s) => s.id === appointment.id && s.type === "appointment")) {
-      toast.error("This appointment is already in the route");
+  const requestCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationStatus("This browser does not support GPS location.");
+      toast.error("GPS location is not supported by this browser.");
       return;
     }
 
-    const stop: Stop = {
-      id: appointment.id,
-      title: appointment.title,
-      address: appointment.location || "",
-      latitude: 0,
-      longitude: 0,
-      type: "appointment",
-      time: new Date(appointment.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      duration: Math.round((new Date(appointment.endTime).getTime() - new Date(appointment.startTime).getTime()) / 60000),
-    };
+    setIsLocating(true);
+    setLocationStatus("Requesting current GPS location…");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          label: "Current location",
+        };
+        setCurrentLocation(nextLocation);
+        setRouteResult(null);
+        setLocationStatus("Current GPS location ready.");
+        setMapKey((key) => key + 1);
+        setIsLocating(false);
+        toast.success("Current location set as route start.");
+      },
+      (error) => {
+        const message = error.code === error.PERMISSION_DENIED
+          ? "Location permission was denied. Allow location access, then try again."
+          : "Current location could not be determined. Try again outdoors or use a stronger connection.";
+        setLocationStatus(message);
+        setIsLocating(false);
+        toast.error(message);
+      },
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 30_000 },
+    );
+  }, []);
 
-    // Geocode the address to get lat/lng
-    if (window.google?.maps?.Geocoder) {
+  const getAddressForPoint = useCallback(async (point: google.maps.LatLngLiteral) => {
+    if (!window.google?.maps?.Geocoder) return "Pinned map stop";
+
+    return new Promise<string>((resolve) => {
       const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address: stop.address }, (results, status) => {
-        if (status === google.maps.GeocoderStatus.OK && results?.[0]) {
-          stop.latitude = results[0].geometry.location.lat();
-          stop.longitude = results[0].geometry.location.lng();
-          setStops([...stops, stop]);
-          toast.success(`${stop.title} added to route`);
-        } else {
-          toast.error("Could not geocode address");
+      geocoder.geocode({ location: point }, (results, status) => {
+        if (status === google.maps.GeocoderStatus.OK && results?.[0]?.formatted_address) {
+          resolve(results[0].formatted_address);
+          return;
         }
+        resolve("Pinned map stop");
       });
+    });
+  }, []);
+
+  const addMapStop = useCallback(async (position: google.maps.LatLngLiteral) => {
+    setIsAddingStop(true);
+    const address = await getAddressForPoint(position);
+    const stop: RouteStop = {
+      id: `map-stop-${Date.now()}`,
+      latitude: position.lat,
+      longitude: position.lng,
+      label: `Stop ${stops.length + 1}`,
+      address,
+    };
+    setStops((current) => [...current, stop]);
+    setRouteResult(null);
+    setMapKey((key) => key + 1);
+    setIsAddingStop(false);
+    toast.success(`${stop.label} added to route.`);
+  }, [getAddressForPoint, stops.length]);
+
+  const removeStop = (stopId: string) => {
+    setStops((current) => current.filter((stop) => stop.id !== stopId));
+    setRouteResult(null);
+    setMapKey((key) => key + 1);
+  };
+
+  const planRoute = async () => {
+    if (!canCreateRoute(currentLocation, stops)) {
+      toast.error("Set your current location and long-press the map to add at least one stop.");
+      return;
     }
-  };
-
-  // Remove stop from route
-  const handleRemoveStop = (index: number) => {
-    setStops(stops.filter((_, i) => i !== index));
-  };
-
-  // Move stop up in order
-  const handleMoveUp = (index: number) => {
-    if (index > 0) {
-      const newStops = [...stops];
-      [newStops[index], newStops[index - 1]] = [newStops[index - 1], newStops[index]];
-      setStops(newStops);
-    }
-  };
-
-  // Move stop down in order
-  const handleMoveDown = (index: number) => {
-    if (index < stops.length - 1) {
-      const newStops = [...stops];
-      [newStops[index], newStops[index + 1]] = [newStops[index + 1], newStops[index]];
-      setStops(newStops);
-    }
-  };
-
-  // Optimize route using Google Maps Directions API
-  const handleOptimizeRoute = async () => {
-    if (stops.length < 2) {
-      toast.error("Add at least 2 stops to optimize route");
+    if (!window.google?.maps?.DirectionsService) {
+      toast.error("The mapping service is still loading. Try again in a moment.");
       return;
     }
 
-    setIsOptimizing(true);
-
+    const { origin, destination, waypoints } = splitRoutePoints(currentLocation!, stops);
+    setIsRouting(true);
     try {
-      if (!window.google?.maps?.DirectionsService) {
-        toast.error("Google Maps not available");
-        return;
-      }
-
-      const directionsService = new google.maps.DirectionsService();
-      const waypoints = stops.slice(1, -1).map((stop) => ({
-        location: new google.maps.LatLng(stop.latitude, stop.longitude),
-        stopover: true,
-      }));
-
-      const result = await directionsService.route({
-        origin: new google.maps.LatLng(stops[0].latitude, stops[0].longitude),
-        destination: new google.maps.LatLng(stops[stops.length - 1].latitude, stops[stops.length - 1].longitude),
-        waypoints: waypoints,
-        optimizeWaypoints: true,
+      const service = new google.maps.DirectionsService();
+      const result = await service.route({
+        origin: routePointToLatLng(origin),
+        destination: routePointToLatLng(destination),
+        waypoints: waypoints.map((stop) => ({ location: routePointToLatLng(stop), stopover: true })),
+        optimizeWaypoints: waypoints.length > 1,
         travelMode: google.maps.TravelMode.DRIVING,
       });
-
-      if (result.routes && result.routes.length > 0) {
-        const route = result.routes[0];
-        const legs = route.legs;
-
-        let totalDistance = 0;
-        let totalDuration = 0;
-
-        legs.forEach((leg) => {
-          totalDistance += leg.distance?.value || 0;
-          totalDuration += leg.duration?.value || 0;
-        });
-
-        // Reorder stops based on optimization
-        const optimizedOrder = (result as any).waypoint_order || [];
-        const reorderedStops = [stops[0]];
-        optimizedOrder.forEach((index: number) => {
-          reorderedStops.push(stops[index + 1]);
-        });
-        reorderedStops.push(stops[stops.length - 1]);
-
-        setStops(reorderedStops);
-        setRouteInfo({
-          totalDistance: (totalDistance / 1000).toFixed(1) + " km",
-          totalDuration: Math.round(totalDuration / 60) + " min",
-          waypoints: reorderedStops,
-        });
-
-        toast.success("Route optimized successfully");
-        setMapKey((k) => k + 1); // Refresh map
-      }
+      setRouteResult(result);
+      setMapKey((key) => key + 1);
+      toast.success("Route created from your current location.");
     } catch (error) {
-      console.error("Route optimization error:", error);
-      toast.error("Failed to optimize route");
+      console.error("Route creation error", error);
+      toast.error("Route could not be created. Check the selected stops and try again.");
     } finally {
-      setIsOptimizing(false);
+      setIsRouting(false);
     }
   };
 
+  const initializeMap = (map: google.maps.Map) => {
+    if (routeResult) {
+      directionsRenderer.current = new google.maps.DirectionsRenderer({ map, suppressMarkers: false });
+      directionsRenderer.current.setDirections(routeResult);
+      return;
+    }
+
+    const bounds = new google.maps.LatLngBounds();
+    if (currentLocation) {
+      const position = routePointToLatLng(currentLocation);
+      new google.maps.Marker({ map, position, title: "Current location", label: "A" });
+      bounds.extend(position);
+    }
+    stops.forEach((stop, index) => {
+      const position = routePointToLatLng(stop);
+      new google.maps.Marker({ map, position, title: stop.address, label: String(index + 1) });
+      bounds.extend(position);
+    });
+    if (!bounds.isEmpty()) map.fitBounds(bounds, 48);
+  };
+
+  const initialCenter = currentLocation ? routePointToLatLng(currentLocation) : fallbackCenter;
+
   return (
-    <div className="space-y-6 p-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Route Optimization</h1>
-          <Button onClick={() => setLocation("/calendar")} variant="outline">
-            Back to Calendar
-          </Button>
+    <div className="space-y-4 sm:space-y-6">
+      <section className="blueprint-section">
+        <div className="blueprint-header">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">GPS route planning</p>
+              <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Route Optimization</h1>
+              <p className="mt-1 text-sm text-foreground/65">Start at your phone’s current location, then long-press the map to add stops such as Home Depot.</p>
+            </div>
+            <Badge variant="outline" className="w-fit border-primary/40 text-primary">Public access</Badge>
+          </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left panel: Route planning */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Route Planning</CardTitle>
-                <CardDescription>Select date and add stops</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="date">Select Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                  />
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_1fr] xl:gap-6">
+        <Card className="h-fit">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2"><Route className="h-5 w-5 text-primary" /> Route controls</CardTitle>
+            <CardDescription>GPS start plus one or more map stops creates a driving route.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
+            <div className="rounded-lg border border-border bg-muted/25 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Route start</p>
+                  <p className="mt-1 text-sm text-foreground/65">{locationStatus}</p>
                 </div>
+                <Crosshair className="h-5 w-5 shrink-0 text-primary" />
+              </div>
+              <Button type="button" className="mt-3 w-full" onClick={requestCurrentLocation} disabled={isLocating}>
+                <LocateFixed className="mr-2 h-4 w-4" />
+                {isLocating ? "Locating…" : currentLocation ? "Refresh current location" : "Use my current location"}
+              </Button>
+            </div>
 
-                {/* Available appointments */}
-                {appointmentsForDate.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Available Appointments</Label>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {appointmentsForDate.map((apt) => (
-                        <div key={apt.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{apt.title}</p>
-                            <p className="text-xs text-gray-500">{apt.location}</p>
-                            <p className="text-xs text-gray-400">
-                              {new Date(apt.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </p>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAddAppointment(apt)}
-                            className="flex-shrink-0"
-                          >
-                            Add
-                          </Button>
-                        </div>
-                      ))}
+            <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3">
+              <p className="flex items-center gap-2 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> Add stops from the map</p>
+              <p className="mt-1 text-sm text-foreground/65">Long-press directly on the map to add a stop. On desktop, right-click also adds one.</p>
+              {isAddingStop && <p className="mt-2 text-xs text-primary">Naming selected stop…</p>}
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">Stops ({stops.length})</p>
+                {customers.length > 0 && <span className="text-xs text-foreground/55">Map stops are independent of customer data.</span>}
+              </div>
+              {stops.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-border p-3 text-sm text-foreground/60">No stops yet. Long-press a destination on the map.</p>
+              ) : (
+                <div className="space-y-2">
+                  {stops.map((stop, index) => (
+                    <div key={stop.id} className="flex items-start gap-2 rounded-lg border border-border bg-background/50 p-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">{index + 1}</span>
+                      <div className="min-w-0 flex-1"><p className="text-sm font-semibold">{stop.label}</p><p className="mt-0.5 line-clamp-2 text-xs text-foreground/60">{stop.address}</p></div>
+                      <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => removeStop(stop.id)} aria-label={`Remove ${stop.label}`}><Trash2 className="h-4 w-4" /></Button>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
+            </div>
 
-                {/* Current route */}
-                {stops.length > 0 && (
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Current Route ({stops.length} stops)</Label>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {stops.map((stop, index) => (
-                        <div key={index} className="flex items-center gap-2 p-2 bg-blue-50 rounded border border-blue-200">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">
-                              {index + 1}. {stop.title}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">{stop.address}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            {index > 0 && (
-                              <Button size="sm" variant="ghost" onClick={() => handleMoveUp(index)}>
-                                <ArrowUp className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {index < stops.length - 1 && (
-                              <Button size="sm" variant="ghost" onClick={() => handleMoveDown(index)}>
-                                <ArrowDown className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button size="sm" variant="ghost" onClick={() => handleRemoveStop(index)}>
-                              ✕
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            <Button type="button" className="w-full" onClick={planRoute} disabled={!canCreateRoute(currentLocation, stops) || isRouting}>
+              <Navigation className="mr-2 h-4 w-4" />
+              {isRouting ? "Creating route…" : "Create driving route"}
+            </Button>
+          </CardContent>
+        </Card>
 
-                {/* Route info */}
-                {routeInfo && (
-                  <div className="bg-green-50 border border-green-200 rounded p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Navigation className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-semibold text-green-900">Optimized Route</span>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <p className="text-gray-700">
-                        <Maximize2 className="h-4 w-4 inline mr-2" />
-                        Distance: {routeInfo.totalDistance}
-                      </p>
-                      <p className="text-gray-700">
-                        <Clock className="h-4 w-4 inline mr-2" />
-                        Duration: {routeInfo.totalDuration}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleOptimizeRoute}
-                  disabled={stops.length < 2 || isOptimizing}
-                  className="w-full"
-                >
-                  {isOptimizing ? "Optimizing..." : "Optimize Route"}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right panel: Map */}
-          <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Route Map</CardTitle>
-              </CardHeader>
-              <CardContent className="h-96">
-                {stops.length > 0 ? (
-                  <MapView
-                    key={mapKey}
-                    onMapReady={(map: google.maps.Map) => {
-                      // Draw route on map
-                      const bounds = new google.maps.LatLngBounds();
-                      stops.forEach((stop) => {
-                        new google.maps.Marker({
-                          map,
-                          position: { lat: stop.latitude, lng: stop.longitude },
-                          title: stop.title,
-                        });
-                        bounds.extend({ lat: stop.latitude, lng: stop.longitude });
-                      });
-                      map.fitBounds(bounds);
-                    }}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full bg-gray-50 rounded">
-                    <p className="text-gray-500">Add stops to see route on map</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <Card className="overflow-hidden">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle>Interactive route map</CardTitle>
+            <CardDescription>Long-press the map to place each destination. Your current location remains the route start.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-0">
+            <MapView
+              key={mapKey}
+              className="h-[52vh] min-h-[380px] sm:h-[560px]"
+              initialCenter={initialCenter}
+              initialZoom={currentLocation ? 13 : 11}
+              onMapReady={initializeMap}
+              onMapLongPress={addMapStop}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

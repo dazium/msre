@@ -603,3 +603,18 @@
 - [x] Make dashboard metric cards navigate to their corresponding CRM pages
 - [x] Make dashboard summary and quick-action cards consistently actionable
 - [x] Add routing regression coverage and validate dashboard card taps in portrait view; the Total Customers card opened `/customers` directly
+
+## Public Route Optimization Bug
+- [x] Diagnose missing origin/destination route-planning controls and any no-login data error
+- [x] Restore public route planning from selected addresses
+- [x] Add regression coverage and validate the route optimizer in portrait view
+
+## GPS Map Route Planning
+- [x] Start routing from the user’s current GPS location with clear permission and fallback states
+- [x] Add manual map stops from a long press, including reverse-geocoded stop labels
+- [x] Render and optimize the route between selected stops without mandatory login
+- [x] Validate the mobile map interaction and GPS-based route workflow; public map loads without console errors and exposes the Google Directions service
+
+## Google Maps Loader Bug
+- [x] Prevent duplicate Google Maps JavaScript API injection on repeated map-page visits
+- [x] Verify Route Optimization reloads without a duplicate-map error; route-page reload completed with an initialized map and no console error
