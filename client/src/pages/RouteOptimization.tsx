@@ -1,4 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MapView } from "@/components/Map";
 import { canCreateRoute, splitRoutePoints, type RoutePoint } from "@/lib/routePlanner";
 import { getCrewDailyAssignments } from "@/lib/crewDispatch";
-import { Crosshair, LocateFixed, MapPin, Navigation, Route, Trash2, Users } from "lucide-react";
+import { reorderRouteStops } from "@/lib/routeStopOrder";
+import { Crosshair, GripVertical, LocateFixed, MapPin, Navigation, Route, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 type RouteStop = RoutePoint & {
@@ -27,6 +31,18 @@ function routePointToLatLng(point: RoutePoint): google.maps.LatLngLiteral {
   return { lat: point.latitude, lng: point.longitude };
 }
 
+function SortableRouteStop({ stop, index, onRemove }: { stop: RouteStop; index: number; onRemove: (stopId: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return <div ref={setNodeRef} style={style} className={`flex items-start gap-2 rounded-lg border border-border bg-background/50 p-3 ${isDragging ? "z-10 opacity-70 shadow-lg ring-1 ring-primary/50" : ""}`}>
+    <button type="button" className="mt-0.5 flex h-9 w-8 shrink-0 touch-none items-center justify-center rounded-md text-foreground/55 hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label={`Drag ${stop.label} to reorder`} {...attributes} {...listeners}><GripVertical className="h-4 w-4" /></button>
+    <span className="mt-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">{index + 1}</span>
+    <div className="min-w-0 flex-1"><p className="text-sm font-semibold">{stop.label}</p><p className="mt-0.5 line-clamp-2 text-xs text-foreground/60">{stop.address}</p></div>
+    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => onRemove(stop.id)} aria-label={`Remove ${stop.label}`}><Trash2 className="h-4 w-4" /></Button>
+  </div>;
+}
+
 export default function RouteOptimization() {
   const [currentLocation, setCurrentLocation] = useState<CurrentLocation | null>(null);
   const [locationStatus, setLocationStatus] = useState("Use your current location to begin.");
@@ -42,6 +58,10 @@ export default function RouteOptimization() {
   const { data: crews = [] } = trpc.crews.list.useQuery();
   const { data: appointments = [] } = trpc.appointments.list.useQuery();
   const directionsRenderer = useRef<google.maps.DirectionsRenderer | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const selectedCrew = crews.find((crew) => crew.id.toString() === selectedCrewId) ?? null;
   const selectedCrewAssignments = useMemo(
     () => selectedCrew ? getCrewDailyAssignments(selectedCrew.id, appointments) : [],
@@ -121,6 +141,13 @@ export default function RouteOptimization() {
     setMapKey((key) => key + 1);
   };
 
+  const handleStopDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    setStops((current) => reorderRouteStops(current, String(active.id), String(over.id)));
+    setRouteResult(null);
+    setMapKey((key) => key + 1);
+  };
+
   const loadSelectedCrewRoute = async () => {
     if (!selectedCrew) return toast.error("Select a crew first.");
     if (selectedCrewAssignments.length === 0) return toast.error(`${selectedCrew.name} has no assigned jobs today.`);
@@ -167,12 +194,12 @@ export default function RouteOptimization() {
         origin: routePointToLatLng(origin),
         destination: routePointToLatLng(destination),
         waypoints: waypoints.map((stop) => ({ location: routePointToLatLng(stop), stopover: true })),
-        optimizeWaypoints: waypoints.length > 1,
+        optimizeWaypoints: false,
         travelMode: google.maps.TravelMode.DRIVING,
       });
       setRouteResult(result);
       setMapKey((key) => key + 1);
-      toast.success("Route created from your current location.");
+      toast.success("Route created in your selected stop order.");
     } catch (error) {
       console.error("Route creation error", error);
       toast.error("Route could not be created. Check the selected stops and try again.");
@@ -262,15 +289,7 @@ export default function RouteOptimization() {
               {stops.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-border p-3 text-sm text-foreground/60">No stops yet. Long-press a destination on the map.</p>
               ) : (
-                <div className="space-y-2">
-                  {stops.map((stop, index) => (
-                    <div key={stop.id} className="flex items-start gap-2 rounded-lg border border-border bg-background/50 p-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">{index + 1}</span>
-                      <div className="min-w-0 flex-1"><p className="text-sm font-semibold">{stop.label}</p><p className="mt-0.5 line-clamp-2 text-xs text-foreground/60">{stop.address}</p></div>
-                      <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => removeStop(stop.id)} aria-label={`Remove ${stop.label}`}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                  ))}
-                </div>
+                <div><p className="mb-2 text-xs text-foreground/60">Drag the handle to reorder stops. The route follows this exact schedule order.</p><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStopDragEnd}><SortableContext items={stops.map((stop) => stop.id)} strategy={verticalListSortingStrategy}><div className="space-y-2">{stops.map((stop, index) => <SortableRouteStop key={stop.id} stop={stop} index={index} onRemove={removeStop} />)}</div></SortableContext></DndContext></div>
               )}
             </div>
 
