@@ -13,6 +13,7 @@ import { Plus, Trash2, Download } from "lucide-react";
 import { FormError } from "@/components/FormError";
 import { validateField, validators, errorsToMap, type ValidationError } from "@/lib/validation";
 import { getNextEstimateNumber } from "@/lib/estimateNumber";
+import { getEstimateDetailPath } from "@/lib/estimateRoutes";
 
 import { generateEstimatePDF } from "@/lib/pdf-export";
 import RoofSpecifications from "@/components/RoofSpecifications";
@@ -210,9 +211,9 @@ export default function Estimates() {
   }
 
   return (
-    <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Estimates</h1>
+    <div className="space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">Estimates</h1>
           <Button onClick={() => setShowDialog(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             New Estimate
@@ -221,24 +222,37 @@ export default function Estimates() {
 
         {/* Estimates list */}
         <Card className="border-border/50 bg-background/50 backdrop-blur">
-          <CardHeader className="border-b border-border/50">
+          <CardHeader className="border-b border-border/50 p-4 sm:p-6">
             <CardTitle>All Estimates</CardTitle>
             <CardDescription>View and manage project estimates</CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             {estimates.length === 0 ? (
               <p className="text-muted-foreground">No estimates yet. Create one to get started.</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {estimates.map((estimate) => (
-                  <div key={estimate.id} className="p-4 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold">Estimate #{estimate.estimateNumber}</h3>
-                        <p className="text-sm text-muted-foreground">{estimate.title}</p>
+                  <div
+                    key={estimate.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open estimate ${estimate.estimateNumber}`}
+                    onClick={() => setLocation(getEstimateDetailPath(estimate.id))}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setLocation(getEstimateDetailPath(estimate.id));
+                      }
+                    }}
+                    className="cursor-pointer rounded-lg border border-border/50 p-3 sm:p-4 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-sm sm:text-base">Estimate #{estimate.estimateNumber}</h3>
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">{estimate.title}</p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold">${parseFloat(estimate.total).toFixed(2)}</div>
+                      <div className="shrink-0 text-right">
+                        <div className="text-xl sm:text-2xl font-bold">${parseFloat(estimate.total).toFixed(2)}</div>
                         <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                           estimate.status === "draft" ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300" :
                           estimate.status === "sent" ? "bg-blue-500/20 text-blue-700 dark:text-blue-300" :
@@ -249,16 +263,20 @@ export default function Estimates() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-3">
+                    <div className="mt-2 flex gap-2 sm:mt-3">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleExportPDF(estimate)}
-                        className="min-h-11"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleExportPDF(estimate);
+                        }}
+                        className="min-h-9 sm:min-h-11"
                       >
                         <Download className="h-4 w-4 mr-2" />
                         Export PDF
                       </Button>
+                      <span className="self-center text-xs text-muted-foreground">Tap to open</span>
                     </div>
                   </div>
                 ))}
