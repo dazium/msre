@@ -648,3 +648,8 @@
 - [x] Show each crew as available or assigned based on active work-order assignments
 - [x] Show a selected crew’s daily assigned route in Route Optimization
 - [x] Add regression coverage and validate the public mobile workflow; focused dispatch tests pass and the 375px route controls show the crew route selector
+
+## Manual Crew Route Stop Ordering
+- [x] Add drag-and-drop reordering for the selected crew’s daily route stops
+- [x] Use the manually arranged stop order when creating the driving route
+- [x] Add regression coverage and validate the portrait route-order workflow; focused reorder tests pass and the portrait planner remains vertically usable
