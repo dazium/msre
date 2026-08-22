@@ -583,3 +583,8 @@
 ## Public Calendar Access Bug
 - [x] Trace and remove the remaining calendar unauthenticated query error
 - [x] Add regression coverage and validate `/calendar` without a session; confirmed the March 2026 calendar and empty appointment state load anonymously after the server restart
+
+## Portrait Estimate List Improvement
+- [x] Reduce portrait estimate-card visual density without sacrificing key estimate information
+- [x] Open the selected estimate detail view when an estimate card is tapped
+- [x] Add regression coverage and validate the estimate interaction on a phone-width viewport; tapping the first list card opened `/estimates/30017`
