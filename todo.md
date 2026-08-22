@@ -618,3 +618,8 @@
 ## Google Maps Loader Bug
 - [x] Prevent duplicate Google Maps JavaScript API injection on repeated map-page visits
 - [x] Verify Route Optimization reloads without a duplicate-map error; route-page reload completed with an initialized map and no console error
+
+## Customer Job Navigation
+- [x] Determine the appropriate project/job destination for a selected customer
+- [x] Open the selected customer’s job or customer detail when the customer card is tapped
+- [x] Add regression coverage and validate customer-card navigation in portrait view; John Mitchell’s customer card opened `/customers/720006`, where the linked Roof Replacement job opens its project detail
