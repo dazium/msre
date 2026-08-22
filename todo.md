@@ -593,3 +593,8 @@
 - [x] Make global navigation controls clearer on every page
 - [x] Add left-edge swipe-to-open behavior for the phone sidebar drawer
 - [x] Add regression coverage and validate drawer behavior in portrait view; verified the visible Menu control at 375px and covered left-edge swipe detection with focused Vitest tests
+
+## Work Order Date Picker Bug
+- [x] Diagnose the missing calendar picker in New Work Order
+- [x] Restore a reliable calendar date selection control and standardize its CRM usage
+- [x] Add regression coverage and validate date selection on a phone-width viewport; focused date helpers pass and the portrait Work Orders entry point remains usable

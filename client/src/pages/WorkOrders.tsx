@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { DatePicker } from "@/components/DatePicker";
+import { dateFromInput } from "@/lib/datePicker";
 import {
   Dialog,
   DialogContent,
@@ -49,7 +51,6 @@ type ScopeDraft = { category: WorkOrderJobType; description: string; quantity: s
 
 const emptyScope = (): ScopeDraft => ({ category: "other", description: "", quantity: "", unit: "" });
 
-const toDate = (value: string) => value ? new Date(`${value}T12:00:00`) : undefined;
 const todayInput = () => new Date().toISOString().slice(0, 10);
 
 function MetricCard({ label, value, Icon, accent }: { label: string; value: number; Icon: ComponentType<{ className?: string }>; accent: string }) {
@@ -145,9 +146,9 @@ export default function WorkOrders() {
       contactId: form.contactId === "none" ? undefined : Number(form.contactId),
       workOrderNumber: form.workOrderNumber.trim() || undefined,
       purchaseOrderNumber: form.purchaseOrderNumber.trim() || undefined,
-      receivedAt: toDate(form.receivedAt),
-      requestedStartDate: toDate(form.requestedStartDate),
-      deadline: toDate(form.deadline),
+      receivedAt: dateFromInput(form.receivedAt),
+      requestedStartDate: dateFromInput(form.requestedStartDate),
+      deadline: dateFromInput(form.deadline),
       jobType: form.jobType,
       scopeSummary: form.scopeSummary.trim(),
       materialsSummary: form.materialsSummary.trim() || undefined,
@@ -187,9 +188,9 @@ export default function WorkOrders() {
                     <div><Label>Job Type *</Label><Select value={form.jobType} onValueChange={(value) => setForm((current) => ({ ...current, jobType: value as WorkOrderJobType }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{WORK_ORDER_JOB_TYPES.map((type) => <SelectItem key={type} value={type}>{WORK_ORDER_JOB_TYPE_LABELS[type]}</SelectItem>)}</SelectContent></Select></div>
                     <div><Label htmlFor="wo-number">Work Order Number</Label><Input id="wo-number" value={form.workOrderNumber} onChange={(event) => setForm((current) => ({ ...current, workOrderNumber: event.target.value }))} placeholder="Auto-generated if blank" /></div>
                     <div><Label htmlFor="po-number">PO Number</Label><Input id="po-number" value={form.purchaseOrderNumber} onChange={(event) => setForm((current) => ({ ...current, purchaseOrderNumber: event.target.value }))} /></div>
-                    <div><Label htmlFor="received-at">Date Received</Label><Input id="received-at" type="date" value={form.receivedAt} onChange={(event) => setForm((current) => ({ ...current, receivedAt: event.target.value }))} /></div>
-                    <div><Label htmlFor="deadline">Deadline</Label><Input id="deadline" type="date" value={form.deadline} onChange={(event) => setForm((current) => ({ ...current, deadline: event.target.value }))} /></div>
-                    <div><Label htmlFor="requested-start">Requested Start</Label><Input id="requested-start" type="date" value={form.requestedStartDate} onChange={(event) => setForm((current) => ({ ...current, requestedStartDate: event.target.value }))} /></div>
+                    <div><Label htmlFor="received-at">Date Received</Label><DatePicker id="received-at" value={form.receivedAt} onChange={(value) => setForm((current) => ({ ...current, receivedAt: value }))} placeholder="Select date received" /></div>
+                    <div><Label htmlFor="deadline">Deadline</Label><DatePicker id="deadline" value={form.deadline} onChange={(value) => setForm((current) => ({ ...current, deadline: value }))} placeholder="Select deadline" /></div>
+                    <div><Label htmlFor="requested-start">Requested Start</Label><DatePicker id="requested-start" value={form.requestedStartDate} onChange={(value) => setForm((current) => ({ ...current, requestedStartDate: value }))} placeholder="Select requested start" /></div>
                     <div><Label htmlFor="estimated-value">Estimated Value (CAD)</Label><Input id="estimated-value" type="number" min="0" step="0.01" value={form.estimatedValue} onChange={(event) => setForm((current) => ({ ...current, estimatedValue: event.target.value }))} /></div>
                     <div><Label htmlFor="agreed-price">Agreed Price (CAD)</Label><Input id="agreed-price" type="number" min="0" step="0.01" value={form.agreedPrice} onChange={(event) => setForm((current) => ({ ...current, agreedPrice: event.target.value }))} /></div>
                     <div className="grid grid-cols-2 gap-3"><div><Label htmlFor="additional-charges">Additional Charges</Label><Input id="additional-charges" type="number" min="0" step="0.01" value={form.additionalCharges} onChange={(event) => setForm((current) => ({ ...current, additionalCharges: event.target.value }))} /></div><div><Label htmlFor="tax-rate">Tax Rate %</Label><Input id="tax-rate" type="number" min="0" step="0.01" value={form.taxRate} onChange={(event) => setForm((current) => ({ ...current, taxRate: event.target.value }))} /></div></div>
