@@ -7,13 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit2, MapPin, Phone, Mail } from "lucide-react";
+import { Plus, Trash2, Edit2, MapPin, Phone, Mail, ArrowRight } from "lucide-react";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
+import { getCustomerDetailPath, isNestedInteractiveTarget } from "@/lib/customerJobRoutes";
 
 export default function Customers() {
+  const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -274,12 +277,25 @@ export default function Customers() {
             ) : (
               <div className="space-y-3">
                 {filteredCustomers?.map((customer) => (
-                  <div key={customer.id} className="blueprint-card p-4 hover:blueprint-glow transition-all">
+                  <div
+                    key={customer.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${customer.firstName} ${customer.lastName} and job details`}
+                    onClick={(event) => {
+                      if (!isNestedInteractiveTarget(event.target)) setLocation(getCustomerDetailPath(customer.id));
+                    }}
+                    onKeyDown={(event) => {
+                      if ((event.key === "Enter" || event.key === " ") && !isNestedInteractiveTarget(event.target)) {
+                        event.preventDefault();
+                        setLocation(getCustomerDetailPath(customer.id));
+                      }
+                    }}
+                    className="blueprint-card cursor-pointer p-4 transition-all hover:blueprint-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-foreground">
-                          {customer.firstName} {customer.lastName}
-                        </h3>
+                        <div className="flex items-center gap-2"><h3 className="font-semibold text-foreground">{customer.firstName} {customer.lastName}</h3><ArrowRight className="h-4 w-4 text-primary" aria-hidden="true" /></div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm text-foreground/70">
                           {customer.phone && (
                             <ContactLink type="phone" value={customer.phone} />
@@ -299,7 +315,7 @@ export default function Customers() {
                             />
                           )}
                         </div>
-                        <p className="text-xs text-foreground/50 mt-2">{customer.notes}</p>
+                        <p className="mt-2 text-xs text-foreground/50">{customer.notes || "Tap to open customer and job details."}</p>
                       </div>
                       <div className="flex items-center gap-3 ml-4">
                         <Select value={customer.status} onValueChange={(val) => handleStatusChange(customer.id, val)}>

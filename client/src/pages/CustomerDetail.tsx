@@ -36,6 +36,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import { getCustomerProjectPath } from "@/lib/customerJobRoutes";
 
 
 const noteTypeColors: Record<string, string> = {
@@ -353,7 +354,19 @@ export default function CustomerDetail() {
                     </div>
 
                     {/* Project card */}
-                    <div className="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open job details for ${project.title}`}
+                      onClick={() => navigate(getCustomerProjectPath(project.id))}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          navigate(getCustomerProjectPath(project.id));
+                        }
+                      }}
+                      className="flex-1 cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-4 transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h3 className="font-semibold text-lg">{project.title}</h3>

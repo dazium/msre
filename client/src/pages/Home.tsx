@@ -1,16 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { ArrowRight, BarChart3, Calendar, ClipboardList, FileText, Plus, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { CustomerDetailModal } from "@/components/CustomerDetailModal";
 import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
 import { getActiveProjects, getPendingEstimates } from "@/lib/dashboardSummary";
 import { getDashboardCreatePath } from "@/lib/dashboardQuickActions";
 import { DASHBOARD_METRIC_ROUTES, getProjectDetailPath } from "@/lib/dashboardCardRoutes";
+import { getCustomerDetailPath, isNestedInteractiveTarget } from "@/lib/customerJobRoutes";
 
 export default function Home() {
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [, setLocation] = useLocation();
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const { data: customers } = trpc.customers.list.useQuery();
@@ -159,10 +160,21 @@ export default function Home() {
                   {customers.slice(0, 5).map((customer) => (
                     <div
                       key={customer.id}
-                      className="p-3 bg-background/50 rounded border border-border hover:border-primary cursor-pointer transition-all"
-                      onClick={() => setSelectedCustomerId(customer.id)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open ${customer.firstName} ${customer.lastName} and job details`}
+                      className="cursor-pointer rounded border border-border bg-background/50 p-3 transition-all hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      onClick={(event) => {
+                        if (!isNestedInteractiveTarget(event.target)) setLocation(getCustomerDetailPath(customer.id));
+                      }}
+                      onKeyDown={(event) => {
+                        if ((event.key === "Enter" || event.key === " ") && !isNestedInteractiveTarget(event.target)) {
+                          event.preventDefault();
+                          setLocation(getCustomerDetailPath(customer.id));
+                        }
+                      }}
                     >
-                      <p className="font-semibold text-foreground">{customer.firstName} {customer.lastName}</p>
+                      <p className="flex items-center gap-2 font-semibold text-foreground">{customer.firstName} {customer.lastName}<ArrowRight className="h-4 w-4 text-primary" aria-hidden="true" /></p>
                       <div className="flex items-center gap-2 mt-2 text-xs text-foreground/60">
                         <ContactLink type="phone" value={customer.phone} />
                         {customer.address && (
@@ -318,11 +330,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <CustomerDetailModal
-        customerId={selectedCustomerId}
-        isOpen={selectedCustomerId !== null}
-        onClose={() => setSelectedCustomerId(null)}
-      />
       <AddressMapModal
         address={selectedAddress}
         isOpen={mapOpen}
