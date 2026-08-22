@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,16 +8,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Edit2, Plus, Users, ChevronDown, ChevronRight } from "lucide-react";
+import { Trash2, Edit2, Plus, Users, ChevronDown, ChevronRight, ClipboardPlus, CircleCheck, Clock3 } from "lucide-react";
 import { Link } from "wouter";
+import { getCrewAvailability, toLocalDateTimeInput, type CrewAvailability } from "@/lib/crewDispatch";
 
-function CrewCard({ crew, onEdit, onDelete }: { crew: any; onEdit: (crew: any) => void; onDelete: (id: number) => void }) {
+const availabilityCopy: Record<CrewAvailability, { label: string; className: string; Icon: typeof CircleCheck }> = {
+  available: { label: "Available", className: "border-emerald-400/30 bg-emerald-400/15 text-emerald-300", Icon: CircleCheck },
+  assigned_today: { label: "Assigned today", className: "border-sky-400/30 bg-sky-400/15 text-sky-300", Icon: Clock3 },
+  on_job: { label: "On a job", className: "border-amber-400/30 bg-amber-400/15 text-amber-300", Icon: Clock3 },
+};
+
+function CrewCard({ crew, availability, onEdit, onDelete, onAssignWorkOrder }: { crew: any; availability: CrewAvailability; onEdit: (crew: any) => void; onDelete: (id: number) => void; onAssignWorkOrder: (crew: any) => void }) {
   const { data: members, refetch: refetchMembers } = trpc.crews.getMembers.useQuery({ crewId: crew.id });
   const { data: projects } = trpc.crews.getProjects.useQuery({ crewId: crew.id });
   const utils = trpc.useUtils();
   const setCrewLeadMutation = trpc.crews.setCrewLead.useMutation();
   const [showMembers, setShowMembers] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
+  const availabilityState = availabilityCopy[availability];
+  const AvailabilityIcon = availabilityState.Icon;
 
   const crewLead = members?.find(m => m.id === crew.crewLeadId);
   const teamMembers = members?.filter((m: any) => m.id !== crew.crewLeadId) || [];
@@ -58,9 +67,7 @@ function CrewCard({ crew, onEdit, onDelete }: { crew: any; onEdit: (crew: any) =
             )}
             {crew.description && <p className="text-sm text-foreground/60 mt-2">{crew.description}</p>}
           </div>
-          <Badge variant={crew.status === "active" ? "default" : "secondary"}>
-            {crew.status}
-          </Badge>
+          <div className="flex flex-wrap justify-end gap-2"><Badge variant={crew.status === "active" ? "default" : "secondary"}>{crew.status}</Badge><Badge variant="outline" className={availabilityState.className}><AvailabilityIcon className="mr-1 h-3 w-3" />{availabilityState.label}</Badge></div>
         </div>
       </CardHeader>
       <CardContent>
@@ -182,6 +189,9 @@ function CrewCard({ crew, onEdit, onDelete }: { crew: any; onEdit: (crew: any) =
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2 border-t">
+            <Button size="sm" variant="outline" onClick={() => onAssignWorkOrder(crew)} className="flex-1">
+              <ClipboardPlus className="mr-2 h-4 w-4" /> Assign Work Order
+            </Button>
             <Link href={`/crews/${crew.id}`} asChild>
               <Button size="sm" variant="outline" className="flex-1">
                 <Users className="w-4 h-4 mr-2" />
@@ -221,11 +231,45 @@ export default function Crews() {
     email: "",
     status: "active" as "active" | "inactive",
   });
+  const [assigningCrew, setAssigningCrew] = useState<any | null>(null);
+  const [assignmentDraft, setAssignmentDraft] = useState({ workOrderId: "", scheduledStart: "", scheduledEnd: "", notes: "" });
 
   const { data: crews, isLoading, refetch } = trpc.crews.list.useQuery();
+  const { data: workOrders = [] } = trpc.workOrders.list.useQuery();
+  const { data: appointments = [] } = trpc.appointments.list.useQuery();
   const createMutation = trpc.crews.create.useMutation();
   const updateMutation = trpc.crews.update.useMutation();
   const deleteMutation = trpc.crews.delete.useMutation();
+  const assignWorkOrderMutation = trpc.workOrders.assignments.create.useMutation();
+  const utils = trpc.useUtils();
+  const activeWorkOrders = useMemo(() => workOrders.filter((order) => ["accepted", "scheduled", "assigned", "in_progress", "waiting"].includes(order.status)), [workOrders]);
+
+  const openAssignment = (crew: any) => {
+    const start = new Date();
+    start.setHours(8, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(16, 0, 0, 0);
+    setAssigningCrew(crew);
+    setAssignmentDraft({ workOrderId: "", scheduledStart: toLocalDateTimeInput(start), scheduledEnd: toLocalDateTimeInput(end), notes: "" });
+  };
+
+  const submitWorkOrderAssignment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!assigningCrew || !assignmentDraft.workOrderId || !assignmentDraft.scheduledStart || !assignmentDraft.scheduledEnd) return;
+    try {
+      await assignWorkOrderMutation.mutateAsync({
+        workOrderId: Number(assignmentDraft.workOrderId),
+        crewId: assigningCrew.id,
+        scheduledStart: new Date(assignmentDraft.scheduledStart),
+        scheduledEnd: new Date(assignmentDraft.scheduledEnd),
+        notes: assignmentDraft.notes.trim() || undefined,
+      });
+      await Promise.all([utils.workOrders.list.invalidate(), utils.appointments.list.invalidate(), utils.crews.list.invalidate()]);
+      setAssigningCrew(null);
+    } catch (error) {
+      console.error("Error assigning crew to work order:", error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -367,7 +411,7 @@ export default function Crews() {
       ) : crews && crews.length > 0 ? (
         <div className="grid gap-4">
           {crews.map((crew: any) => (
-            <CrewCard key={crew.id} crew={crew} onEdit={handleEdit} onDelete={handleDelete} />
+            <CrewCard key={crew.id} crew={crew} availability={getCrewAvailability(crew.id, appointments)} onEdit={handleEdit} onDelete={handleDelete} onAssignWorkOrder={openAssignment} />
           ))}
         </div>
       ) : (
@@ -377,6 +421,17 @@ export default function Crews() {
           </CardContent>
         </Card>
       )}
+      <Dialog open={Boolean(assigningCrew)} onOpenChange={(open) => !open && setAssigningCrew(null)}>
+        <DialogContent className="max-h-[90vh] w-[95vw] max-w-xl overflow-y-auto">
+          <DialogHeader><DialogTitle>Assign Work Order to {assigningCrew?.name}</DialogTitle><DialogDescription>Choose an active work order and schedule the crew. This creates the work-order assignment and its calendar event together.</DialogDescription></DialogHeader>
+          {activeWorkOrders.length === 0 ? <p className="rounded-lg border border-dashed border-border p-5 text-sm text-foreground/60">No active work orders are ready for dispatch. Move a work order to Accepted or Scheduled first.</p> : <form onSubmit={submitWorkOrderAssignment} className="space-y-4">
+            <div><Label>Active Work Order</Label><Select value={assignmentDraft.workOrderId} onValueChange={(value) => setAssignmentDraft((current) => ({ ...current, workOrderId: value }))}><SelectTrigger><SelectValue placeholder="Select a work order" /></SelectTrigger><SelectContent>{activeWorkOrders.map((order) => <SelectItem key={order.id} value={order.id.toString()}>{order.workOrderNumber} · {order.companyName} · {order.jobSiteName || order.jobSiteAddress}</SelectItem>)}</SelectContent></Select></div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><Label htmlFor="crew-assignment-start">Start</Label><Input id="crew-assignment-start" type="datetime-local" value={assignmentDraft.scheduledStart} onChange={(event) => setAssignmentDraft((current) => ({ ...current, scheduledStart: event.target.value }))} /></div><div><Label htmlFor="crew-assignment-end">End</Label><Input id="crew-assignment-end" type="datetime-local" value={assignmentDraft.scheduledEnd} onChange={(event) => setAssignmentDraft((current) => ({ ...current, scheduledEnd: event.target.value }))} /></div></div>
+            <div><Label htmlFor="crew-assignment-notes">Dispatch Notes</Label><Textarea id="crew-assignment-notes" rows={3} value={assignmentDraft.notes} onChange={(event) => setAssignmentDraft((current) => ({ ...current, notes: event.target.value }))} placeholder="Site access, staging, safety, or handoff notes" /></div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button type="button" variant="outline" onClick={() => setAssigningCrew(null)}>Cancel</Button><Button type="submit" disabled={assignWorkOrderMutation.isPending || !assignmentDraft.workOrderId}>{assignWorkOrderMutation.isPending ? "Assigning…" : "Assign Work Order"}</Button></div>
+          </form>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
