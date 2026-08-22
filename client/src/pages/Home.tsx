@@ -7,6 +7,7 @@ import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
 import { getActiveProjects, getPendingEstimates } from "@/lib/dashboardSummary";
 import { getDashboardCreatePath } from "@/lib/dashboardQuickActions";
+import { DASHBOARD_METRIC_ROUTES, getProjectDetailPath } from "@/lib/dashboardCardRoutes";
 
 export default function Home() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
@@ -42,35 +43,35 @@ export default function Home() {
 
         {/* Quick Stats Grid */}
         <div className="blueprint-grid-3">
-          <div className="blueprint-stat">
+          <a href={DASHBOARD_METRIC_ROUTES.customers} aria-label="Open customers" className="blueprint-stat group block cursor-pointer transition-all hover:blueprint-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <div className="flex items-center justify-between">
               <div>
-                <p className="blueprint-label">Total Customers</p>
+                <p className="blueprint-label flex items-center gap-1">Total Customers <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></p>
                 <p className="blueprint-value">{customers?.length || 0}</p>
               </div>
               <Users className="w-12 h-12 text-primary/20" />
             </div>
-          </div>
+          </a>
 
-          <div className="blueprint-stat">
+          <a href={DASHBOARD_METRIC_ROUTES.activeProjects} aria-label="Open projects" className="blueprint-stat group block cursor-pointer transition-all hover:blueprint-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <div className="flex items-center justify-between">
               <div>
-                <p className="blueprint-label">Active Projects</p>
+                <p className="blueprint-label flex items-center gap-1">Active Projects <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></p>
                 <p className="blueprint-value">{activeProjects.length}</p>
               </div>
               <BarChart3 className="w-12 h-12 text-primary/20" />
             </div>
-          </div>
+          </a>
 
-          <div className="blueprint-stat">
+          <a href={DASHBOARD_METRIC_ROUTES.pendingEstimates} aria-label="Open pending estimates" className="blueprint-stat group block cursor-pointer transition-all hover:blueprint-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <div className="flex items-center justify-between">
               <div>
-                <p className="blueprint-label">Pending Estimates</p>
+                <p className="blueprint-label flex items-center gap-1">Pending Estimates <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></p>
                 <p className="blueprint-value">{pendingEstimates.length}</p>
               </div>
               <FileText className="w-12 h-12 text-primary/20" />
             </div>
-          </div>
+          </a>
         </div>
 
         {/* Quick Summary Dashboard */}
@@ -81,7 +82,7 @@ export default function Home() {
                 <TrendingUp className="w-5 h-5" />
                 Active Projects
               </h2>
-              <a href="/projects" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
+              <a href={DASHBOARD_METRIC_ROUTES.activeProjects} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
                 View all <ArrowRight className="w-4 h-4" />
               </a>
             </div>
@@ -96,7 +97,7 @@ export default function Home() {
               {activeProjects.length > 0 ? (
                 <div className="space-y-2">
                   {activeProjects.slice(0, 3).map((project) => (
-                    <a key={project.id} href={`/projects/${project.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
+                      <a key={project.id} href={getProjectDetailPath(project.id)} className="flex min-h-11 items-center justify-between gap-3 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
                       <span className="min-w-0 truncate font-semibold text-foreground">{project.title}</span>
                       <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-foreground/60">{project.status.replace("_", " ")}</span>
                     </a>
@@ -114,7 +115,7 @@ export default function Home() {
                 <ClipboardList className="w-5 h-5" />
                 Pending Estimates
               </h2>
-              <a href="/estimates" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
+              <a href={DASHBOARD_METRIC_ROUTES.pendingEstimates} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
                 View all <ArrowRight className="w-4 h-4" />
               </a>
             </div>
@@ -186,20 +187,23 @@ export default function Home() {
 
           {/* Upcoming Appointments */}
           <div className="blueprint-section">
-            <div className="blueprint-header">
+            <div className="blueprint-header flex items-center justify-between gap-3">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 Upcoming Appointments
               </h2>
+              <a href={DASHBOARD_METRIC_ROUTES.appointments} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                View calendar <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
             <div className="p-6">
               {appointments && appointments.length > 0 ? (
                 <div className="space-y-2">
                   {appointments.slice(0, 5).map((apt) => (
-                    <div key={apt.id} className="p-3 bg-background/50 rounded border border-border">
+                    <a key={apt.id} href={DASHBOARD_METRIC_ROUTES.appointments} className="block min-h-11 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
                       <p className="font-semibold text-foreground">{apt.title}</p>
                       <p className="text-xs text-foreground/60 mt-1">{new Date(apt.startTime).toLocaleDateString()}</p>
-                    </div>
+                    </a>
                   ))}
                 </div>
               ) : (
@@ -213,20 +217,23 @@ export default function Home() {
 
         {/* Active Projects Section */}
         <div className="blueprint-section">
-          <div className="blueprint-header">
+          <div className="blueprint-header flex items-center justify-between gap-3">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
               Active Projects
             </h2>
+            <a href={DASHBOARD_METRIC_ROUTES.activeProjects} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
+              View all <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
           <div className="p-6">
             {activeProjects.length > 0 ? (
               <div className="space-y-2">
                 {activeProjects.slice(0, 5).map((proj) => (
-                  <div key={proj.id} className="p-3 bg-background/50 rounded border border-border">
+                  <a key={proj.id} href={getProjectDetailPath(proj.id)} className="block min-h-11 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
                     <p className="font-semibold text-foreground">{proj.title}</p>
                     <p className="text-xs text-foreground/60 mt-1">Status: {proj.status}</p>
-                  </div>
+                  </a>
                 ))}
               </div>
             ) : (

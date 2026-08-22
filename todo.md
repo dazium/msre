@@ -598,3 +598,8 @@
 - [x] Diagnose the missing calendar picker in New Work Order
 - [x] Restore a reliable calendar date selection control and standardize its CRM usage
 - [x] Add regression coverage and validate date selection on a phone-width viewport; focused date helpers pass and the portrait Work Orders entry point remains usable
+
+## Actionable Dashboard Cards
+- [x] Make dashboard metric cards navigate to their corresponding CRM pages
+- [x] Make dashboard summary and quick-action cards consistently actionable
+- [x] Add routing regression coverage and validate dashboard card taps in portrait view; the Total Customers card opened `/customers` directly
