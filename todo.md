@@ -569,3 +569,8 @@
 - [x] Convert high-traffic CRM pages to vertically stacked portrait layouts
 - [x] Add regression coverage for portrait-first layout safeguards
 - [x] Verify key routes at phone-width breakpoints without requiring landscape orientation
+
+## Test Database Cleanup
+- [x] Audit database relationships and select ten representative customer records to retain
+- [x] Remove surplus test records in dependency-safe order while preserving the retained sample
+- [x] Verify final customer and operational record counts
