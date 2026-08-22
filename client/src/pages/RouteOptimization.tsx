@@ -1,11 +1,14 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapView } from "@/components/Map";
 import { canCreateRoute, splitRoutePoints, type RoutePoint } from "@/lib/routePlanner";
-import { Crosshair, LocateFixed, MapPin, Navigation, Route, Trash2 } from "lucide-react";
+import { getCrewDailyAssignments } from "@/lib/crewDispatch";
+import { Crosshair, LocateFixed, MapPin, Navigation, Route, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 type RouteStop = RoutePoint & {
@@ -32,9 +35,18 @@ export default function RouteOptimization() {
   const [isLocating, setIsLocating] = useState(false);
   const [isRouting, setIsRouting] = useState(false);
   const [isAddingStop, setIsAddingStop] = useState(false);
+  const [selectedCrewId, setSelectedCrewId] = useState("none");
+  const [isLoadingCrewRoute, setIsLoadingCrewRoute] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const { data: customers = [] } = trpc.customers.list.useQuery();
+  const { data: crews = [] } = trpc.crews.list.useQuery();
+  const { data: appointments = [] } = trpc.appointments.list.useQuery();
   const directionsRenderer = useRef<google.maps.DirectionsRenderer | null>(null);
+  const selectedCrew = crews.find((crew) => crew.id.toString() === selectedCrewId) ?? null;
+  const selectedCrewAssignments = useMemo(
+    () => selectedCrew ? getCrewDailyAssignments(selectedCrew.id, appointments) : [],
+    [appointments, selectedCrew],
+  );
 
   const requestCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -107,6 +119,34 @@ export default function RouteOptimization() {
     setStops((current) => current.filter((stop) => stop.id !== stopId));
     setRouteResult(null);
     setMapKey((key) => key + 1);
+  };
+
+  const loadSelectedCrewRoute = async () => {
+    if (!selectedCrew) return toast.error("Select a crew first.");
+    if (selectedCrewAssignments.length === 0) return toast.error(`${selectedCrew.name} has no assigned jobs today.`);
+    if (!window.google?.maps?.Geocoder) return toast.error("The mapping service is still loading. Try again in a moment.");
+    setIsLoadingCrewRoute(true);
+    try {
+      const geocoder = new google.maps.Geocoder();
+      const resolvedStops = await Promise.all(selectedCrewAssignments.map(async (assignment, index) => {
+        const address = assignment.location?.trim();
+        if (!address) return null;
+        const result = await new Promise<google.maps.GeocoderResult | null>((resolve) => {
+          geocoder.geocode({ address }, (results, status) => resolve(status === google.maps.GeocoderStatus.OK && results?.[0] ? results[0] : null));
+        });
+        const location = result?.geometry.location;
+        if (!location) return null;
+        return { id: `crew-${selectedCrew.id}-${index}`, latitude: location.lat(), longitude: location.lng(), label: assignment.title || `Crew stop ${index + 1}`, address: result?.formatted_address || address } satisfies RouteStop;
+      }));
+      const crewStops = resolvedStops.filter((stop): stop is RouteStop => Boolean(stop));
+      if (crewStops.length === 0) return toast.error("The crew's job addresses could not be placed on the map.");
+      setStops(crewStops);
+      setRouteResult(null);
+      setMapKey((key) => key + 1);
+      toast.success(`${selectedCrew.name}'s ${crewStops.length} assigned stop${crewStops.length === 1 ? "" : "s"} loaded for today.`);
+    } finally {
+      setIsLoadingCrewRoute(false);
+    }
   };
 
   const planRoute = async () => {
@@ -204,6 +244,14 @@ export default function RouteOptimization() {
               <p className="flex items-center gap-2 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> Add stops from the map</p>
               <p className="mt-1 text-sm text-foreground/65">Long-press directly on the map to add a stop. On desktop, right-click also adds one.</p>
               {isAddingStop && <p className="mt-2 text-xs text-primary">Naming selected stop…</p>}
+            </div>
+
+            <div className="rounded-lg border border-border bg-muted/25 p-3">
+              <p className="flex items-center gap-2 text-sm font-semibold"><Users className="h-4 w-4 text-primary" /> Crew route for today</p>
+              <p className="mt-1 text-sm text-foreground/65">Load a crew’s scheduled work-order stops into the route map. Your GPS location remains the optional route start.</p>
+              <div className="mt-3 space-y-2"><Label htmlFor="crew-route">Crew</Label><Select value={selectedCrewId} onValueChange={setSelectedCrewId}><SelectTrigger id="crew-route"><SelectValue placeholder="Select a crew" /></SelectTrigger><SelectContent><SelectItem value="none">No crew selected</SelectItem>{crews.filter((crew) => crew.status === "active").map((crew) => <SelectItem key={crew.id} value={crew.id.toString()}>{crew.name}</SelectItem>)}</SelectContent></Select></div>
+              {selectedCrew && <p className="mt-2 text-xs text-foreground/60">{selectedCrewAssignments.length} assigned job{selectedCrewAssignments.length === 1 ? "" : "s"} today.</p>}
+              <Button type="button" variant="outline" className="mt-3 w-full" onClick={loadSelectedCrewRoute} disabled={!selectedCrew || isLoadingCrewRoute}><Route className="mr-2 h-4 w-4" />{isLoadingCrewRoute ? "Loading crew route…" : "Load crew route"}</Button>
             </div>
 
             <div>

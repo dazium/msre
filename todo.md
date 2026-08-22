@@ -642,3 +642,9 @@
 - [x] Diagnose the remaining authentication requirement on the Crews page
 - [x] Allow public CRM visitors to load crew information without login
 - [x] Add regression coverage and validate the unauthenticated Crews route; verified `/crews` loads at 375px without a login message
+
+## Crew Work Orders and Daily Routes
+- [x] Add direct active work-order assignment from a selected crew card
+- [x] Show each crew as available or assigned based on active work-order assignments
+- [x] Show a selected crew’s daily assigned route in Route Optimization
+- [x] Add regression coverage and validate the public mobile workflow; focused dispatch tests pass and the 375px route controls show the crew route selector
