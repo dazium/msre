@@ -574,3 +574,8 @@
 - [x] Audit database relationships and select ten representative customer records to retain
 - [x] Remove surplus test records in dependency-safe order while preserving the retained sample
 - [x] Verify final customer and operational record counts
+
+## Public No-Authentication Access
+- [x] Remove mandatory authentication prompts from CRM navigation and layout
+- [x] Expose required CRM data procedures to unauthenticated visitors using the public CRM owner scope
+- [x] Add regression coverage and verify unauthenticated dashboard access

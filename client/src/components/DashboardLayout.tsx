@@ -1,11 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -19,13 +12,10 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, LogOut, PanelLeft, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
-import { Button } from "./ui/button";
 import { HeaderSearch } from './HeaderSearch';
 
 const menuItems = [
@@ -62,42 +52,9 @@ export default function DashboardLayout({
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
-  const { loading, user } = useAuth();
-
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
-
-  if (loading) {
-    return <DashboardLayoutSkeleton />
-  }
-
-  // Skip login requirement - allow public access
-  if (false && !user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight text-center">
-              Sign in to continue
-            </h1>
-            <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Access to this dashboard requires authentication. Continue to launch the login flow.
-            </p>
-          </div>
-          <Button
-            onClick={() => {
-              window.location.href = getLoginUrl();
-            }}
-            size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-all"
-          >
-            Sign in
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <SidebarProvider
@@ -123,7 +80,6 @@ function DashboardLayoutContent({
   children,
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
-  const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -253,34 +209,21 @@ MUNRO & Sons
           </SidebarContent>
 
           <SidebarFooter className="p-3 border-t border-sidebar-border">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-sidebar-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <Avatar className="h-9 w-9 border border-sidebar-border flex-shrink-0">
-                    <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
-                    <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">
-                      {user?.name || "-"}
-                    </p>
-                    <p className="text-xs text-sidebar-foreground/60 truncate mt-1.5">
-                      {user?.email || "-"}
-                    </p>
-                  </div>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={logout}
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-3 rounded-lg px-1 py-1 w-full group-data-[collapsible=icon]:justify-center">
+              <Avatar className="h-9 w-9 border border-sidebar-border flex-shrink-0">
+                <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
+                  M
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+                <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">
+                  MUNRO and Sons
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate mt-1.5">
+                  Public CRM access
+                </p>
+              </div>
+            </div>
           </SidebarFooter>
         </Sidebar>
         <div
