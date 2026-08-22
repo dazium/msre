@@ -579,3 +579,7 @@
 - [x] Remove mandatory authentication prompts from CRM navigation and layout
 - [x] Expose required CRM data procedures to unauthenticated visitors using the public CRM owner scope
 - [x] Add regression coverage and verify unauthenticated dashboard access
+
+## Public Calendar Access Bug
+- [x] Trace and remove the remaining calendar unauthenticated query error
+- [x] Add regression coverage and validate `/calendar` without a session; confirmed the March 2026 calendar and empty appointment state load anonymously after the server restart
