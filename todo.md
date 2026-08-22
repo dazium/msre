@@ -36,8 +36,8 @@
 - [x] Add project update functionality
 - [x] Comprehensive tests for all project operations
 - [x] Build projects dashboard with kanban-style status board
-- [ ] Implement project detail view with timeline
-- [ ] Create project timeline visualization
+- [x] Implement project detail view with timeline
+- [x] Create project timeline visualization
 
 ## Estimates & Pricing (MOSTLY COMPLETE)
 - [x] Create estimates table queries in server/db.ts
@@ -97,13 +97,13 @@
 - [x] Add upcoming appointments widget
 - [x] Create quick stats (total customers, active projects, revenue)
 - [ ] Build activity feed showing recent changes
-- [ ] Add key metrics and KPIs display
+- [x] Add key metrics and KPIs display
 
 ## Google Maps Integration
-- [ ] Set up Google Maps component from template
-- [ ] Implement job location visualization on map
-- [ ] Add route planning between multiple jobs
-- [ ] Create location search and geocoding
+- [x] Set up Google Maps component from template
+- [x] Implement job location visualization on map
+- [x] Add route planning between multiple jobs
+- [x] Create location search and geocoding
 - [ ] Build address validation using Maps API
 - [ ] Add map markers for customers and projects
 - [ ] Implement map filtering by project status
@@ -165,7 +165,7 @@
 ## UI Polish & Branding
 - [ ] Apply company branding (logo, colors, fonts)
 - [ ] Add company logo and favicon
-- [ ] Refine blueprint aesthetic throughout
+- [x] Refine blueprint aesthetic throughout
 - [ ] Ensure consistent spacing and alignment
 - [ ] Add micro-interactions and animations
 - [ ] Optimize colors for accessibility
@@ -623,3 +623,22 @@
 - [x] Determine the appropriate project/job destination for a selected customer
 - [x] Open the selected customer’s job or customer detail when the customer card is tapped
 - [x] Add regression coverage and validate customer-card navigation in portrait view; John Mitchell’s customer card opened `/customers/720006`, where the linked Roof Replacement job opens its project detail
+
+## Customer Profile Quick Actions
+- [ ] Add customer-scoped Create New Job and New Estimate actions
+- [ ] Add quick notes to the customer’s job timeline
+- [ ] Add photo attachments to the customer’s job timeline
+- [ ] Add regression coverage and validate the full workflow in portrait view
+
+## GitHub Synchronization — Current Completed Changes
+- [x] Commit and push the completed validated CRM changes without the unfinished profile quick-action work; GitHub main now points to e0a576b
+
+## Backlog Accuracy Audit
+- [x] Review historical unchecked tasks and mark only implemented, verified work complete
+- [ ] Add a real MSRE/MUNRO company logo and verify end-to-end branded coverage
+- [ ] Add a dedicated customer service-history section alongside existing contact notes
+
+## Public Crews Access Bug
+- [x] Diagnose the remaining authentication requirement on the Crews page
+- [x] Allow public CRM visitors to load crew information without login
+- [x] Add regression coverage and validate the unauthenticated Crews route; verified `/crews` loads at 375px without a login message

@@ -15,6 +15,9 @@ export default defineConfig({
   test: {
     environment: "node",
     testTimeout: 25000,
+    env: {
+      VITE_APP_TITLE: "MUNRO and Sons Roofing Experts",
+    },
     include: ["server/**/*.test.ts", "server/**/*.spec.ts", "client/**/*.test.ts"],
   },
 });
