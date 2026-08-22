@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -212,8 +211,6 @@ function CrewCard({ crew, onEdit, onDelete }: { crew: any; onEdit: (crew: any) =
 }
 
 export default function Crews() {
-  const auth = useAuth();
-  const user = auth?.user;
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -270,10 +267,6 @@ export default function Crews() {
       }
     }
   };
-
-  if (!user) {
-    return <div className="p-8">Please log in to view crews.</div>;
-  }
 
   return (
     <div className="space-y-6">
