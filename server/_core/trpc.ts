@@ -1,10 +1,9 @@
 import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
 import superjson from "superjson";
-import { users, type User } from "../../drizzle/schema";
-import { getDb } from "../db";
+import { getUserByOpenId } from "../db";
 import type { TrpcContext } from "./context";
+import { ENV } from "./env";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -13,35 +12,22 @@ const t = initTRPC.context<TrpcContext>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
-const PUBLIC_CRM_OWNER_ID = 1;
-let publicCrmOwner: User | null | undefined;
+let publicCrmUserPromise: Promise<NonNullable<TrpcContext["user"]> | null> | null = null;
 
-export function resolvePublicCrmUser(
-  authenticatedUser: User | null,
-  publicOwner: User | null,
-): User | null {
-  return authenticatedUser ?? publicOwner;
-}
-
-async function getPublicCrmOwner(): Promise<User | null> {
-  if (publicCrmOwner !== undefined) return publicCrmOwner;
-
-  const db = await getDb();
-  if (!db) return null;
-
-  const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, PUBLIC_CRM_OWNER_ID))
-    .limit(1);
-
-  publicCrmOwner = result[0] ?? null;
-  return publicCrmOwner;
+async function resolvePublicCrmUser() {
+  if (!ENV.ownerOpenId) return null;
+  if (!publicCrmUserPromise) {
+    publicCrmUserPromise = getUserByOpenId(ENV.ownerOpenId).then((user) => user ?? null).catch((error) => {
+      console.error("[Public CRM] Could not resolve the configured owner identity", error);
+      return null;
+    });
+  }
+  return publicCrmUserPromise;
 }
 
 const requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;
-  const user = resolvePublicCrmUser(ctx.user, await getPublicCrmOwner());
+  const user = ctx.user ?? await resolvePublicCrmUser();
 
   if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
@@ -75,10 +61,10 @@ export const fieldOperationsProcedure = t.procedure.use(requireUser).use(require
 export const accountingProcedure = t.procedure.use(requireUser).use(requireAnyRole(["user", "admin", "office_manager", "accounting"]));
 
 export const adminProcedure = t.procedure.use(
-  t.middleware(async opts => {
+  requireUser).use(t.middleware(async opts => {
     const { ctx, next } = opts;
 
-    if (!ctx.user || ctx.user.role !== 'admin') {
+    if (!ctx.user || (ctx.user.role !== 'admin' && ctx.user.openId !== ENV.ownerOpenId)) {
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
 
@@ -88,5 +74,4 @@ export const adminProcedure = t.procedure.use(
         user: ctx.user,
       },
     });
-  }),
-);
+  }));

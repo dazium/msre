@@ -91,45 +91,22 @@ const FORGE_BASE_URL =
   import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
   "https://forge.butterfly-effect.dev";
 const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
-const MAPS_SCRIPT_ID = "msre-google-maps-api";
-let mapsLoadPromise: Promise<void> | null = null;
 
-function loadMapScript(): Promise<void> {
-  if (window.google?.maps) return Promise.resolve();
-  if (mapsLoadPromise) return mapsLoadPromise;
-
-  mapsLoadPromise = new Promise<void>((resolve, reject) => {
-    const existingScript = document.getElementById(MAPS_SCRIPT_ID) as HTMLScriptElement | null;
-    const handleLoaded = () => {
-      if (window.google?.maps) {
-        resolve();
-      } else {
-        mapsLoadPromise = null;
-        reject(new Error("Google Maps loaded without initializing its runtime."));
-      }
-    };
-    const handleFailed = () => {
-      mapsLoadPromise = null;
-      reject(new Error("Google Maps JavaScript API could not be loaded."));
-    };
-
-    if (existingScript) {
-      existingScript.addEventListener("load", handleLoaded, { once: true });
-      existingScript.addEventListener("error", handleFailed, { once: true });
-      return;
-    }
-
+function loadMapScript() {
+  return new Promise(resolve => {
     const script = document.createElement("script");
-    script.id = MAPS_SCRIPT_ID;
-    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry,routes`;
+    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
     script.async = true;
     script.crossOrigin = "anonymous";
-    script.addEventListener("load", handleLoaded, { once: true });
-    script.addEventListener("error", handleFailed, { once: true });
+    script.onload = () => {
+      resolve(null);
+      script.remove(); // Clean up immediately
+    };
+    script.onerror = () => {
+      console.error("Failed to load Google Maps script");
+    };
     document.head.appendChild(script);
   });
-
-  return mapsLoadPromise;
 }
 
 interface MapViewProps {
@@ -137,7 +114,6 @@ interface MapViewProps {
   initialCenter?: google.maps.LatLngLiteral;
   initialZoom?: number;
   onMapReady?: (map: google.maps.Map) => void;
-  onMapLongPress?: (position: google.maps.LatLngLiteral) => void;
 }
 
 export function MapView({
@@ -145,29 +121,9 @@ export function MapView({
   initialCenter = { lat: 37.7749, lng: -122.4194 },
   initialZoom = 12,
   onMapReady,
-  onMapLongPress,
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastLongPress = useRef(0);
-  const onMapLongPressRef = useRef(onMapLongPress);
-  onMapLongPressRef.current = onMapLongPress;
-
-  const clearLongPressTimer = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-
-  const emitLongPress = (latLng: google.maps.LatLng | null | undefined) => {
-    if (!latLng || !onMapLongPressRef.current) return;
-    const now = Date.now();
-    if (now - lastLongPress.current < 800) return;
-    lastLongPress.current = now;
-    onMapLongPressRef.current({ lat: latLng.lat(), lng: latLng.lng() });
-  };
 
   const init = usePersistFn(async () => {
     await loadMapScript();
@@ -184,19 +140,6 @@ export function MapView({
       streetViewControl: true,
       mapId: "DEMO_MAP_ID",
     });
-
-    if (onMapLongPress) {
-      google.maps.event.addListener(map.current, "mousedown", (event: google.maps.MapMouseEvent) => {
-        clearLongPressTimer();
-        longPressTimer.current = setTimeout(() => emitLongPress(event.latLng), 650);
-      });
-      google.maps.event.addListener(map.current, "mouseup", clearLongPressTimer);
-      google.maps.event.addListener(map.current, "dragstart", clearLongPressTimer);
-      google.maps.event.addListener(map.current, "rightclick", (event: google.maps.MapMouseEvent) => {
-        clearLongPressTimer();
-        emitLongPress(event.latLng);
-      });
-    }
     if (onMapReady) {
       onMapReady(map.current);
     }
@@ -204,7 +147,6 @@ export function MapView({
 
   useEffect(() => {
     init();
-    return clearLongPressTimer;
   }, [init]);
 
   return (

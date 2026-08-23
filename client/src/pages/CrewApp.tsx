@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { Camera, ArrowLeft, Calendar, MapPin, Phone, Mail, AlertCircle, X } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
-import { useAuth } from '@/_core/hooks/useAuth'
 
 interface CrewPhoto {
   id: string
@@ -19,7 +18,6 @@ interface CrewPhoto {
 
 export default function CrewApp() {
   const [, setLocation] = useLocation()
-  const { user } = useAuth()
   const [view, setView] = useState<'list' | 'details'>('list')
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
   const [photos, setPhotos] = useState<CrewPhoto[]>([])
@@ -105,7 +103,7 @@ export default function CrewApp() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white">Crew Jobs</h1>
-          <p className="text-blue-100 text-sm mt-1">Logged in as {user?.name}</p>
+          <p className="text-blue-100 text-sm mt-1">Public crew job board</p>
         </div>
 
         {/* Jobs List */}

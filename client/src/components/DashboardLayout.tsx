@@ -13,10 +13,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { shouldOpenMobileDrawerFromSwipe } from "@/lib/sidebarDrawerGesture";
-import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight, PanelLeft } from "lucide-react";
+import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, PanelLeft, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
+import { Button } from "./ui/button";
 import { HeaderSearch } from './HeaderSearch';
 
 const menuItems = [
@@ -82,7 +83,7 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const [location, setLocation] = useLocation();
-  const { state, toggleSidebar, setOpenMobile } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -90,7 +91,6 @@ function DashboardLayoutContent({
   const isMobile = useIsMobile();
   const [history, setHistory] = useState<string[]>([location]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const edgeSwipeStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (isCollapsed) {
@@ -157,34 +157,6 @@ function DashboardLayoutContent({
     };
   }, [isResizing, setSidebarWidth]);
 
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const handleTouchStart = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch) return;
-      edgeSwipeStart.current = { x: touch.clientX, y: touch.clientY };
-    };
-
-    const handleTouchEnd = (event: TouchEvent) => {
-      const start = edgeSwipeStart.current;
-      const touch = event.changedTouches[0];
-      edgeSwipeStart.current = null;
-      if (!start || !touch) return;
-
-      if (shouldOpenMobileDrawerFromSwipe(start, { x: touch.clientX, y: touch.clientY })) {
-        setOpenMobile(true);
-      }
-    };
-
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
-    return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [isMobile, setOpenMobile]);
-
   return (
     <>
       <div className="relative" ref={sidebarRef}>
@@ -219,10 +191,7 @@ MUNRO & Sons
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      onClick={() => {
-                        setLocation(item.path);
-                        if (isMobile) setOpenMobile(false);
-                      }}
+                      onClick={() => setLocation(item.path)}
                       tooltip={item.label}
                       className={`h-10 transition-all font-medium rounded-lg ${
                         isActive 
@@ -242,19 +211,13 @@ MUNRO & Sons
           </SidebarContent>
 
           <SidebarFooter className="p-3 border-t border-sidebar-border">
-            <div className="flex items-center gap-3 rounded-lg px-1 py-1 w-full group-data-[collapsible=icon]:justify-center">
+            <div className="flex items-center gap-3 rounded-lg px-1 py-1 group-data-[collapsible=icon]:justify-center">
               <Avatar className="h-9 w-9 border border-sidebar-border flex-shrink-0">
-                <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
-                  M
-                </AvatarFallback>
+                <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">M</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
-                <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">
-                  MUNRO and Sons
-                </p>
-                <p className="text-xs text-sidebar-foreground/60 truncate mt-1.5">
-                  Public CRM access
-                </p>
+                <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">MUNRO and Sons</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate mt-1.5">Public CRM demo</p>
               </div>
             </div>
           </SidebarFooter>
@@ -272,38 +235,24 @@ MUNRO & Sons
       <SidebarInset>
         <div className="flex border-b border-border h-14 min-w-0 items-center justify-between bg-card/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40 px-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
-            {isMobile && (
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Open navigation menu"
-              >
-                <PanelLeft className="h-4 w-4" />
-                <span>Menu</span>
-              </button>
-            )}
+            {isMobile && <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />}
             <div className="flex items-center gap-1">
-              {canGoBack && (
-                <button
-                  onClick={goBack}
-                  className="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm font-medium hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  title="Go back"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                  <span>Back</span>
-                </button>
-              )}
-              {canGoForward && (
-                <button
-                  onClick={goForward}
-                  className="h-10 w-10 rounded-lg flex items-center justify-center hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  title="Go forward"
-                  aria-label="Go forward"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              )}
+              <button
+                onClick={goBack}
+                disabled={!canGoBack}
+                className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Go back"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={goForward}
+                disabled={!canGoForward}
+                className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Go forward"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
             {isMobile && (
               <div className="ml-1 flex min-w-0 items-center gap-2">
