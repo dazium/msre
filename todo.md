@@ -100,13 +100,13 @@
 - [ ] Add key metrics and KPIs display
 
 ## Google Maps Integration
-- [ ] Set up Google Maps component from template
-- [ ] Implement job location visualization on map
-- [ ] Add route planning between multiple jobs
-- [ ] Create location search and geocoding
-- [ ] Build address validation using Maps API
-- [ ] Add map markers for customers and projects
-- [ ] Implement map filtering by project status
+- [x] Set up Google Maps component from template
+- [x] Implement job location visualization on map
+- [x] Add route planning between multiple jobs
+- [x] Create location search and geocoding
+- [x] Build address validation using Maps API
+- [x] Add map markers for customers and projects
+- [x] Implement map filtering by project status
 
 ## LLM Integration
 - [ ] Set up LLM helper for project summaries
@@ -574,3 +574,15 @@
 - [x] Audit every visible CRM route for remaining Manus login prompts or session-gated calls
 - [x] Remove remaining public-facing authentication redirects and login controls
 - [x] Verify the main CRM routes load anonymously for a public demonstration; dashboard, customers, crews, calendar, and work orders all load at 375px without a login prompt
+
+## GitHub Synchronization — Public Demo Access
+- [ ] Push the published global public-demo access repair to GitHub
+
+## Google Maps Backlog Completion
+- [x] Verify and complete template map setup, job-location visualization, multi-stop routing, and geocoding
+- [x] Add or verify Maps-based address validation and customer/project markers
+- [x] Add project-status filtering on the map and validate the public mobile experience
+- [x] Require a validated Google Maps place/geocode result before saving an entered customer or job address
+- [x] Add visible lookup-failure guidance for invalid or unresolvable customer addresses
+- [x] Enforce Google Maps address validation in both the new-customer and reusable job-site creation forms
+- [x] Add regression coverage and public-browser verification for customer and job-site address validation

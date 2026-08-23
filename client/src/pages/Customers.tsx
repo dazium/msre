@@ -12,6 +12,7 @@ import { Plus, Trash2, Edit2, MapPin, Phone, Mail } from "lucide-react";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
+import { canSaveAddress } from "@/lib/addressValidation";
 
 export default function Customers() {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +20,7 @@ export default function Customers() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [addressIsValidated, setAddressIsValidated] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -43,6 +45,10 @@ export default function Customers() {
       toast.error("Please fill in required fields");
       return;
     }
+    if (!canSaveAddress(formData.address, addressIsValidated)) {
+      toast.error("Select a Google address suggestion to validate the customer location before saving");
+      return;
+    }
 
     try {
       await createMutation.mutateAsync(formData);
@@ -60,6 +66,7 @@ export default function Customers() {
         longitude: "",
         notes: "",
       });
+      setAddressIsValidated(false);
       setIsOpen(false);
       refetch();
     } catch (error) {
@@ -97,7 +104,10 @@ export default function Customers() {
         <div className="blueprint-section">
           <div className="blueprint-header flex items-center justify-between">
             <h1 className="text-3xl font-bold">Customers</h1>
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <Dialog open={isOpen} onOpenChange={(open) => {
+              setIsOpen(open);
+              if (!open) setAddressIsValidated(false);
+            }}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
                   <Plus className="w-4 h-4" />
@@ -167,6 +177,7 @@ export default function Customers() {
                           longitude: location.longitude,
                         })
                       }
+                      onValidationChange={setAddressIsValidated}
                       placeholder="123 Main St, Windsor, ON"
                     />
                   </div>

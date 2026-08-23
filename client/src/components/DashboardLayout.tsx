@@ -13,7 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, PanelLeft, Settings, Users, Zap, Navigation, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, PanelLeft, Settings, Users, Zap, Navigation, Package, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -34,6 +34,7 @@ const menuItems = [
   { icon: BarChart3, label: "Financial Dashboard", path: "/financial-dashboard" },
   { icon: BarChart3, label: "Financial Reports", path: "/financial-reports" },
   { icon: Calendar, label: "Calendar", path: "/calendar" },
+  { icon: MapPin, label: "Job Map", path: "/maps" },
   { icon: Navigation, label: "Route Optimization", path: "/route-optimization" },
   { icon: Package, label: "Materials", path: "/materials" },
   { icon: Users, label: "Crews", path: "/crews" },
