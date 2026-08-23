@@ -36,8 +36,8 @@
 - [x] Add project update functionality
 - [x] Comprehensive tests for all project operations
 - [x] Build projects dashboard with kanban-style status board
-- [x] Implement project detail view with timeline
-- [x] Create project timeline visualization
+- [ ] Implement project detail view with timeline
+- [ ] Create project timeline visualization
 
 ## Estimates & Pricing (MOSTLY COMPLETE)
 - [x] Create estimates table queries in server/db.ts
@@ -97,13 +97,13 @@
 - [x] Add upcoming appointments widget
 - [x] Create quick stats (total customers, active projects, revenue)
 - [ ] Build activity feed showing recent changes
-- [x] Add key metrics and KPIs display
+- [ ] Add key metrics and KPIs display
 
 ## Google Maps Integration
-- [x] Set up Google Maps component from template
-- [x] Implement job location visualization on map
-- [x] Add route planning between multiple jobs
-- [x] Create location search and geocoding
+- [ ] Set up Google Maps component from template
+- [ ] Implement job location visualization on map
+- [ ] Add route planning between multiple jobs
+- [ ] Create location search and geocoding
 - [ ] Build address validation using Maps API
 - [ ] Add map markers for customers and projects
 - [ ] Implement map filtering by project status
@@ -165,7 +165,7 @@
 ## UI Polish & Branding
 - [ ] Apply company branding (logo, colors, fonts)
 - [ ] Add company logo and favicon
-- [x] Refine blueprint aesthetic throughout
+- [ ] Refine blueprint aesthetic throughout
 - [ ] Ensure consistent spacing and alignment
 - [ ] Add micro-interactions and animations
 - [ ] Optimize colors for accessibility
@@ -570,86 +570,7 @@
 - [x] Add regression coverage for portrait-first layout safeguards
 - [x] Verify key routes at phone-width breakpoints without requiring landscape orientation
 
-## Test Database Cleanup
-- [x] Audit database relationships and select ten representative customer records to retain
-- [x] Remove surplus test records in dependency-safe order while preserving the retained sample
-- [x] Verify final customer and operational record counts
-
-## Public No-Authentication Access
-- [x] Remove mandatory authentication prompts from CRM navigation and layout
-- [x] Expose required CRM data procedures to unauthenticated visitors using the public CRM owner scope
-- [x] Add regression coverage and verify unauthenticated dashboard access
-
-## Public Calendar Access Bug
-- [x] Trace and remove the remaining calendar unauthenticated query error
-- [x] Add regression coverage and validate `/calendar` without a session; confirmed the March 2026 calendar and empty appointment state load anonymously after the server restart
-
-## Portrait Estimate List Improvement
-- [x] Reduce portrait estimate-card visual density without sacrificing key estimate information
-- [x] Open the selected estimate detail view when an estimate card is tapped
-- [x] Add regression coverage and validate the estimate interaction on a phone-width viewport; tapping the first list card opened `/estimates/30017`
-
-## Global Navigation and Mobile Drawer
-- [x] Make global navigation controls clearer on every page
-- [x] Add left-edge swipe-to-open behavior for the phone sidebar drawer
-- [x] Add regression coverage and validate drawer behavior in portrait view; verified the visible Menu control at 375px and covered left-edge swipe detection with focused Vitest tests
-
-## Work Order Date Picker Bug
-- [x] Diagnose the missing calendar picker in New Work Order
-- [x] Restore a reliable calendar date selection control and standardize its CRM usage
-- [x] Add regression coverage and validate date selection on a phone-width viewport; focused date helpers pass and the portrait Work Orders entry point remains usable
-
-## Actionable Dashboard Cards
-- [x] Make dashboard metric cards navigate to their corresponding CRM pages
-- [x] Make dashboard summary and quick-action cards consistently actionable
-- [x] Add routing regression coverage and validate dashboard card taps in portrait view; the Total Customers card opened `/customers` directly
-
-## Public Route Optimization Bug
-- [x] Diagnose missing origin/destination route-planning controls and any no-login data error
-- [x] Restore public route planning from selected addresses
-- [x] Add regression coverage and validate the route optimizer in portrait view
-
-## GPS Map Route Planning
-- [x] Start routing from the user’s current GPS location with clear permission and fallback states
-- [x] Add manual map stops from a long press, including reverse-geocoded stop labels
-- [x] Render and optimize the route between selected stops without mandatory login
-- [x] Validate the mobile map interaction and GPS-based route workflow; public map loads without console errors and exposes the Google Directions service
-
-## Google Maps Loader Bug
-- [x] Prevent duplicate Google Maps JavaScript API injection on repeated map-page visits
-- [x] Verify Route Optimization reloads without a duplicate-map error; route-page reload completed with an initialized map and no console error
-
-## Customer Job Navigation
-- [x] Determine the appropriate project/job destination for a selected customer
-- [x] Open the selected customer’s job or customer detail when the customer card is tapped
-- [x] Add regression coverage and validate customer-card navigation in portrait view; John Mitchell’s customer card opened `/customers/720006`, where the linked Roof Replacement job opens its project detail
-
-## Customer Profile Quick Actions
-- [ ] Add customer-scoped Create New Job and New Estimate actions
-- [ ] Add quick notes to the customer’s job timeline
-- [ ] Add photo attachments to the customer’s job timeline
-- [ ] Add regression coverage and validate the full workflow in portrait view
-
-## GitHub Synchronization — Current Completed Changes
-- [x] Commit and push the completed validated CRM changes without the unfinished profile quick-action work; GitHub main now points to e0a576b
-
-## Backlog Accuracy Audit
-- [x] Review historical unchecked tasks and mark only implemented, verified work complete
-- [ ] Add a real MSRE/MUNRO company logo and verify end-to-end branded coverage
-- [ ] Add a dedicated customer service-history section alongside existing contact notes
-
-## Public Crews Access Bug
-- [x] Diagnose the remaining authentication requirement on the Crews page
-- [x] Allow public CRM visitors to load crew information without login
-- [x] Add regression coverage and validate the unauthenticated Crews route; verified `/crews` loads at 375px without a login message
-
-## Crew Work Orders and Daily Routes
-- [x] Add direct active work-order assignment from a selected crew card
-- [x] Show each crew as available or assigned based on active work-order assignments
-- [x] Show a selected crew’s daily assigned route in Route Optimization
-- [x] Add regression coverage and validate the public mobile workflow; focused dispatch tests pass and the 375px route controls show the crew route selector
-
-## Manual Crew Route Stop Ordering
-- [x] Add drag-and-drop reordering for the selected crew’s daily route stops
-- [x] Use the manually arranged stop order when creating the driving route
-- [x] Add regression coverage and validate the portrait route-order workflow; focused reorder tests pass and the portrait planner remains vertically usable
+## Global Public Demo Access
+- [x] Audit every visible CRM route for remaining Manus login prompts or session-gated calls
+- [x] Remove remaining public-facing authentication redirects and login controls
+- [x] Verify the main CRM routes load anonymously for a public demonstration; dashboard, customers, crews, calendar, and work orders all load at 375px without a login prompt
