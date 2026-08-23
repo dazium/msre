@@ -22,6 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import EstimateForm from "@/pages/EstimateForm";
+import { PhotoUpload } from "@/components/PhotoUpload";
+import { toast } from "sonner";
 import {
   Edit2,
   Phone,
@@ -35,6 +38,8 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  BriefcaseBusiness,
+  Camera,
 } from "lucide-react";
 
 
@@ -73,6 +78,11 @@ export default function CustomerDetail() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isEstimatePickerOpen, setIsEstimatePickerOpen] = useState(false);
+  const [isEstimateFormOpen, setIsEstimateFormOpen] = useState(false);
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
+  const [selectedEstimateProjectId, setSelectedEstimateProjectId] = useState("");
+  const [selectedPhotoProjectId, setSelectedPhotoProjectId] = useState("");
   const [formData, setFormData] = useState<{
     firstName: string;
     lastName: string;
@@ -208,6 +218,35 @@ export default function CustomerDetail() {
     });
   }, [projects]);
 
+  const openNewJob = () => {
+    if (!customerId) return;
+    navigate(`/projects?new=1&customerId=${customerId}`);
+  };
+
+  const openNewEstimate = () => {
+    if (sortedProjects.length === 0) {
+      toast.error("Create a job before starting an estimate for this customer.");
+      return;
+    }
+
+    if (sortedProjects.length === 1) {
+      setSelectedEstimateProjectId(sortedProjects[0].id.toString());
+      setIsEstimateFormOpen(true);
+      return;
+    }
+
+    setIsEstimatePickerOpen(true);
+  };
+
+  const openPhotoAttachment = () => {
+    if (sortedProjects.length === 0) {
+      toast.error("Create a job before attaching photos to this customer timeline.");
+      return;
+    }
+    setSelectedPhotoProjectId((current) => current || sortedProjects[0].id.toString());
+    setIsPhotoDialogOpen(true);
+  };
+
   if (isLoading) {
     return <div className="p-8 text-center">Loading customer details...</div>;
   }
@@ -219,7 +258,7 @@ export default function CustomerDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">{customer.firstName} {customer.lastName}</h1>
           <p className="text-gray-600 text-sm mt-1">
@@ -228,10 +267,28 @@ export default function CustomerDetail() {
           </p>
           <Badge className={`mt-2 ${statusColors[customer.status]}`}>{customer.status}</Badge>
         </div>
-        <Button onClick={handleEdit} variant="outline">
-          <Edit2 className="w-4 h-4 mr-2" />
-          Edit Customer
-        </Button>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          <Button onClick={openNewJob} className="min-h-11 gap-2">
+            <BriefcaseBusiness className="h-4 w-4" />
+            New Job
+          </Button>
+          <Button onClick={openNewEstimate} variant="outline" className="min-h-11 gap-2">
+            <FileText className="h-4 w-4" />
+            New Estimate
+          </Button>
+          <Button onClick={() => setIsAddingNote(true)} variant="outline" className="min-h-11 gap-2">
+            <Plus className="h-4 w-4" />
+            Quick Note
+          </Button>
+          <Button onClick={openPhotoAttachment} variant="outline" className="min-h-11 gap-2">
+            <Camera className="h-4 w-4" />
+            Add Photo
+          </Button>
+          <Button onClick={handleEdit} variant="outline" className="col-span-2 min-h-11 gap-2 sm:col-span-1">
+            <Edit2 className="h-4 w-4" />
+            Edit Customer
+          </Button>
+        </div>
       </div>
 
       {/* Key Metrics */}
@@ -276,6 +333,66 @@ export default function CustomerDetail() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isEstimatePickerOpen} onOpenChange={setIsEstimatePickerOpen}>
+        <DialogContent className="w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose a Job for the Estimate</DialogTitle>
+            <DialogDescription>Estimates are linked to a specific customer job.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="estimate-project">Job *</Label>
+              <Select value={selectedEstimateProjectId} onValueChange={setSelectedEstimateProjectId}>
+                <SelectTrigger id="estimate-project"><SelectValue placeholder="Select a job" /></SelectTrigger>
+                <SelectContent>
+                  {sortedProjects.map((project) => <SelectItem key={project.id} value={project.id.toString()}>{project.title}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="min-h-11 w-full" onClick={() => {
+              if (!selectedEstimateProjectId) return toast.error("Select a job for this estimate.");
+              setIsEstimatePickerOpen(false);
+              setIsEstimateFormOpen(true);
+            }}>Continue to Estimate</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {selectedEstimateProjectId && customerId && (
+        <EstimateForm
+          projectId={Number(selectedEstimateProjectId)}
+          customerId={customerId}
+          open={isEstimateFormOpen}
+          onOpenChange={setIsEstimateFormOpen}
+          hideTrigger
+        />
+      )}
+
+      <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
+        <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Timeline Photos</DialogTitle>
+            <DialogDescription>Select the customer job that should own these photos. Files are stored on that project timeline.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="photo-project">Job *</Label>
+              <Select value={selectedPhotoProjectId} onValueChange={setSelectedPhotoProjectId}>
+                <SelectTrigger id="photo-project"><SelectValue placeholder="Select a job" /></SelectTrigger>
+                <SelectContent>
+                  {sortedProjects.map((project) => <SelectItem key={project.id} value={project.id.toString()}>{project.title}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedPhotoProjectId ? (
+              <PhotoUpload projectId={Number(selectedPhotoProjectId)} maxFiles={10} />
+            ) : (
+              <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">Choose a job to attach its timeline photos.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Contact Information */}
       <Card>

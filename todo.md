@@ -586,3 +586,10 @@
 - [x] Add visible lookup-failure guidance for invalid or unresolvable customer addresses
 - [x] Enforce Google Maps address validation in both the new-customer and reusable job-site creation forms
 - [x] Add regression coverage and public-browser verification for customer and job-site address validation
+
+## Customer Profile Quick Actions
+- [x] Add a customer-context Create New Job action with the customer preselected in project creation
+- [x] Add a customer-context New Estimate action with project selection when multiple jobs exist
+- [x] Surface direct customer timeline quick notes from the profile header
+- [x] Add a project-selected photo attachment action to the customer job timeline
+- [x] Add focused regression coverage and public portrait validation for customer profile quick actions

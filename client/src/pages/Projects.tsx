@@ -87,6 +87,10 @@ export default function Projects() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const customerId = params.get("customerId");
+    if (customerId) {
+      setFormData((current) => ({ ...current, customerId }));
+    }
     if (params.get("new") === "1") setIsOpen(true);
   }, []);
 

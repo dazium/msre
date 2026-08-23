@@ -19,8 +19,22 @@ interface LineItem {
   total: number;
 }
 
-export default function EstimateForm({ projectId, customerId }: { projectId: number; customerId: number }) {
-  const [isOpen, setIsOpen] = useState(false);
+interface EstimateFormProps {
+  projectId: number;
+  customerId: number;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}
+
+export default function EstimateForm({ projectId, customerId, open, onOpenChange, hideTrigger = false }: EstimateFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const setIsOpen = (nextOpen: boolean) => {
+    if (!isControlled) setInternalOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  };
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -94,12 +108,14 @@ export default function EstimateForm({ projectId, customerId }: { projectId: num
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Estimate
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Estimate
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Estimate</DialogTitle>
