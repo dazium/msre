@@ -615,5 +615,5 @@
 
 ## Private App Subcontractor Access Follow-up
 - [x] Restore the deployed public-owner fallback so subcontractor operations do not return login errors on Android and phone-sized web layouts
-- [ ] Verify subcontractor lists, company details, work orders, crew dispatch, documents/photos, invoices, and role-bound actions behave consistently on web and Android
+- [x] Verify subcontractor lists, company details, work orders, crew dispatch, documents/photos, invoices, and role-bound actions behave consistently on web and Android
 - [x] Preserve a clear future boundary for restoring private authentication before external distribution
