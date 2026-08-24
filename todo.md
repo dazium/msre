@@ -598,3 +598,11 @@
 - [x] Pre-fill the estimate title and editable job summary from the selected recent customer job
 - [x] Show the selected customer’s name, phone, email, and address in the estimate form before submission
 - [x] Add regression coverage and public portrait validation for customer-context estimate prefilling
+
+## Android Capacitor Packaging
+- [x] Configure the CRM as a Capacitor Android project with stable application metadata
+- [x] Route packaged-app tRPC traffic to the deployed CRM API instead of a relative browser path
+- [x] Add native-camera capture to the project photo workflow with browser fallback
+- [x] Add native location support to the route-planning workflow with browser fallback
+- [x] Build and validate the Android project artifacts plus web regression coverage
+- [x] Document Android Studio sync, signed release build, and Play Store handoff steps

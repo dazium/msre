@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Navigation, Clock, Maximize2, ArrowUp, ArrowDown } from "lucide-react";
+import { MapPin, Navigation, Clock, Maximize2, ArrowUp, ArrowDown, LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 import { MapView } from "@/components/Map";
+import { fieldLocationLabel, getFieldLocation } from "@/lib/nativeFieldDevices";
 
 interface Stop {
   id: number;
@@ -16,7 +17,7 @@ interface Stop {
   address: string;
   latitude: number;
   longitude: number;
-  type: "appointment" | "customer";
+  type: "appointment" | "customer" | "current_location";
   time?: string;
   duration?: number;
 }
@@ -33,6 +34,7 @@ export default function RouteOptimization() {
   const [stops, setStops] = useState<Stop[]>([]);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const [mapKey, setMapKey] = useState(0);
 
   const { data: appointments } = trpc.appointments.list.useQuery();
@@ -81,6 +83,32 @@ export default function RouteOptimization() {
   // Remove stop from route
   const handleRemoveStop = (index: number) => {
     setStops(stops.filter((_, i) => i !== index));
+  };
+
+  const handleAddCurrentLocation = async () => {
+    setIsLocating(true);
+    try {
+      const location = await getFieldLocation();
+      setStops((currentStops) => [
+        {
+          id: -Date.now(),
+          title: "Current device location",
+          address: fieldLocationLabel(location.source),
+          latitude: location.latitude,
+          longitude: location.longitude,
+          type: "current_location",
+        },
+        ...currentStops.filter((stop) => stop.type !== "current_location"),
+      ]);
+      setRouteInfo(null);
+      setMapKey((current) => current + 1);
+      toast.success(`${fieldLocationLabel(location.source)} added as the route origin.`);
+    } catch (error) {
+      console.error("Location error:", error);
+      toast.error("Unable to read your location. Check device location permission and try again.");
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   // Move stop up in order
@@ -195,6 +223,17 @@ export default function RouteOptimization() {
                     onChange={(e) => setSelectedDate(e.target.value)}
                   />
                 </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 w-full"
+                  onClick={handleAddCurrentLocation}
+                  disabled={isLocating}
+                >
+                  <LocateFixed className="mr-2 h-4 w-4" />
+                  {isLocating ? "Finding location..." : "Use Current GPS Location"}
+                </Button>
 
                 {/* Available appointments */}
                 {appointmentsForDate.length > 0 && (

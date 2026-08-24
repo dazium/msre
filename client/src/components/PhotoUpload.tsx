@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
-import { Upload, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { Upload, X, CheckCircle2, AlertCircle, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { captureNativeCameraFile } from "@/lib/nativeFieldDevices";
+import { getApiUrl, isNativeMobileApp } from "@/lib/mobileRuntime";
 
 interface PhotoUploadProps {
   projectId: number;
@@ -43,6 +45,17 @@ export function PhotoUpload({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     handleFiles(files);
+    e.target.value = "";
+  };
+
+  const handleNativeCameraCapture = async () => {
+    try {
+      const file = await captureNativeCameraFile();
+      if (file) await handleFiles([file]);
+    } catch (error) {
+      console.error("Native camera capture error:", error);
+      toast.error("Unable to capture a photo. Check the Android camera permission and try again.");
+    }
   };
 
   const handleFiles = async (files: File[]) => {
@@ -78,11 +91,12 @@ export function PhotoUpload({
 
           try {
             // Upload to S3 via API
-            const uploadResponse = await fetch("/api/trpc/photos.uploadFile", {
+            const uploadResponse = await fetch(getApiUrl("/api/trpc/photos.uploadFile"), {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
+              credentials: "include",
               body: JSON.stringify({
                 projectId,
                 fileName: file.name,
@@ -167,6 +181,18 @@ export function PhotoUpload({
           >
             {isUploading ? "Uploading..." : "Select Files"}
           </Button>
+          {isNativeMobileApp() && (
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleNativeCameraCapture}
+              disabled={isUploading}
+            >
+              <Camera className="mr-2 h-4 w-4" />
+              Take Photo
+            </Button>
+          )}
         </div>
       </div>
 

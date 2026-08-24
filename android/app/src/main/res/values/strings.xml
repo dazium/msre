@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MSRE Roofing CRM</string>
+    <string name="title_activity_main">MSRE Roofing CRM</string>
+    <string name="package_name">ca.msre.roofingcrm</string>
+    <string name="custom_url_scheme">ca.msre.roofingcrm</string>
+</resources>
