@@ -608,7 +608,7 @@
 - [x] Document Android Studio sync, signed release build, and Play Store handoff steps
 
 ## Android APK Delivery Follow-up
-- [ ] Provide a directly downloadable copy of the validated Android debug APK
-- [ ] Confirm the delivered APK artifact is intact and explain installation steps
+- [x] Provide a directly downloadable copy of the validated Android debug APK
+- [x] Confirm the delivered APK artifact is intact and explain installation steps
 
 **End of task history.**
