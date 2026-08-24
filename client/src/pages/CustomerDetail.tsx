@@ -366,6 +366,22 @@ export default function CustomerDetail() {
           open={isEstimateFormOpen}
           onOpenChange={setIsEstimateFormOpen}
           hideTrigger
+          customerContext={(() => {
+            const selectedProject = sortedProjects.find((project) => project.id.toString() === selectedEstimateProjectId);
+            return selectedProject ? {
+              customerName: `${customer.firstName} ${customer.lastName}`.trim(),
+              phone: customer.phone,
+              email: customer.email,
+              address: customer.address,
+              city: customer.city,
+              state: customer.state,
+              zipCode: customer.zipCode,
+              jobTitle: selectedProject.title,
+              jobDescription: selectedProject.description,
+              jobStatus: selectedProject.status,
+              roofType: selectedProject.roofType,
+            } : undefined;
+          })()}
         />
       )}
 

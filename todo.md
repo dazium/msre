@@ -593,3 +593,8 @@
 - [x] Surface direct customer timeline quick notes from the profile header
 - [x] Add a project-selected photo attachment action to the customer job timeline
 - [x] Add focused regression coverage and public portrait validation for customer profile quick actions
+
+## Customer-Context Estimate Prefill
+- [x] Pre-fill the estimate title and editable job summary from the selected recent customer job
+- [x] Show the selected customer’s name, phone, email, and address in the estimate form before submission
+- [x] Add regression coverage and public portrait validation for customer-context estimate prefilling

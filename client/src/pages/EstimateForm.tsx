@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus } from "lucide-react";
 import { getNextEstimateNumber } from "@/lib/estimateNumber";
+import { buildCustomerEstimatePrefill, type EstimateCustomerContext } from "@/lib/estimateContext";
 
 interface LineItem {
   id?: number;
@@ -25,9 +24,10 @@ interface EstimateFormProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
+  customerContext?: EstimateCustomerContext;
 }
 
-export default function EstimateForm({ projectId, customerId, open, onOpenChange, hideTrigger = false }: EstimateFormProps) {
+export default function EstimateForm({ projectId, customerId, open, onOpenChange, hideTrigger = false, customerContext }: EstimateFormProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const isOpen = isControlled ? open : internalOpen;
@@ -51,15 +51,23 @@ export default function EstimateForm({ projectId, customerId, open, onOpenChange
 
   const createMutation = trpc.estimates.create.useMutation();
   const { data: estimatesData, refetch: refetchEstimates } = trpc.estimates.list.useQuery();
+  const customerPrefill = useMemo(
+    () => customerContext ? buildCustomerEstimatePrefill(customerContext) : undefined,
+    [customerContext],
+  );
+  const prefillKey = customerPrefill ? `${customerPrefill.title}\n${customerPrefill.description}` : "";
 
   useEffect(() => {
     if (isOpen) {
-      setFormData((current) => ({
-        ...current,
+      setFormData({
+        title: customerPrefill?.title || "",
+        description: customerPrefill?.description || "",
+        validUntil: "",
         estimateNumber: getNextEstimateNumber(estimatesData ?? []),
-      }));
+      });
+      setLineItems([]);
     }
-  }, [isOpen, estimatesData]);
+  }, [isOpen, prefillKey, projectId]);
 
   const calculateTotal = (quantity: number, unitPrice: string): number => {
     return quantity * (parseFloat(unitPrice) || 0);
@@ -123,6 +131,27 @@ export default function EstimateForm({ projectId, customerId, open, onOpenChange
         </DialogHeader>
 
         <div className="space-y-6">
+          {customerPrefill && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Customer & Recent Job</CardTitle>
+                <CardDescription>These customer details and job notes have been prefilled below and remain editable.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                {customerPrefill.contact.map((item) => (
+                  <div key={item.label} className={item.label === "Address" ? "sm:col-span-2" : ""}>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</p>
+                    <p className="mt-1 break-words font-medium text-foreground">{item.value}</p>
+                  </div>
+                ))}
+                <div className="sm:col-span-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Selected Job</p>
+                  <p className="mt-1 font-medium text-foreground">{customerContext?.jobTitle}</p>
+                  <p className="mt-1 capitalize text-muted-foreground">{customerContext?.jobStatus?.replaceAll("_", " ") || "Status not set"}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           {/* Estimate Header */}
           <div className="space-y-4">
             <div>
