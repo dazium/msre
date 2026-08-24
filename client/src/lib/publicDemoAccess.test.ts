@@ -17,4 +17,12 @@ describe("public CRM demo access", () => {
     expect(layout).toContain("Public CRM demo");
     expect(layout).not.toContain("Sign in to continue");
   });
+
+  it("keeps the temporary private-build fallback usable when production omits the owner identity", () => {
+    const trpc = readSource("server/_core/trpc.ts");
+    expect(trpc).toContain("getFirstAdminUser");
+    expect(trpc).toContain("OWNER_OPEN_ID is not configured");
+    const db = readSource("server/db.ts");
+    expect(db).toContain('where(eq(users.role, "admin"))');
+  });
 });

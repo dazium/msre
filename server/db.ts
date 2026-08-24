@@ -90,6 +90,23 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+/**
+ * Temporary private-build fallback for the public app surface. Production may
+ * omit OWNER_OPEN_ID even though the database still contains the owner account.
+ * Prefer the configured identity; use the oldest admin only when no identity is
+ * available so the temporary no-login build remains usable on mobile devices.
+ */
+export async function getFirstAdminUser() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get admin user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.role, "admin")).orderBy(asc(users.id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 // Customer queries
 export async function getCustomersByUserId(userId: number) {
   const db = await getDb();

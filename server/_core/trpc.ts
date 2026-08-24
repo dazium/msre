@@ -1,7 +1,7 @@
 import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { getUserByOpenId } from "../db";
+import { getFirstAdminUser, getUserByOpenId } from "../db";
 import type { TrpcContext } from "./context";
 import { ENV } from "./env";
 
@@ -15,10 +15,20 @@ export const publicProcedure = t.procedure;
 let publicCrmUserPromise: Promise<NonNullable<TrpcContext["user"]> | null> | null = null;
 
 async function resolvePublicCrmUser() {
-  if (!ENV.ownerOpenId) return null;
   if (!publicCrmUserPromise) {
-    publicCrmUserPromise = getUserByOpenId(ENV.ownerOpenId).then((user) => user ?? null).catch((error) => {
-      console.error("[Public CRM] Could not resolve the configured owner identity", error);
+    publicCrmUserPromise = (ENV.ownerOpenId
+      ? getUserByOpenId(ENV.ownerOpenId)
+      : getFirstAdminUser()
+    ).then(async (user) => {
+      if (user) return user;
+      if (ENV.ownerOpenId) {
+        console.warn("[Public CRM] Configured owner identity was not found; falling back to the first admin user");
+      } else {
+        console.warn("[Public CRM] OWNER_OPEN_ID is not configured; falling back to the first admin user");
+      }
+      return (await getFirstAdminUser()) ?? null;
+    }).catch((error) => {
+      console.error("[Public CRM] Could not resolve a public owner identity", error);
       return null;
     });
   }
