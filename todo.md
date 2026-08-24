@@ -606,3 +606,9 @@
 - [x] Add native location support to the route-planning workflow with browser fallback
 - [x] Build and validate the Android project artifacts plus web regression coverage
 - [x] Document Android Studio sync, signed release build, and Play Store handoff steps
+
+## Android APK Delivery Follow-up
+- [ ] Provide a directly downloadable copy of the validated Android debug APK
+- [ ] Confirm the delivered APK artifact is intact and explain installation steps
+
+**End of task history.**
