@@ -171,15 +171,27 @@ export default function CustomerDetail() {
 
   const handleSave = async () => {
     if (!customerId) return;
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.phone.trim()) {
+      toast.error("First name, last name, and phone are required.");
+      return;
+    }
     try {
       await updateMutation.mutateAsync({
         id: customerId,
         ...formData,
+        email: formData.email.trim() || null,
+        address: formData.address.trim() || null,
+        city: formData.city.trim() || null,
+        state: formData.state.trim() || null,
+        zipCode: formData.zipCode.trim() || null,
+        companyName: formData.companyName.trim() || null,
+        roofType: formData.roofType.trim() || null,
       });
       setIsEditing(false);
-      refetch();
-    } catch (error) {
-      console.error("Error updating customer:", error);
+      await refetch();
+      toast.success("Customer updated");
+    } catch {
+      toast.error("Customer could not be updated");
     }
   };
 

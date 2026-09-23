@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Calendar, DollarSign, MapPin, FileText, Users, Edit2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { canConfirmCrewAssignment } from "@/lib/crewAssignment";
 const formatDate = (date: Date | string) => {
   const d = new Date(date);
@@ -98,18 +99,19 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       await updateProjectMutation.mutateAsync({
         id: projectId,
         title: projectForm.title.trim(),
-        description: projectForm.description.trim() || undefined,
+        description: projectForm.description.trim() || null,
         status: projectForm.status as any,
-        startDate: projectForm.startDate ? new Date(`${projectForm.startDate}T00:00:00`) : undefined,
-        endDate: projectForm.endDate ? new Date(`${projectForm.endDate}T00:00:00`) : undefined,
-        estimatedValue: projectForm.estimatedValue || undefined,
-        actualValue: projectForm.actualValue || undefined,
+        startDate: projectForm.startDate ? new Date(`${projectForm.startDate}T00:00:00`) : null,
+        endDate: projectForm.endDate ? new Date(`${projectForm.endDate}T00:00:00`) : null,
+        estimatedValue: projectForm.estimatedValue || null,
+        actualValue: projectForm.actualValue || null,
         roofType: projectForm.roofType as any,
       });
       await utils.projects.getById.invalidate({ id: projectId });
       setIsEditingProject(false);
+      toast.success("Project updated");
     } catch {
-      window.alert("The project could not be saved. Please check the fields and try again.");
+      toast.error("The project could not be saved. Please check the fields and try again.");
     }
   };
 
@@ -120,7 +122,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       await deleteProjectMutation.mutateAsync({ id: projectId });
       setLocation("/projects");
     } catch {
-      window.alert("The project could not be deleted.");
+      toast.error("The project could not be deleted.");
     }
   };
 

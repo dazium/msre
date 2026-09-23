@@ -147,6 +147,13 @@ export async function deleteCustomer(id: number, userId: number) {
     .where(and(eq(projects.customerId, id), eq(projects.userId, userId)));
   for (const project of customerProjects) await deleteProject(project.id, userId);
 
+  const customerInvoices = await db.select({ id: invoices.id }).from(invoices)
+    .where(and(eq(invoices.customerId, id), eq(invoices.userId, userId)));
+  for (const invoice of customerInvoices) {
+    await db.delete(payments).where(and(eq(payments.invoiceId, invoice.id), eq(payments.userId, userId)));
+    await db.delete(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoice.id));
+  }
+  await db.delete(invoices).where(and(eq(invoices.customerId, id), eq(invoices.userId, userId)));
   await db.delete(customerNotes).where(and(eq(customerNotes.customerId, id), eq(customerNotes.userId, userId)));
   await db.delete(photos).where(and(eq(photos.customerId, id), eq(photos.userId, userId)));
   await db.delete(appointments).where(and(eq(appointments.customerId, id), eq(appointments.userId, userId)));
