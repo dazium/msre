@@ -145,6 +145,7 @@ export default function CustomerDetail() {
 
   // Mutations
   const updateMutation = trpc.customers.update.useMutation();
+  const deleteMutation = trpc.customers.delete.useMutation();
   const createNoteMutation = trpc.customerNotes.create.useMutation();
   const deleteNoteMutation = trpc.customerNotes.delete.useMutation();
 
@@ -179,6 +180,18 @@ export default function CustomerDetail() {
       refetch();
     } catch (error) {
       console.error("Error updating customer:", error);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!customerId || !customer) return;
+    if (!window.confirm(`Delete ${customer.firstName} ${customer.lastName} and all linked jobs and records? This cannot be undone.`)) return;
+    try {
+      await deleteMutation.mutateAsync({ id: customerId });
+      toast.success("Customer deleted");
+      navigate("/customers");
+    } catch {
+      toast.error("Customer could not be deleted");
     }
   };
 
@@ -287,6 +300,10 @@ export default function CustomerDetail() {
           <Button onClick={handleEdit} variant="outline" className="col-span-2 min-h-11 gap-2 sm:col-span-1">
             <Edit2 className="h-4 w-4" />
             Edit Customer
+          </Button>
+          <Button onClick={handleDeleteCustomer} variant="destructive" className="col-span-2 min-h-11 gap-2 sm:col-span-1" disabled={deleteMutation.isPending}>
+            <Trash2 className="h-4 w-4" />
+            {deleteMutation.isPending ? "Deleting..." : "Delete Customer"}
           </Button>
         </div>
       </div>

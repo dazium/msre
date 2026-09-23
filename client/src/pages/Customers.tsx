@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, MapPin, Phone, Mail } from "lucide-react";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -15,6 +16,7 @@ import { AddressMapModal } from "@/components/AddressMapModal";
 import { canSaveAddress } from "@/lib/addressValidation";
 
 export default function Customers() {
+  const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -38,6 +40,7 @@ export default function Customers() {
   const { data: customers, isLoading, refetch } = trpc.customers.list.useQuery();
   const createMutation = trpc.customers.create.useMutation();
   const updateMutation = trpc.customers.update.useMutation();
+  const deleteMutation = trpc.customers.delete.useMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +87,17 @@ export default function Customers() {
       refetch();
     } catch (error) {
       toast.error("Failed to update status");
+    }
+  };
+
+  const handleDelete = async (customerId: number, name: string) => {
+    if (!window.confirm(`Delete ${name} and all of their linked jobs, estimates, notes, and photos? This cannot be undone.`)) return;
+    try {
+      await deleteMutation.mutateAsync({ id: customerId });
+      toast.success("Customer deleted");
+      await refetch();
+    } catch {
+      toast.error("Customer could not be deleted");
     }
   };
 
@@ -288,9 +302,9 @@ export default function Customers() {
                   <div key={customer.id} className="blueprint-card p-4 hover:blueprint-glow transition-all">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-foreground">
+                        <button type="button" className="text-left font-semibold text-foreground hover:text-primary hover:underline" onClick={() => setLocation(`/customers/${customer.id}`)}>
                           {customer.firstName} {customer.lastName}
-                        </h3>
+                        </button>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm text-foreground/70">
                           {customer.phone && (
                             <ContactLink type="phone" value={customer.phone} />
@@ -312,7 +326,7 @@ export default function Customers() {
                         </div>
                         <p className="text-xs text-foreground/50 mt-2">{customer.notes}</p>
                       </div>
-                      <div className="flex items-center gap-3 ml-4">
+                      <div className="ml-4 flex flex-wrap items-center justify-end gap-2">
                         <Select value={customer.status} onValueChange={(val) => handleStatusChange(customer.id, val)}>
                           <SelectTrigger className="w-32">
                             <SelectValue />
@@ -326,6 +340,20 @@ export default function Customers() {
                             <SelectItem value="lost">Lost</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => setLocation(`/customers/${customer.id}`)}>
+                          <Edit2 className="h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          aria-label={`Delete ${customer.firstName} ${customer.lastName}`}
+                          onClick={() => handleDelete(customer.id, `${customer.firstName} ${customer.lastName}`)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </div>
                   </div>

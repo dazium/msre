@@ -4,8 +4,11 @@ import { trpc } from "@/lib/trpc";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calendar, DollarSign, MapPin, FileText, Users } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, MapPin, FileText, Users, Edit2, Trash2 } from "lucide-react";
 import { canConfirmCrewAssignment } from "@/lib/crewAssignment";
 const formatDate = (date: Date | string) => {
   const d = new Date(date);
@@ -16,6 +19,17 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [, setLocation] = useLocation();
   const [editingCrew, setEditingCrew] = useState(false);
   const [pendingCrewId, setPendingCrewId] = useState<number | null>(null);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [projectForm, setProjectForm] = useState({
+    title: "",
+    description: "",
+    status: "lead",
+    startDate: "",
+    endDate: "",
+    estimatedValue: "",
+    actualValue: "",
+    roofType: "asphalt_shingle",
+  });
   const projectId = parseInt(params.id);
 
   const { data: project, isLoading: projectLoading } = trpc.projects.getById.useQuery(
@@ -43,6 +57,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   const { data: crews } = trpc.crews.list.useQuery();
   const utils = trpc.useUtils();
+  const updateProjectMutation = trpc.projects.update.useMutation();
+  const deleteProjectMutation = trpc.projects.delete.useMutation();
 
   const assignCrewMutation = trpc.projects.assignCrew.useMutation({
     onSuccess: () => {
@@ -59,6 +75,54 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       void utils.crews.getById.invalidate();
     },
   });
+
+  const openProjectEditor = () => {
+    if (!project) return;
+    setProjectForm({
+      title: project.title,
+      description: project.description ?? "",
+      status: project.status,
+      startDate: project.startDate ? String(project.startDate).slice(0, 10) : "",
+      endDate: project.endDate ? String(project.endDate).slice(0, 10) : "",
+      estimatedValue: project.estimatedValue ?? "",
+      actualValue: project.actualValue ?? "",
+      roofType: project.roofType,
+    });
+    setIsEditingProject(true);
+  };
+
+  const saveProject = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!projectForm.title.trim()) return;
+    try {
+      await updateProjectMutation.mutateAsync({
+        id: projectId,
+        title: projectForm.title.trim(),
+        description: projectForm.description.trim() || undefined,
+        status: projectForm.status as any,
+        startDate: projectForm.startDate ? new Date(`${projectForm.startDate}T00:00:00`) : undefined,
+        endDate: projectForm.endDate ? new Date(`${projectForm.endDate}T00:00:00`) : undefined,
+        estimatedValue: projectForm.estimatedValue || undefined,
+        actualValue: projectForm.actualValue || undefined,
+        roofType: projectForm.roofType as any,
+      });
+      await utils.projects.getById.invalidate({ id: projectId });
+      setIsEditingProject(false);
+    } catch {
+      window.alert("The project could not be saved. Please check the fields and try again.");
+    }
+  };
+
+  const deleteProject = async () => {
+    if (!project) return;
+    if (!window.confirm(`Delete “${project.title}” and its linked estimates, inspections, damages, photos, and appointments? This cannot be undone.`)) return;
+    try {
+      await deleteProjectMutation.mutateAsync({ id: projectId });
+      setLocation("/projects");
+    } catch {
+      window.alert("The project could not be deleted.");
+    }
+  };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -152,8 +216,66 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 {project.status.replace("_", " ").toUpperCase()}
               </span>
             </div>
+            <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex">
+              <Button type="button" variant="outline" className="min-h-11 gap-2" onClick={openProjectEditor}>
+                <Edit2 className="h-4 w-4" />
+                Edit Project
+              </Button>
+              <Button type="button" variant="destructive" className="min-h-11 gap-2" onClick={deleteProject} disabled={deleteProjectMutation.isPending}>
+                <Trash2 className="h-4 w-4" />
+                {deleteProjectMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
           </div>
         </div>
+
+        <Dialog open={isEditingProject} onOpenChange={setIsEditingProject}>
+          <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
+            <DialogHeader><DialogTitle>Edit Project</DialogTitle></DialogHeader>
+            <form onSubmit={saveProject} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-project-title">Project Title *</Label>
+                <Input id="edit-project-title" value={projectForm.title} onChange={(event) => setProjectForm((current) => ({ ...current, title: event.target.value }))} />
+              </div>
+              <div>
+                <Label htmlFor="edit-project-description">Description</Label>
+                <textarea id="edit-project-description" value={projectForm.description} onChange={(event) => setProjectForm((current) => ({ ...current, description: event.target.value }))} className="w-full rounded-md border border-input bg-background px-3 py-2 text-foreground" rows={4} />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="edit-project-status">Status</Label>
+                  <Select value={projectForm.status} onValueChange={(value) => setProjectForm((current) => ({ ...current, status: value }))}>
+                    <SelectTrigger id="edit-project-status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {['lead', 'scheduled', 'in_progress', 'completed', 'on_hold', 'cancelled'].map((status) => <SelectItem key={status} value={status}>{status.replace('_', ' ')}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-project-roof-type">Roof Type</Label>
+                  <Select value={projectForm.roofType} onValueChange={(value) => setProjectForm((current) => ({ ...current, roofType: value }))}>
+                    <SelectTrigger id="edit-project-roof-type"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {['asphalt_shingle', 'metal', 'flat', 'tile', 'cedar'].map((roofType) => <SelectItem key={roofType} value={roofType}>{roofType.replace('_', ' ')}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div><Label htmlFor="edit-project-start">Start Date</Label><Input id="edit-project-start" type="date" value={projectForm.startDate} onChange={(event) => setProjectForm((current) => ({ ...current, startDate: event.target.value }))} /></div>
+                <div><Label htmlFor="edit-project-end">Target End Date</Label><Input id="edit-project-end" type="date" value={projectForm.endDate} onChange={(event) => setProjectForm((current) => ({ ...current, endDate: event.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div><Label htmlFor="edit-project-estimated">Estimated Value (CAD)</Label><Input id="edit-project-estimated" type="number" min="0" step="0.01" value={projectForm.estimatedValue} onChange={(event) => setProjectForm((current) => ({ ...current, estimatedValue: event.target.value }))} /></div>
+                <div><Label htmlFor="edit-project-actual">Actual Value (CAD)</Label><Input id="edit-project-actual" type="number" min="0" step="0.01" value={projectForm.actualValue} onChange={(event) => setProjectForm((current) => ({ ...current, actualValue: event.target.value }))} /></div>
+              </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => setIsEditingProject(false)}>Cancel</Button>
+                <Button type="submit" disabled={updateProjectMutation.isPending}>{updateProjectMutation.isPending ? "Saving..." : "Save Changes"}</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

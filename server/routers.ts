@@ -76,6 +76,9 @@ export const appRouter = router({
       const { id, ...data } = input;
       return db.updateCustomer(id, ctx.user.id, data);
     }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
+      db.deleteCustomer(input.id, ctx.user.id)
+    ),
     getLifetimeValue: protectedProcedure.input(z.object({ customerId: z.number() })).query(({ input }) =>
       db.getCustomerLifetimeValue(input.customerId)
     ),
@@ -559,6 +562,9 @@ export const appRouter = router({
       const { id, ...data } = input;
       return db.updateProject(id, ctx.user.id, data);
     }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(({ ctx, input }) =>
+      db.deleteProject(input.id, ctx.user.id)
+    ),
     assignCrew: protectedProcedure.input(z.object({
       projectId: z.number(),
       crewId: z.number(),

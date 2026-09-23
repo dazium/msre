@@ -1,6 +1,6 @@
 import { and, asc, eq, like, gte, inArray, lte, desc, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceLineItems, InsertInvoiceLineItem, InvoiceLineItem, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote, inspections, InsertInspection, inspectionItems, InsertInspectionItem, companies, InsertCompany, Company, companyContacts, InsertCompanyContact, CompanyContact, companyNotes, InsertCompanyNote, CompanyNote, jobSites, InsertJobSite, JobSite, activityLog, InsertActivityLog, workOrders, InsertWorkOrder, WorkOrder, workOrderScopes, InsertWorkOrderScope, WorkOrderScope, workOrderAssignments, InsertWorkOrderAssignment, WorkOrderAssignment, workOrderCompletions, InsertWorkOrderCompletion, WorkOrderCompletion, changeOrders, InsertChangeOrder, ChangeOrder, documents, InsertDocument, Document, workOrderStatusHistory, InsertWorkOrderStatusHistory, WorkOrderStatusHistory } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, damageMaterials, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, roofSpecifications, roofMeasurements, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceLineItems, InsertInvoiceLineItem, InvoiceLineItem, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote, inspections, InsertInspection, inspectionItems, InsertInspectionItem, companies, InsertCompany, Company, companyContacts, InsertCompanyContact, CompanyContact, companyNotes, InsertCompanyNote, CompanyNote, jobSites, InsertJobSite, JobSite, activityLog, InsertActivityLog, workOrders, InsertWorkOrder, WorkOrder, workOrderScopes, InsertWorkOrderScope, WorkOrderScope, workOrderAssignments, InsertWorkOrderAssignment, WorkOrderAssignment, workOrderCompletions, InsertWorkOrderCompletion, WorkOrderCompletion, changeOrders, InsertChangeOrder, ChangeOrder, documents, InsertDocument, Document, workOrderStatusHistory, InsertWorkOrderStatusHistory, WorkOrderStatusHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { WORK_ORDER_NORMAL_TRANSITIONS, type WorkOrderStatus } from "../shared/subcontractor";
 
@@ -137,6 +137,23 @@ export async function updateCustomer(id: number, userId: number, data: Partial<I
   );
 }
 
+export async function deleteCustomer(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const customer = await getCustomerById(id, userId);
+  if (!customer) return { deleted: false };
+
+  const customerProjects = await db.select({ id: projects.id }).from(projects)
+    .where(and(eq(projects.customerId, id), eq(projects.userId, userId)));
+  for (const project of customerProjects) await deleteProject(project.id, userId);
+
+  await db.delete(customerNotes).where(and(eq(customerNotes.customerId, id), eq(customerNotes.userId, userId)));
+  await db.delete(photos).where(and(eq(photos.customerId, id), eq(photos.userId, userId)));
+  await db.delete(appointments).where(and(eq(appointments.customerId, id), eq(appointments.userId, userId)));
+  await db.delete(customers).where(and(eq(customers.id, id), eq(customers.userId, userId)));
+  return { deleted: true };
+}
+
 // Project queries
 export async function getProjectsByUserId(userId: number) {
   const db = await getDb();
@@ -171,6 +188,54 @@ export async function updateProject(id: number, userId: number, data: Partial<In
   return db.update(projects).set(data).where(
     and(eq(projects.id, id), eq(projects.userId, userId))
   );
+}
+
+export async function deleteProject(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const project = await getProjectById(id, userId);
+  if (!project) return { deleted: false };
+
+  const deleteInvoices = async (whereClause: any) => {
+    const linkedInvoices = await db.select({ id: invoices.id }).from(invoices).where(whereClause);
+    for (const invoice of linkedInvoices) {
+      await db.delete(payments).where(and(eq(payments.invoiceId, invoice.id), eq(payments.userId, userId)));
+      await db.delete(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoice.id));
+    }
+    await db.delete(invoices).where(whereClause);
+  };
+
+  const projectEstimates = await db.select({ id: estimates.id }).from(estimates)
+    .where(and(eq(estimates.projectId, id), eq(estimates.userId, userId)));
+  for (const estimate of projectEstimates) {
+    await db.delete(estimateLineItems).where(eq(estimateLineItems.estimateId, estimate.id));
+    await db.delete(roofSpecifications).where(and(eq(roofSpecifications.estimateId, estimate.id), eq(roofSpecifications.userId, userId)));
+    await deleteInvoices(and(eq(invoices.estimateId, estimate.id), eq(invoices.userId, userId)));
+  }
+  await db.delete(estimates).where(and(eq(estimates.projectId, id), eq(estimates.userId, userId)));
+
+  const projectDamages = await db.select({ id: damages.id }).from(damages)
+    .where(and(eq(damages.projectId, id), eq(damages.userId, userId)));
+  for (const damage of projectDamages) {
+    await db.delete(damagePhotos).where(eq(damagePhotos.damageId, damage.id));
+    await db.delete(damageMaterials).where(eq(damageMaterials.damageId, damage.id));
+  }
+  await db.delete(damages).where(and(eq(damages.projectId, id), eq(damages.userId, userId)));
+
+  const projectInspections = await db.select({ id: inspections.id }).from(inspections)
+    .where(and(eq(inspections.projectId, id), eq(inspections.userId, userId)));
+  for (const inspection of projectInspections) {
+    await db.delete(inspectionItems).where(eq(inspectionItems.inspectionId, inspection.id));
+  }
+  await db.delete(inspections).where(and(eq(inspections.projectId, id), eq(inspections.userId, userId)));
+  await db.delete(photos).where(and(eq(photos.projectId, id), eq(photos.userId, userId)));
+  await db.delete(appointments).where(and(eq(appointments.projectId, id), eq(appointments.userId, userId)));
+  await db.delete(roofMeasurements).where(and(eq(roofMeasurements.projectId, id), eq(roofMeasurements.userId, userId)));
+  await deleteInvoices(and(eq(invoices.projectId, id), eq(invoices.userId, userId)));
+  await db.update(workOrders).set({ projectId: null }).where(and(eq(workOrders.projectId, id), eq(workOrders.userId, userId)));
+  await db.delete(activityLog).where(and(eq(activityLog.entityType, "project"), eq(activityLog.entityId, id), eq(activityLog.userId, userId)));
+  await db.delete(projects).where(and(eq(projects.id, id), eq(projects.userId, userId)));
+  return { deleted: true };
 }
 
 // Estimate queries
