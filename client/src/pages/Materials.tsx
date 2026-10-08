@@ -65,6 +65,21 @@ export default function Materials() {
 
   const { data: materialsData } = trpc.materials.list.useQuery();
   const createMutation = trpc.materials.create.useMutation();
+
+  const uniqueMaterials = useMemo(() => {
+    const seen = new Set<string>();
+    return materials.filter((material) => {
+      const key = [
+        material.name?.trim().toLowerCase(),
+        material.category,
+        material.unit,
+        String(material.unitPrice),
+      ].join("|");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [materials]);
   const updateMutation = trpc.materials.update.useMutation();
   const deleteMutation = trpc.materials.delete.useMutation();
 
@@ -76,7 +91,28 @@ export default function Materials() {
 
   const handleAddDefaults = async () => {
     try {
+      const existingKeys = new Set(
+        materials.map((material) =>
+          [
+            material.name?.trim().toLowerCase(),
+            material.category,
+            material.unit,
+            String(material.unitPrice),
+          ].join("|")
+        )
+      );
+
+      let added = 0;
       for (const material of DEFAULT_MATERIALS) {
+        const key = [
+          material.name.trim().toLowerCase(),
+          material.category,
+          material.unit,
+          String(material.unitPrice),
+        ].join("|");
+
+        if (existingKeys.has(key)) continue;
+
         await createMutation.mutateAsync({
           name: material.name,
           category: material.category as any,
@@ -84,8 +120,11 @@ export default function Materials() {
           unitPrice: material.unitPrice,
           description: material.description,
         });
+        existingKeys.add(key);
+        added += 1;
       }
-      toast.success("Default materials added successfully!");
+
+      toast.success(added > 0 ? `Added ${added} missing default materials.` : "Default materials are already loaded.");
     } catch (error) {
       toast.error("Failed to add materials");
     }
@@ -168,17 +207,17 @@ export default function Materials() {
           </div>
         </div>
 
-        {materials.length === 0 ? (
+        {uniqueMaterials.length === 0 ? (
           <Card className="border-border/50 bg-background/50 backdrop-blur">
             <CardContent className="p-12 text-center">
-              <p className="text-muted-foreground mb-4">No materials yet. Click "Load Defaults" to add Home Depot Canada pricing.</p>
+              <p className="text-muted-foreground mb-4">No materials yet. Click "Load Defaults" to add any missing Home Depot Canada pricing.</p>
               <Button onClick={handleAddDefaults}>Load Default Materials</Button>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4">
             {MATERIAL_CATEGORIES.map(category => {
-              const categoryMaterials = materials.filter(m => m.category === category.value);
+              const categoryMaterials = uniqueMaterials.filter(m => m.category === category.value);
               if (categoryMaterials.length === 0) return null;
 
               return (
