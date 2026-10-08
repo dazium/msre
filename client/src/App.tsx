@@ -3,6 +3,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { useAuth } from "./_core/hooks/useAuth";
+import { getLoginUrl } from "./const";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
@@ -79,15 +81,52 @@ function Router() {
   );
 }
 
+function AuthenticatedApp() {
+  const { user, loading, error } = useAuth();
+  const loginUrl = getLoginUrl();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <div className="text-center">
+          <h1 className="text-xl font-semibold">Loading your roofing CRM…</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Checking your sign-in session.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    if (loginUrl !== "/") {
+      window.location.replace(loginUrl);
+      return null;
+    }
+
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center">
+          <h1 className="text-xl font-semibold">Sign-in is not configured</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The CRM cannot open its login service. Configure the Manus OAuth settings before exposing this app.
+          </p>
+          {error ? (
+            <p className="mt-4 text-sm text-destructive">{error.message}</p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  return <Router />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="dark"
-      >
+      <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <AuthenticatedApp />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
