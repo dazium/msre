@@ -6,18 +6,34 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { DollarSign, TrendingUp, Users, AlertCircle } from "lucide-react";
 
 export default function FinancialReports() {
-  const { data: invoices } = trpc.invoices.list.useQuery();
-  const { data: payments } = trpc.payments.getByUser.useQuery();
-  const { data: projects } = trpc.projects.list.useQuery();
-  const { data: customers } = trpc.customers.list.useQuery();
-  const { data: estimates } = trpc.estimates.list.useQuery();
+  const invoicesQuery = trpc.invoices.list.useQuery();
+  const paymentsQuery = trpc.payments.getByUser.useQuery();
+  const projectsQuery = trpc.projects.list.useQuery();
+  const customersQuery = trpc.customers.list.useQuery();
+  const estimatesQuery = trpc.estimates.list.useQuery();
+
+  const invoices = invoicesQuery.data;
+  const payments = paymentsQuery.data;
+  const projects = projectsQuery.data;
+  const customers = customersQuery.data;
+  const estimates = estimatesQuery.data;
+
+  const reportHasErrors =
+    invoicesQuery.isError ||
+    paymentsQuery.isError ||
+    projectsQuery.isError ||
+    customersQuery.isError ||
+    estimatesQuery.isError;
 
   // Calculate P&L Report
   const profitLoss = useMemo(() => {
-    const totalRevenue = payments?.reduce((sum: number, p: any) => sum + (p.amount || 0), 0) || 0;
-    const totalInvoiced = invoices?.reduce((sum, i) => sum + (parseFloat(i.total) || 0), 0) || 0;
+    const totalRevenue = payments
+      ?.filter((payment) => payment.status === "succeeded")
+      .reduce((sum, payment) => sum + (Number.parseFloat(String(payment.amount ?? "0")) || 0), 0) || 0;
+    const totalInvoiced = invoices
+      ?.reduce((sum, invoice) => sum + (Number.parseFloat(String(invoice.total ?? "0")) || 0), 0) || 0;
     
-    // Estimate costs (simplified: 40% of revenue for materials/labor)
+    // This is an estimate, not actual job costing. Actual costs should come from recorded expenses/labour/materials.
     const estimatedCosts = totalRevenue * 0.4;
     const profit = totalRevenue - estimatedCosts;
     const profitMargin = totalRevenue > 0 ? (profit / totalRevenue * 100).toFixed(2) : 0;
@@ -158,6 +174,17 @@ export default function FinancialReports() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Financial Reports</h1>
 
+      {reportHasErrors && (
+        <Card className="border-amber-500/50 bg-amber-950/20">
+          <CardContent className="p-4">
+            <p className="font-semibold">Some financial data could not be loaded.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The report is showing the data that was available. Refresh the page or try again later.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* P&L Report */}
       <Card className="border-border/50 bg-background/50 backdrop-blur">
         <CardHeader>
@@ -173,7 +200,7 @@ export default function FinancialReports() {
               <p className="text-2xl font-bold text-blue-400">${profitLoss.revenue.toFixed(2)}</p>
             </div>
             <div className="p-4 rounded bg-red-950/20 border border-red-500/50">
-              <p className="text-sm text-foreground/60">Estimated Costs</p>
+              <p className="text-sm text-foreground/60">Estimated Costs (40%)</p>
               <p className="text-2xl font-bold text-red-400">${profitLoss.costs.toFixed(2)}</p>
             </div>
             <div className="p-4 rounded bg-green-950/20 border border-green-500/50">
