@@ -66,6 +66,7 @@ export default function Projects() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [roofTypeFilter, setRoofTypeFilter] = useState<string>("all");
   const [crewFilter, setCrewFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("board");
   const [formData, setFormData] = useState({
@@ -101,14 +102,15 @@ export default function Projects() {
         .toLowerCase()
         .includes(searchTerm.trim().toLowerCase());
       const matchesStatus = statusFilter === "all" || project.status === statusFilter;
+      const matchesRoofType = roofTypeFilter === "all" || project.roofType === roofTypeFilter;
       const matchesCrew =
         crewFilter === "all" ||
         (crewFilter === "unassigned" && !project.crewId) ||
         (crewFilter !== "unassigned" && project.crewId?.toString() === crewFilter);
 
-      return matchesSearch && matchesStatus && matchesCrew;
+      return matchesSearch && matchesStatus && matchesRoofType && matchesCrew;
     });
-  }, [crewFilter, projects, searchTerm, statusFilter]);
+  }, [crewFilter, projects, roofTypeFilter, searchTerm, statusFilter]);
 
   const boardColumns = useMemo(
     () =>
@@ -138,6 +140,12 @@ export default function Projects() {
       roofType: "asphalt_shingle",
       crewId: "unassigned",
     });
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setRoofTypeFilter("all");
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -411,7 +419,7 @@ export default function Projects() {
 
       <section className="blueprint-section">
         <div className="p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div>
               <Label htmlFor="search">Search</Label>
               <Input
@@ -433,6 +441,18 @@ export default function Projects() {
                     <SelectItem key={status.value} value={status.value}>
                       {status.label}
                     </SelectItem>
+                  ))}
+                </SelectContent>
+                </Select>
+            </div>
+            <div>
+              <Label htmlFor="project-roof-type">Roof Type</Label>
+              <Select value={roofTypeFilter} onValueChange={setRoofTypeFilter}>
+                <SelectTrigger id="project-roof-type"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roof types</SelectItem>
+                  {ROOF_TYPES.map((roofType) => (
+                    <SelectItem key={roofType} value={roofType}>{ROOF_TYPE_LABELS[roofType]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -457,9 +477,14 @@ export default function Projects() {
           </div>
 
           <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-foreground/65">
-              Showing <strong className="text-foreground">{filteredProjects.length}</strong> project{filteredProjects.length === 1 ? "" : "s"}
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm text-foreground/65">
+                Showing <strong className="text-foreground">{filteredProjects.length}</strong> project{filteredProjects.length === 1 ? "" : "s"}
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={clearFilters} disabled={!searchTerm && statusFilter === "all" && roofTypeFilter === "all"}>
+                Clear filters
+              </Button>
+            </div>
             <div className="inline-flex w-full rounded-md border border-border p-1 sm:w-auto" aria-label="Project view">
               <Button
                 type="button"

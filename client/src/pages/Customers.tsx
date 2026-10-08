@@ -20,6 +20,7 @@ export default function Customers() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [roofTypeFilter, setRoofTypeFilter] = useState<string>("all");
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [addressIsValidated, setAddressIsValidated] = useState(false);
@@ -102,14 +103,24 @@ export default function Customers() {
   };
 
   const filteredCustomers = customers?.filter((c) => {
+    const normalizedRoofType = (c.roofType ?? "").toLowerCase().replace(/\s+/g, "_");
     const matchesSearch =
       c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm);
+      c.phone.includes(searchTerm) ||
+      c.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.roofType?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesRoofType = roofTypeFilter === "all" || normalizedRoofType === roofTypeFilter || normalizedRoofType.includes(roofTypeFilter);
+    return matchesSearch && matchesStatus && matchesRoofType;
   });
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setRoofTypeFilter("all");
+  };
 
   return (
     <>
@@ -256,7 +267,7 @@ export default function Customers() {
         {/* Filters */}
         <div className="blueprint-section">
           <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
                 <Label htmlFor="search">Search</Label>
                 <Input
@@ -283,6 +294,25 @@ export default function Customers() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="customer-roof-type">Roof Type</Label>
+                <Select value={roofTypeFilter} onValueChange={setRoofTypeFilter}>
+                  <SelectTrigger id="customer-roof-type"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All roof types</SelectItem>
+                    <SelectItem value="asphalt_shingle">Asphalt shingles</SelectItem>
+                    <SelectItem value="metal">Metal</SelectItem>
+                    <SelectItem value="flat">Flat</SelectItem>
+                    <SelectItem value="tile">Tile</SelectItem>
+                    <SelectItem value="cedar">Cedar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button type="button" variant="outline" onClick={clearFilters} disabled={!searchTerm && statusFilter === "all" && roofTypeFilter === "all"}>
+                Clear filters
+              </Button>
             </div>
           </div>
         </div>
