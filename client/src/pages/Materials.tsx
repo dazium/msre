@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,8 +51,17 @@ const DEFAULT_MATERIALS = [
   { name: "Pipe Flange Boot", category: "pipe_flange", unit: "piece", unitPrice: 52.93, description: "2\" galvanized" },
 ];
 
+type MaterialRow = {
+  id: number;
+  name: string;
+  category: string;
+  unit: string;
+  unitPrice: string | number;
+  description?: string | null;
+};
+
 export default function Materials() {
-  const [materials, setMaterials] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<MaterialRow[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -241,7 +250,7 @@ export default function Materials() {
                           <div className="flex items-center gap-4">
                             <div className="text-right">
                               <p className="font-semibold text-lg">
-                                ${parseFloat(material.unitPrice).toFixed(2)}
+                                ${Number(material.unitPrice).toFixed(2)}
                               </p>
                               <p className="text-sm text-muted-foreground">per {material.unit}</p>
                             </div>
