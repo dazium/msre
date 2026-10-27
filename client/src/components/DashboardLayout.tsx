@@ -13,7 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, PanelLeft, Settings, Users, Zap, Navigation, Package, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, Menu, Settings, Users, Zap, Navigation, Package, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -59,8 +59,13 @@ export default function DashboardLayout({
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
 
+  const isMobile = useIsMobile();
+
   return (
     <SidebarProvider
+      // Keep the full navigation permanently available on desktop. Mobile uses
+      // the provider's separate drawer state through SidebarTrigger below.
+      open={isMobile ? undefined : true}
       style={
         {
           "--sidebar-width": `${sidebarWidth}px`,
@@ -236,7 +241,15 @@ MUNRO & Sons
       <SidebarInset>
         <div className="flex border-b border-border h-14 min-w-0 items-center justify-between bg-card/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40 px-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
-            {isMobile && <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />}
+            {isMobile && (
+              <SidebarTrigger
+                className="h-10 w-10 rounded-lg bg-background"
+                aria-label="Open navigation menu"
+                title="Open navigation menu"
+              >
+                <Menu className="h-5 w-5" />
+              </SidebarTrigger>
+            )}
             <div className="flex items-center gap-1">
               <button
                 onClick={goBack}
