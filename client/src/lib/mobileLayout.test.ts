@@ -20,7 +20,7 @@ describe("portrait-first CRM layout safeguards", () => {
     const crewProductivity = source("../pages/CrewProductivity.tsx");
     const calendar = source("../pages/Calendar.tsx");
 
-    expect(projects).toContain("space-y-4 md:hidden");
+    expect(projects).toContain("space-y-4 lg:hidden");
     expect(subcontractorDashboard).toContain("space-y-3 sm:hidden");
     expect(crewProductivity).toContain("space-y-3 p-4 sm:hidden");
     expect(calendar).not.toContain("overflow-x-auto");

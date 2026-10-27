@@ -267,7 +267,7 @@ export default function Customers() {
         {/* Filters */}
         <div className="blueprint-section">
           <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <Label htmlFor="search">Search</Label>
                 <Input
@@ -329,13 +329,13 @@ export default function Customers() {
             ) : (
               <div className="space-y-3">
                 {filteredCustomers?.map((customer) => (
-                  <div key={customer.id} className="blueprint-card p-4 hover:blueprint-glow transition-all">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                  <div key={customer.id} className="blueprint-card min-w-0 p-4 hover:blueprint-glow transition-all">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
                         <button type="button" className="text-left font-semibold text-foreground hover:text-primary hover:underline" onClick={() => setLocation(`/customers/${customer.id}`)}>
                           {customer.firstName} {customer.lastName}
                         </button>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm text-foreground/70">
+                        <div className="grid min-w-0 grid-cols-1 gap-2 mt-2 text-sm text-foreground/70 sm:grid-cols-2 lg:grid-cols-3">
                           {customer.phone && (
                             <ContactLink type="phone" value={customer.phone} />
                           )}
@@ -356,7 +356,7 @@ export default function Customers() {
                         </div>
                         <p className="text-xs text-foreground/50 mt-2">{customer.notes}</p>
                       </div>
-                      <div className="ml-4 flex flex-wrap items-center justify-end gap-2">
+                      <div className="flex w-full flex-wrap items-center gap-2 lg:ml-4 lg:w-auto lg:justify-end">
                         <Select value={customer.status} onValueChange={(val) => handleStatusChange(customer.id, val)}>
                           <SelectTrigger className="w-32">
                             <SelectValue />

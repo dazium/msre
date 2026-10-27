@@ -22,7 +22,7 @@ import { HeaderSearch } from './HeaderSearch';
 
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/" },
-  { icon: BarChart3, label: "Subcontractor Operations", path: "/subcontractor-dashboard" },
+  { icon: BarChart3, label: "Subcontractor Operations", path: "/subcontractor-dashboard", activePaths: ["/subcontractor-dashboard", "/subcontractors"] },
   { icon: Building2, label: "Companies & Accounts", path: "/companies" },
   { icon: ClipboardList, label: "Work Orders", path: "/work-orders" },
   { icon: Users, label: "Direct Customers", path: "/customers" },
@@ -45,6 +45,11 @@ const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
+
+function isMenuItemActive(location: string, item: (typeof menuItems)[number]) {
+  const paths = item.activePaths ?? [item.path];
+  return paths.some((path) => location === path || location.startsWith(`${path}/`));
+}
 
 export default function DashboardLayout({
   children,
@@ -89,7 +94,7 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const [location, setLocation] = useLocation();
-  const { state, toggleSidebar } = useSidebar();
+  const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -192,7 +197,7 @@ MUNRO & Sons
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-4">
               {menuItems.map(item => {
-                const isActive = location === item.path;
+                const isActive = isMenuItemActive(location, item);
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton

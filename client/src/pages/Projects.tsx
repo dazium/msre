@@ -399,7 +399,7 @@ export default function Projects() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="blueprint-card p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-foreground/55">Active jobs</p>
           <p className="mt-2 text-3xl font-bold text-foreground">{activeProjectCount}</p>
@@ -419,7 +419,7 @@ export default function Projects() {
 
       <section className="blueprint-section">
         <div className="p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <Label htmlFor="search">Search</Label>
               <Input
@@ -524,7 +524,7 @@ export default function Projects() {
             </div>
           ) : viewMode === "board" ? (
             <>
-              <div className="space-y-4 md:hidden">
+              <div className="space-y-4 lg:hidden">
                 {boardColumns.map((column) => (
                   <section key={column.value} className="rounded-lg border border-border/70 bg-background/35 p-3">
                     <div className="mb-3 flex items-center justify-between gap-2">
@@ -537,7 +537,7 @@ export default function Projects() {
                   </section>
                 ))}
               </div>
-              <div className="hidden -mx-2 overflow-x-auto px-2 pb-4 md:block">
+              <div className="hidden -mx-2 overflow-x-auto px-2 pb-4 lg:block">
                 <div className="grid min-w-[1320px] grid-cols-6 gap-4">
                   {boardColumns.map((column) => (
                     <div key={column.value} className="rounded-lg bg-background/35 p-3">

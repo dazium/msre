@@ -16,11 +16,11 @@ export function ContactLink({ type, value, label, onAddressClick }: ContactLinkP
       <Button
         variant="ghost"
         size="sm"
-        className="h-auto p-0 text-left hover:text-primary"
+        className="h-auto min-w-0 max-w-full p-0 text-left hover:text-primary"
         onClick={() => (window.location.href = `tel:${value}`)}
       >
         <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
-        <span>{label || value}</span>
+        <span className="min-w-0 break-words">{label || value}</span>
       </Button>
     );
   }
@@ -30,11 +30,11 @@ export function ContactLink({ type, value, label, onAddressClick }: ContactLinkP
       <Button
         variant="ghost"
         size="sm"
-        className="h-auto p-0 text-left hover:text-primary"
+        className="h-auto min-w-0 max-w-full p-0 text-left hover:text-primary"
         onClick={() => (window.location.href = `mailto:${value}`)}
       >
         <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
-        <span>{label || value}</span>
+        <span className="min-w-0 break-words">{label || value}</span>
       </Button>
     );
   }
@@ -44,11 +44,11 @@ export function ContactLink({ type, value, label, onAddressClick }: ContactLinkP
       <Button
         variant="ghost"
         size="sm"
-        className="h-auto p-0 text-left hover:text-primary"
+        className="h-auto min-w-0 max-w-full p-0 text-left hover:text-primary"
         onClick={() => onAddressClick?.(value)}
       >
         <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-        <span>{label || value}</span>
+        <span className="min-w-0 break-words">{label || value}</span>
       </Button>
     );
   }
