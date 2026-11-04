@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Edit2, Trash2, Plus, Phone, Mail, User } from "lucide-react";
+import { toast } from "sonner";
 
 export default function CrewDetail() {
   const [, params] = useRoute("/crews/:id");
@@ -56,9 +57,10 @@ export default function CrewDetail() {
       });
       setFormData({ firstName: "", lastName: "", email: "", phone: "", role: "crew_member" });
       setIsAddingMember(false);
-      refetchMembers();
-    } catch (error) {
-      console.error("Error adding member:", error);
+      await refetchMembers();
+      toast.success("Crew member added.");
+    } catch {
+      toast.error("Crew member could not be added.");
     }
   };
 
@@ -79,9 +81,10 @@ export default function CrewDetail() {
       setFormData({ firstName: "", lastName: "", email: "", phone: "", role: "crew_member" });
       setIsEditingMember(false);
       setEditingMemberId(null);
-      refetchMembers();
-    } catch (error) {
-      console.error("Error updating member:", error);
+      await refetchMembers();
+      toast.success("Crew member updated.");
+    } catch {
+      toast.error("Crew member could not be updated.");
     }
   };
 
@@ -91,16 +94,18 @@ export default function CrewDetail() {
     try {
       await deleteMemberMutation.mutateAsync({ id: deletingMemberId });
       setDeletingMemberId(null);
-      refetchMembers();
-    } catch (error) {
-      console.error("Error deleting member:", error);
+      await refetchMembers();
+      toast.success("Crew member removed.");
+    } catch {
+      toast.error("Crew member could not be removed.");
     }
   };
 
   const startEditMember = (member: any) => {
+    const [firstName, ...lastNameParts] = member.name.trim().split(/\s+/);
     setFormData({
-      firstName: member.firstName,
-      lastName: member.lastName,
+      firstName: firstName || "",
+      lastName: lastNameParts.join(" "),
       email: member.email || "",
       phone: member.phone || "",
       role: member.role,
@@ -119,7 +124,7 @@ export default function CrewDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">{crew.name}</h1>
           <p className="text-gray-600 mt-1">{crew.description || "No description"}</p>
@@ -140,13 +145,13 @@ export default function CrewDetail() {
                 Add Member
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Crew Member</DialogTitle>
                 <DialogDescription>Add a new member to this crew</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label>First Name</Label>
                     <Input
@@ -193,8 +198,8 @@ export default function CrewDetail() {
                     <option value="supervisor">Supervisor</option>
                   </select>
                 </div>
-                <Button onClick={handleAddMember} className="w-full">
-                  Add Member
+                <Button onClick={handleAddMember} className="w-full" disabled={addMemberMutation.isPending}>
+                  {addMemberMutation.isPending ? "Adding..." : "Add Member"}
                 </Button>
               </div>
             </DialogContent>
@@ -204,7 +209,7 @@ export default function CrewDetail() {
           {members && members.length > 0 ? (
             <div className="space-y-3">
               {members.map((member) => (
-                <div key={member.id} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
+                <div key={member.id} className="flex flex-col gap-4 rounded-lg border p-4 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -212,7 +217,7 @@ export default function CrewDetail() {
                       </div>
                       <div>
                         <p className="font-semibold">{member.name}</p>
-                        <div className="flex gap-3 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-3 text-sm text-gray-600">
                           {member.email && (
                             <div className="flex items-center gap-1">
                               <Mail className="w-4 h-4" />
@@ -229,7 +234,7 @@ export default function CrewDetail() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <Badge variant="outline">{member.role.replace(/_/g, " ")}</Badge>
                     <Dialog open={isEditingMember && editingMemberId === member.id} onOpenChange={setIsEditingMember}>
                       <DialogTrigger asChild>
@@ -241,13 +246,13 @@ export default function CrewDetail() {
                           <Edit2 className="w-4 h-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Edit Crew Member</DialogTitle>
                           <DialogDescription>Update member information</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                               <Label>First Name</Label>
                               <Input
@@ -290,8 +295,8 @@ export default function CrewDetail() {
                               <option value="supervisor">Supervisor</option>
                             </select>
                           </div>
-                          <Button onClick={handleUpdateMember} className="w-full">
-                            Save Changes
+                          <Button onClick={handleUpdateMember} className="w-full" disabled={updateMemberMutation.isPending}>
+                            {updateMemberMutation.isPending ? "Saving..." : "Save Changes"}
                           </Button>
                         </div>
                       </DialogContent>

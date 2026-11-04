@@ -18,6 +18,8 @@ export default function Calendar() {
   const [showDialog, setShowDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
@@ -29,6 +31,17 @@ export default function Calendar() {
       setAppointments(appointmentsData);
     }
   }, [appointmentsData]);
+
+  const filteredAppointments = appointments.filter((appointment) => {
+    const matchesType = typeFilter === "all" || appointment.type === typeFilter;
+    const matchesStatus = statusFilter === "all" || appointment.status === statusFilter;
+    return matchesType && matchesStatus;
+  });
+
+  const clearFilters = () => {
+    setTypeFilter("all");
+    setStatusFilter("all");
+  };
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
@@ -47,7 +60,7 @@ export default function Calendar() {
   };
 
   const getAppointmentsForDate = (day: number) => {
-    return appointments.filter((apt) => {
+    return filteredAppointments.filter((apt) => {
       const aptDate = new Date(apt.startTime);
       return (
         aptDate.getFullYear() === currentDate.getFullYear() &&
@@ -113,6 +126,60 @@ export default function Calendar() {
           New Appointment
         </Button>
       </div>
+
+      <Card className="border-border/50 bg-background/50 backdrop-blur">
+        <CardContent className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:items-end">
+            <div>
+              <Label htmlFor="calendar-type-filter">Appointment type</Label>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger id="calendar-type-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="estimate">Estimate</SelectItem>
+                  <SelectItem value="inspection">Inspection</SelectItem>
+                  <SelectItem value="consultation">Consultation</SelectItem>
+                  <SelectItem value="job_start">Job start</SelectItem>
+                  <SelectItem value="follow_up">Follow up</SelectItem>
+                  <SelectItem value="work_order">Work order</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="calendar-status-filter">Appointment status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger id="calendar-status-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="no_show">No show</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between gap-3 md:col-span-2 md:justify-end lg:col-span-1">
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredAppointments.length} of {appointments.length}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                disabled={typeFilter === "all" && statusFilter === "all"}
+              >
+                Clear filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-border/50 bg-background/50 backdrop-blur">
         <CardHeader className="border-b border-border/50">
@@ -194,11 +261,13 @@ export default function Calendar() {
           <CardDescription>Next 7 days</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          {appointments.length === 0 ? (
-            <p className="text-muted-foreground">No appointments scheduled</p>
+          {filteredAppointments.length === 0 ? (
+            <p className="text-muted-foreground">
+              {appointments.length === 0 ? "No appointments scheduled" : "No appointments match the selected filters"}
+            </p>
           ) : (
             <div className="space-y-4">
-              {appointments
+              {filteredAppointments
                 .filter((apt) => {
                   const aptDate = new Date(apt.startTime);
                   const today = new Date();

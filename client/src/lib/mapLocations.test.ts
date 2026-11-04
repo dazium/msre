@@ -33,4 +33,20 @@ describe("map locations", () => {
 
     expect(markers).toEqual([]);
   });
+
+  it("filters appointment markers by type and status", () => {
+    const markers = buildLocationMarkers({
+      projects,
+      customers: [],
+      appointments: [
+        { id: 4, projectId: 1, title: "Roof inspection", type: "inspection", status: "scheduled" },
+        { id: 5, projectId: 1, title: "Estimate", type: "estimate", status: "completed" },
+      ],
+      statusFilter: "all",
+      appointmentTypeFilter: "inspection",
+      appointmentStatusFilter: "scheduled",
+    });
+
+    expect(markers.map((marker) => marker.id)).toEqual(["project-1", "project-2", "appointment-4"]);
+  });
 });

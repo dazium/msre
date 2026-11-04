@@ -16,6 +16,7 @@ export type AppointmentLocationRecord = {
   projectId?: number | null;
   title: string;
   type: string;
+  status?: string | null;
 };
 
 export type LocationMarker = {
@@ -50,6 +51,18 @@ const coordinatesFor = (record: MappableRecord) => {
 const customerName = (customer: MappableRecord) =>
   [customer.firstName, customer.lastName].filter(Boolean).join(" ") || "Customer location";
 
+export const APPOINTMENT_TYPE_OPTIONS = [
+  "estimate",
+  "inspection",
+  "consultation",
+  "job_start",
+  "follow_up",
+  "work_order",
+  "other",
+] as const;
+
+export const APPOINTMENT_STATUS_OPTIONS = ["scheduled", "completed", "cancelled", "no_show"] as const;
+
 export function getProjectStatusOptions(projects: MappableRecord[]) {
   return Array.from(new Set(projects.map((project) => project.status).filter((status): status is string => Boolean(status)))).sort();
 }
@@ -59,11 +72,15 @@ export function buildLocationMarkers({
   customers,
   appointments,
   statusFilter,
+  appointmentTypeFilter = "all",
+  appointmentStatusFilter = "all",
 }: {
   projects: MappableRecord[];
   customers: MappableRecord[];
   appointments: AppointmentLocationRecord[];
   statusFilter: string;
+  appointmentTypeFilter?: string;
+  appointmentStatusFilter?: string;
 }): LocationMarker[] {
   const visibleProjects = projects.filter((project) => statusFilter === "all" || project.status === statusFilter);
   const projectMarkers = visibleProjects.flatMap((project) => {
@@ -96,6 +113,8 @@ export function buildLocationMarkers({
   const visibleProjectIds = new Set(visibleProjects.map((project) => project.id));
   const projectsById = new Map(visibleProjects.map((project) => [project.id, project]));
   const appointmentMarkers = appointments.flatMap((appointment) => {
+    if (appointmentTypeFilter !== "all" && appointment.type !== appointmentTypeFilter) return [];
+    if (appointmentStatusFilter !== "all" && appointment.status !== appointmentStatusFilter) return [];
     if (!appointment.projectId || !visibleProjectIds.has(appointment.projectId)) return [];
     const project = projectsById.get(appointment.projectId);
     if (!project) return [];

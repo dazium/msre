@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Navigation, Users } from "lucide-react";
 import { MapView } from "@/components/Map";
-import { buildLocationMarkers, getProjectStatusColor, getProjectStatusOptions } from "@/lib/mapLocations";
+import {
+  APPOINTMENT_STATUS_OPTIONS,
+  APPOINTMENT_TYPE_OPTIONS,
+  buildLocationMarkers,
+  getProjectStatusColor,
+  getProjectStatusOptions,
+} from "@/lib/mapLocations";
 
 const mapCenterFallback = { lat: 42.3149, lng: -83.0364 };
 
@@ -14,13 +20,22 @@ export default function Maps() {
   const { data: customers = [] } = trpc.customers.list.useQuery();
   const { data: appointments = [] } = trpc.appointments.list.useQuery();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [appointmentTypeFilter, setAppointmentTypeFilter] = useState("all");
+  const [appointmentStatusFilter, setAppointmentStatusFilter] = useState("all");
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const markerRefs = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
   const statusOptions = useMemo(() => getProjectStatusOptions(projects), [projects]);
   const markers = useMemo(
-    () => buildLocationMarkers({ projects, customers, appointments, statusFilter }),
-    [projects, customers, appointments, statusFilter],
+    () => buildLocationMarkers({
+      projects,
+      customers,
+      appointments,
+      statusFilter,
+      appointmentTypeFilter,
+      appointmentStatusFilter,
+    }),
+    [projects, customers, appointments, statusFilter, appointmentTypeFilter, appointmentStatusFilter],
   );
 
   useEffect(() => {
@@ -78,12 +93,26 @@ export default function Maps() {
             <CardTitle className="flex items-center gap-2 text-2xl"><MapPin className="h-6 w-6 text-primary" /> Job & Customer Map</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">Filter jobs by status, inspect customer locations, and open driving directions.</p>
           </div>
-          <div className="w-full sm:w-52">
+          <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger aria-label="Filter map by project status"><SelectValue placeholder="All project statuses" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All project statuses</SelectItem>
                 {statusOptions.map((status) => <SelectItem key={status} value={status}>{status.replaceAll("_", " ")}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={appointmentTypeFilter} onValueChange={setAppointmentTypeFilter}>
+              <SelectTrigger aria-label="Filter map by appointment type"><SelectValue placeholder="All appointment types" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All appointment types</SelectItem>
+                {APPOINTMENT_TYPE_OPTIONS.map((type) => <SelectItem key={type} value={type}>{type.replaceAll("_", " ")}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={appointmentStatusFilter} onValueChange={setAppointmentStatusFilter}>
+              <SelectTrigger aria-label="Filter map by appointment status"><SelectValue placeholder="All appointment statuses" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All appointment statuses</SelectItem>
+                {APPOINTMENT_STATUS_OPTIONS.map((status) => <SelectItem key={status} value={status}>{status.replaceAll("_", " ")}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

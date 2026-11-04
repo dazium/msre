@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Edit2, Plus, Users, ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
+import { toast } from "sonner";
 
 function CrewCard({ crew, onEdit, onDelete }: { crew: any; onEdit: (crew: any) => void; onDelete: (id: number) => void }) {
   const { data: members, refetch: refetchMembers } = trpc.crews.getMembers.useQuery({ crewId: crew.id });
@@ -226,21 +227,38 @@ export default function Crews() {
   const createMutation = trpc.crews.create.useMutation();
   const updateMutation = trpc.crews.update.useMutation();
   const deleteMutation = trpc.crews.delete.useMutation();
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const name = formData.name.trim();
+    if (!name) {
+      toast.error("Enter a crew name before saving.");
+      return;
+    }
+
+    const crewFields = {
+      name,
+      description: formData.description.trim() || undefined,
+      crewLead: formData.crewLead.trim() || undefined,
+      phone: formData.phone.trim() || undefined,
+      email: formData.email.trim() || undefined,
+    };
+
     try {
       if (editingId) {
-        await updateMutation.mutateAsync({ id: editingId, ...formData });
+        await updateMutation.mutateAsync({ id: editingId, ...crewFields, status: formData.status });
+        toast.success("Crew updated successfully.");
       } else {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(crewFields);
+        toast.success("Crew created successfully.");
       }
       setFormData({ name: "", description: "", crewLead: "", phone: "", email: "", status: "active" });
       setEditingId(null);
       setIsOpen(false);
-      refetch();
-    } catch (error) {
-      console.error("Error saving crew:", error);
+      await refetch();
+    } catch {
+      toast.error(editingId ? "Crew could not be updated." : "Crew could not be created.");
     }
   };
 
@@ -261,9 +279,10 @@ export default function Crews() {
     if (confirm("Are you sure you want to delete this crew?")) {
       try {
         await deleteMutation.mutateAsync({ id });
-        refetch();
-      } catch (error) {
-        console.error("Error deleting crew:", error);
+        toast.success("Crew deleted.");
+        await refetch();
+      } catch {
+        toast.error("Crew could not be deleted.");
       }
     }
   };
@@ -353,8 +372,8 @@ export default function Crews() {
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button type="submit" className="w-full sm:w-auto">
-                  {editingId ? "Update Crew" : "Create Crew"}
+                <Button type="submit" className="w-full sm:w-auto" disabled={isSaving}>
+                  {isSaving ? "Saving..." : editingId ? "Update Crew" : "Create Crew"}
                 </Button>
               </div>
             </form>

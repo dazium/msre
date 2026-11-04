@@ -80,7 +80,7 @@
 - [x] Write tests for calendar feature (14 tests passing)
 - [ ] Create appointment notifications/reminders
 - [ ] Build appointment detail view with editing
-- [ ] Add calendar filtering by type and status
+- [x] Add calendar filtering by type and status
 
 ## Google Maps Integration (IN PROGRESS)
 - [x] Integrate Google Maps component for job location visualization
@@ -88,7 +88,7 @@
 - [x] Implement route planning between multiple job locations
 - [x] Add location search and geocoding
 - [x] Create directions display with estimated travel time
-- [ ] Add map filtering by appointment type and status
+- [x] Add map filtering by appointment type and status
 
 ## Dashboard
 - [x] Create dashboard overview page
