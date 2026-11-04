@@ -30,7 +30,7 @@ export default function Home() {
         {/* Welcome Section */}
         <div className="blueprint-section">
           <div className="blueprint-header">
-            <h1 className="text-3xl font-bold">Munro & Sons Roofing</h1>
+            <h1 className="text-3xl font-bold">Welcome to MUNRO and Sons Roofing Experts</h1>
             <p className="text-sm text-secondary-foreground/80 mt-2">Professional project management for your roofing business</p>
           </div>
           <div className="p-6">
