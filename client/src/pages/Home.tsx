@@ -30,12 +30,12 @@ export default function Home() {
         {/* Welcome Section */}
         <div className="blueprint-section">
           <div className="blueprint-header">
-            <h1 className="text-3xl font-bold">Welcome to MUNRO and Sons Roofing Experts</h1>
+            <h1 className="text-3xl font-bold">Munro & Sons Roofing</h1>
             <p className="text-sm text-secondary-foreground/80 mt-2">Professional project management for your roofing business</p>
           </div>
           <div className="p-6">
             <p className="text-foreground/80">
-              Manage your customers, track projects, generate professional estimates, and optimize your roofing operations with MUNRO and Sons CRM.
+              Manage your customers, track projects, generate professional estimates, and optimize your roofing operations with Munro & Sons CRM.
             </p>
           </div>
         </div>
@@ -211,31 +211,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Active Projects Section */}
-        <div className="blueprint-section">
-          <div className="blueprint-header">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Active Projects
-            </h2>
-          </div>
-          <div className="p-6">
-            {activeProjects.length > 0 ? (
-              <div className="space-y-2">
-                {activeProjects.slice(0, 5).map((proj) => (
-                  <div key={proj.id} className="p-3 bg-background/50 rounded border border-border">
-                    <p className="font-semibold text-foreground">{proj.title}</p>
-                    <p className="text-xs text-foreground/60 mt-1">Status: {proj.status}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-foreground/60 text-center py-8">
-                No active projects. Create a new project to get started.
-              </p>
-            )}
-          </div>
-        </div>
 
         {/* Quick Actions */}
         <div className="blueprint-section">
