@@ -1,4 +1,4 @@
-import { type ComponentType, useMemo, useState } from "react";
+import { type ComponentType, useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -67,6 +66,14 @@ export default function WorkOrders() {
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
+      setIsCreateOpen(true);
+      setLocation("/work-orders");
+    }
+  }, [setLocation]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | WorkOrderStatus>("all");
   const [companyFilter, setCompanyFilter] = useState("all");
@@ -169,10 +176,11 @@ export default function WorkOrders() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Primary operations queue</p>
             <h1 className="mt-1 text-3xl font-bold">Work Orders</h1>
-            <p className="mt-1 text-sm text-foreground/65">Receive, organize, assign, complete, bill, and collect subcontract work without duplicating job information.</p>
+            <p className="mt-1 text-sm text-foreground/65">Review, organize, assign, complete, bill, and collect subcontract work without duplicating job information.</p>
+            <p className="mt-1 text-xs text-foreground/50">New work orders are received through Subcontractor Operations.</p>
           </div>
+          <Button variant="outline" onClick={() => setLocation("/subcontractor-dashboard")}>Subcontractor Operations</Button>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild><Button className="gap-2"><ClipboardPlus className="h-4 w-4" /> New Work Order</Button></DialogTrigger>
             <DialogContent className="max-h-[90vh] w-[95vw] max-w-4xl overflow-y-auto">
               <DialogHeader><DialogTitle>New Work Order</DialogTitle><DialogDescription>Create the job from the partner company and reusable job site. Required operational data stays in one place for dispatch, completion, and invoicing.</DialogDescription></DialogHeader>
               {companies.length === 0 ? (
