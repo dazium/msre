@@ -187,7 +187,7 @@ function DashboardLayoutContent({
                     MSRE
                   </span>
                   <span className="text-xs text-sidebar-foreground/70 truncate">
-MUNRO & Sons
+Munro & Sons
                   </span>
                 </div>
               ) : null}
@@ -227,7 +227,7 @@ MUNRO & Sons
                 <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">M</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
-                <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">MUNRO and Sons</p>
+                <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">Munro & Sons</p>
                 <p className="text-xs text-sidebar-foreground/60 truncate mt-1.5">Public CRM demo</p>
               </div>
             </div>
