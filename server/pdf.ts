@@ -30,7 +30,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Buffer> {
   const { width, height } = page.getSize();
 
   // Company header
-  page.drawText("ROOFTOP RENOVATORS", {
+  page.drawText("MUNRO AND SONS ROOFING EXPERTS", {
     x: 50,
     y: height - 50,
     size: 24,
@@ -38,7 +38,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Buffer> {
     font: await pdfDoc.embedFont("Helvetica-Bold"),
   });
 
-  page.drawText("Professional Roofing Services", {
+  page.drawText("MSRE • Professional Roofing Services", {
     x: 50,
     y: height - 75,
     size: 10,

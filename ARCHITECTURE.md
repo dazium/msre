@@ -1,8 +1,8 @@
-# Rooftop Renovators CRM - System Architecture
+# MUNRO AND SONS ROOFING EXPERTS CRM - System Architecture
 
 ## Overview
 
-The Rooftop Renovators CRM is a full-stack web application built with React, Express, tRPC, and MySQL. It provides comprehensive tools for managing roofing business operations including customers, projects, estimates, invoices, payments, and crew management.
+The MUNRO AND SONS ROOFING EXPERTS CRM is a full-stack web application built with React, Express, tRPC, and MySQL. It provides comprehensive tools for managing roofing business operations including customers, projects, estimates, invoices, payments, and crew management.
 
 ## Technology Stack
 
@@ -32,7 +32,7 @@ The Rooftop Renovators CRM is a full-stack web application built with React, Exp
 ## Project Structure
 
 ```
-rooftop-renovators-crm/
+msre-roofing-crm/
 ├── client/                          # Frontend React application
 │   ├── public/                      # Static assets (favicon, robots.txt)
 │   ├── src/
