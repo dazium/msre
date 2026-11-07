@@ -37,6 +37,7 @@ export default function EstimateDetail() {
   const updateMutation = trpc.estimates.update.useMutation();
   const deleteEstimateMutation = trpc.estimates.delete.useMutation();
   const updateStatusMutation = trpc.estimates.updateStatus.useMutation();
+  const convertToProjectMutation = trpc.estimates.convertToProject.useMutation();
   const createLineItemMutation = trpc.estimateLineItems.create.useMutation();
   const deleteLineItemMutation = trpc.estimateLineItems.delete.useMutation();
   const updateLineItemMutation = trpc.estimateLineItems.update.useMutation();
@@ -188,6 +189,21 @@ export default function EstimateDetail() {
     }
   };
 
+  const handleConvertToProject = async () => {
+    try {
+      const project = await convertToProjectMutation.mutateAsync({ id: parseInt(id || "0") });
+      if (!project) {
+        toast.error("The linked project could not be found.");
+        return;
+      }
+      toast.success("Estimate converted to project");
+      setLocation(`/projects/${project.id}`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not convert this estimate to a project");
+    }
+  };
+
   const handleDeleteEstimate = async () => {
     if (!confirm("Are you sure you want to delete this estimate?")) return;
 
@@ -254,7 +270,10 @@ export default function EstimateDetail() {
             <p className="text-muted-foreground">{estimate.title}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={handleConvertToProject} disabled={convertToProjectMutation.isPending}>
+            {convertToProjectMutation.isPending ? "Converting..." : "Turn into Project"}
+          </Button>
           <Button variant="outline" size="sm" onClick={handleExportPDF}>
             <Download className="h-4 w-4 mr-2" />
             Export PDF

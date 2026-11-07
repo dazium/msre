@@ -10,6 +10,7 @@ import { randomUUID } from "crypto";
 import { storagePut } from "./storage";
 import { generateInvoicePDF } from "./pdf";
 import { sendInvoiceEmail } from "./email";
+import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
   system: systemRouter,
@@ -87,6 +88,50 @@ export const appRouter = router({
     getProjectSummary: protectedProcedure.input(z.object({ customerId: z.number() })).query(({ input }) =>
       db.getCustomerProjectSummary(input.customerId)
     ),
+  }),
+
+  publicEnquiries: router({
+    submit: protectedProcedure.input(z.object({
+      firstName: z.string().trim().min(1).max(100),
+      lastName: z.string().trim().min(1).max(100),
+      email: z.string().trim().email().optional(),
+      phone: z.string().trim().min(1).max(30),
+      address: z.string().trim().max(255).optional(),
+      city: z.string().trim().max(100).optional(),
+      state: z.string().trim().max(50).optional(),
+      zipCode: z.string().trim().max(20).optional(),
+      service: z.string().trim().max(120).optional(),
+      message: z.string().trim().max(4000).optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const notes = [
+        "Website enquiry — Get My Precision Quote",
+        input.service ? `Requested service: ${input.service}` : "",
+        input.message ? `Message: ${input.message}` : "",
+      ].filter(Boolean).join("\n");
+
+      const result = await db.createCustomer({
+        userId: ctx.user.id,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email || undefined,
+        phone: input.phone,
+        address: input.address || undefined,
+        city: input.city || undefined,
+        state: input.state || undefined,
+        zipCode: input.zipCode || undefined,
+        notes,
+      });
+
+      const notified = await notifyOwner({
+        title: "New website roofing enquiry",
+        content: `${input.firstName} ${input.lastName} requested a precision quote.\nPhone: ${input.phone}\nEmail: ${input.email || "Not provided"}\nService: ${input.service || "Not specified"}\nAddress: ${[input.address, input.city, input.state, input.zipCode].filter(Boolean).join(", ") || "Not provided"}\n${input.message || "No additional message."}`,
+      }).catch((error) => {
+        console.warn("[Public Enquiry] Owner notification failed after lead was saved", error);
+        return false;
+      });
+
+      return { success: true, notified, customerId: result[0]?.insertId ?? null };
+    }),
   }),
 
   customerNotes: router({
@@ -895,6 +940,9 @@ export const appRouter = router({
       status: z.enum(["draft", "sent", "accepted", "rejected"]),
     })).mutation(({ input }) =>
       db.updateEstimateStatus(input.id, input.status)
+    ),
+    convertToProject: protectedProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ ctx, input }) =>
+      db.convertEstimateToProject(input.id, ctx.user.id)
     ),
   }),
 

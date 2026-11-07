@@ -261,6 +261,23 @@ export async function getEstimateById(id: number, userId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function convertEstimateToProject(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const estimate = await getEstimateById(id, userId);
+  if (!estimate) return undefined;
+  const project = await getProjectById(estimate.projectId, userId);
+  if (!project) throw new Error("The estimate is not linked to a project");
+
+  await db.update(projects).set({
+    description: project.description || estimate.description || null,
+    estimatedValue: estimate.total,
+    status: project.status === "lead" ? "scheduled" : project.status,
+  }).where(and(eq(projects.id, project.id), eq(projects.userId, userId)));
+
+  return getProjectById(project.id, userId);
+}
+
 export async function generateEstimateNumber() {
   const db = await getDb();
   if (!db) return "EST-001";

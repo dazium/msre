@@ -1,7 +1,10 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ArrowRight, BarChart3, Calendar, ClipboardList, FileText, Plus, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { CustomerDetailModal } from "@/components/CustomerDetailModal";
 import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
@@ -12,6 +15,8 @@ export default function Home() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [enquiry, setEnquiry] = useState({ firstName: "", lastName: "", email: "", phone: "", address: "", city: "Windsor", state: "ON", zipCode: "", service: "", message: "" });
+  const submitEnquiry = trpc.publicEnquiries.submit.useMutation();
   const { data: customers } = trpc.customers.list.useQuery();
   const { data: projects } = trpc.projects.list.useQuery();
   const { data: estimates } = trpc.estimates.list.useQuery();
@@ -22,6 +27,30 @@ export default function Home() {
   const handleAddressClick = (address: string) => {
     setSelectedAddress(address);
     setMapOpen(true);
+  };
+
+  const handleEnquirySubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!enquiry.firstName.trim() || !enquiry.lastName.trim() || !enquiry.phone.trim()) {
+      toast.error("Name and phone are required so we can follow up.");
+      return;
+    }
+    try {
+      await submitEnquiry.mutateAsync({
+        ...enquiry,
+        email: enquiry.email.trim() || undefined,
+        address: enquiry.address.trim() || undefined,
+        city: enquiry.city.trim() || undefined,
+        state: enquiry.state.trim() || undefined,
+        zipCode: enquiry.zipCode.trim() || undefined,
+        service: enquiry.service.trim() || undefined,
+        message: enquiry.message.trim() || undefined,
+      });
+      toast.success("Thanks — your enquiry has been added to the MSRE follow-up queue.");
+      setEnquiry({ firstName: "", lastName: "", email: "", phone: "", address: "", city: "Windsor", state: "ON", zipCode: "", service: "", message: "" });
+    } catch {
+      toast.error("We could not save your enquiry. Please call us directly.");
+    }
   };
 
   return (
@@ -39,6 +68,26 @@ export default function Home() {
             </p>
           </div>
         </div>
+
+        <section className="blueprint-section" aria-labelledby="precision-quote-title">
+          <div className="blueprint-header">
+            <h2 id="precision-quote-title" className="text-xl font-bold">Get My Precision Quote</h2>
+            <p className="mt-1 text-sm text-secondary-foreground/80">Send a roofing enquiry directly into the MSRE CRM.</p>
+          </div>
+          <form onSubmit={handleEnquirySubmit} className="grid gap-4 p-6 sm:grid-cols-2">
+            <Input aria-label="First name" placeholder="First name *" value={enquiry.firstName} onChange={(event) => setEnquiry({ ...enquiry, firstName: event.target.value })} />
+            <Input aria-label="Last name" placeholder="Last name *" value={enquiry.lastName} onChange={(event) => setEnquiry({ ...enquiry, lastName: event.target.value })} />
+            <Input aria-label="Phone" placeholder="Phone *" type="tel" value={enquiry.phone} onChange={(event) => setEnquiry({ ...enquiry, phone: event.target.value })} />
+            <Input aria-label="Email" placeholder="Email" type="email" value={enquiry.email} onChange={(event) => setEnquiry({ ...enquiry, email: event.target.value })} />
+            <Input aria-label="Address" placeholder="Street address" className="sm:col-span-2" value={enquiry.address} onChange={(event) => setEnquiry({ ...enquiry, address: event.target.value })} />
+            <Input aria-label="Requested service" placeholder="Requested service, e.g. roof replacement" value={enquiry.service} onChange={(event) => setEnquiry({ ...enquiry, service: event.target.value })} />
+            <Input aria-label="Postal code" placeholder="Postal code" value={enquiry.zipCode} onChange={(event) => setEnquiry({ ...enquiry, zipCode: event.target.value })} />
+            <textarea aria-label="Message" placeholder="Tell us what you need help with" rows={3} className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground sm:col-span-2" value={enquiry.message} onChange={(event) => setEnquiry({ ...enquiry, message: event.target.value })} />
+            <div className="sm:col-span-2">
+              <Button type="submit" className="min-h-11" disabled={submitEnquiry.isPending}>{submitEnquiry.isPending ? "Saving enquiry..." : "Request My Quote"}</Button>
+            </div>
+          </form>
+        </section>
 
         {/* Quick Stats Grid */}
         <div className="blueprint-grid-3">
