@@ -346,7 +346,7 @@ export default function Customers() {
                             <ContactLink
                               type="address"
                               value={customer.address}
-                              label={`${customer.city}, ${customer.state}`}
+                              label={[customer.city, customer.state].filter(Boolean).join(", ")}
                               onAddressClick={(addr) => {
                                 setSelectedAddress(addr);
                                 setMapOpen(true);

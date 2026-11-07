@@ -42,6 +42,7 @@ const menuItems = [
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
+const ACCESS_MODE_KEY = "msre-access-mode";
 const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
@@ -102,6 +103,12 @@ function DashboardLayoutContent({
   const isMobile = useIsMobile();
   const [history, setHistory] = useState<string[]>([location]);
   const [historyIndex, setHistoryIndex] = useState(0);
+
+  useEffect(() => {
+    if (!localStorage.getItem(ACCESS_MODE_KEY)) {
+      setLocation("/login");
+    }
+  }, [setLocation]);
 
   useEffect(() => {
     if (isCollapsed) {

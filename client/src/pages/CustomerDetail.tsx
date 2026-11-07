@@ -467,8 +467,7 @@ export default function CustomerDetail() {
               <div>
                 <p className="text-sm text-gray-600">Address</p>
                 <p className="font-medium">
-                  {customer.address && `${customer.address}, ${customer.city}, ${customer.state} ${customer.zipCode}`}
-                  {!customer.address && "Not provided"}
+                  {[customer.address, customer.city, customer.state, customer.zipCode].filter(Boolean).join(", ") || "Not provided"}
                 </p>
               </div>
             </div>

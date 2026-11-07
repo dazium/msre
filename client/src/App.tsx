@@ -35,12 +35,16 @@ import EstimateDetail from "@/pages/EstimateDetail";
 import CrewAvailability from "@/pages/CrewAvailability";
 import Inspections from "@/pages/Inspections";
 import CrewProductivity from "@/pages/CrewProductivity";
+import Login from "@/pages/Login";
 import { SUBCONTRACTOR_DASHBOARD_PATHS } from "@/lib/subcontractorRoutes";
 
 function Router() {
   return (
-    <DashboardLayout>
-      <Switch>
+    <Switch>
+      <Route path="/login" component={Login} />
+      <Route>
+        <DashboardLayout>
+          <Switch>
         <Route path={"/"} component={Home} />
         <Route path={"/customers"} component={Customers} />
         <Route path={"/customers/:id"} component={CustomerDetail} />
@@ -74,8 +78,10 @@ function Router() {
         <Route path="/404" component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
+          </Switch>
+        </DashboardLayout>
+      </Route>
+    </Switch>
   );
 }
 

@@ -1317,9 +1317,9 @@ export async function getCustomerLifetimeValue(customerId: number): Promise<numb
   if (!db) return 0;
   
   const result = await db
-    .select({ totalValue: sql`SUM(CAST(${estimates.subtotal} AS DECIMAL(10,2)))` })
-    .from(estimates)
-    .where(eq(estimates.customerId, customerId));
+    .select({ totalValue: sql`SUM(CAST(COALESCE(${projects.actualValue}, ${projects.estimatedValue}, 0) AS DECIMAL(10,2)))` })
+    .from(projects)
+    .where(eq(projects.customerId, customerId));
   
   return parseFloat(result[0]?.totalValue as string) || 0;
 }
