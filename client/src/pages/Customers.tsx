@@ -123,7 +123,7 @@ export default function Customers() {
     const aName = `${a.lastName} ${a.firstName}`.toLowerCase();
     const bName = `${b.lastName} ${b.firstName}`.toLowerCase();
     if (sortOrder === "name_desc") return bName.localeCompare(aName);
-    if (sortOrder === "newest") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sortOrder === "newest") return b.createdAt.getTime() - a.createdAt.getTime();
     return aName.localeCompare(bName);
   });
   const totalPages = Math.max(1, Math.ceil(sortedCustomers.length / pageSize));
