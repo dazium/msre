@@ -77,6 +77,7 @@ export default function WorkOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | WorkOrderStatus>("all");
   const [companyFilter, setCompanyFilter] = useState("all");
+  const [companySearch, setCompanySearch] = useState("");
   const [form, setForm] = useState({
     companyId: "",
     jobSiteId: "",
@@ -99,7 +100,7 @@ export default function WorkOrders() {
   });
   const [scopes, setScopes] = useState<ScopeDraft[]>([]);
 
-  const { data: companies = [] } = trpc.companies.list.useQuery();
+  const { data: companies = [] } = trpc.companies.list.useQuery({ search: companySearch.trim() || undefined });
   const selectedCompanyId = Number(form.companyId);
   const { data: jobSites = [] } = trpc.companies.jobSites.list.useQuery(
     { companyId: selectedCompanyId, includeInactive: false },
@@ -189,7 +190,26 @@ export default function WorkOrders() {
                 <form onSubmit={submit} className="space-y-5">
                   <div className="rounded-lg border border-primary/25 bg-primary/5 p-4 text-sm text-foreground/70"><strong className="text-foreground">Fast intake:</strong> company, job site, job type, and scope summary are enough to create a tracked work order. Add the remaining field details now or later before dispatch.</div>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div><Label>Company *</Label><Select value={form.companyId} onValueChange={(value) => setForm((current) => ({ ...current, companyId: value, jobSiteId: "", contactId: "none" }))}><SelectTrigger><SelectValue placeholder="Select partner company" /></SelectTrigger><SelectContent>{companies.map((company) => <SelectItem key={company.id} value={company.id.toString()}>{company.name}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-2">
+                      <Label>Company *</Label>
+                      <Input
+                        value={companySearch}
+                        onChange={(event) => {
+                          setCompanySearch(event.target.value);
+                          setForm((current) => ({ ...current, companyId: "", jobSiteId: "", contactId: "none" }));
+                        }}
+                        placeholder="Search company name…"
+                        autoComplete="off"
+                      />
+                      <Select value={form.companyId} onValueChange={(value) => {
+                        setForm((current) => ({ ...current, companyId: value, jobSiteId: "", contactId: "none" }));
+                        const selected = companies.find((company) => company.id.toString() === value);
+                        if (selected) setCompanySearch(selected.name);
+                      }}>
+                        <SelectTrigger><SelectValue placeholder={companySearch ? "Choose a matching company" : "Search for a company above"} /></SelectTrigger>
+                        <SelectContent>{companies.map((company) => <SelectItem key={company.id} value={company.id.toString()}>{company.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
                     <div><Label>Job Site *</Label><Select value={form.jobSiteId} onValueChange={(value) => setForm((current) => ({ ...current, jobSiteId: value }))} disabled={!selectedCompanyId || jobSites.length === 0}><SelectTrigger><SelectValue placeholder={selectedCompanyId ? "Select job site" : "Select company first"} /></SelectTrigger><SelectContent>{jobSites.map((site) => <SelectItem key={site.id} value={site.id.toString()}>{site.name || site.address}{site.name ? ` — ${site.address}` : ""}</SelectItem>)}</SelectContent></Select>{selectedCompanyId > 0 && jobSites.length === 0 && <p className="mt-1 text-xs text-amber-300">This company has no active job sites yet. Add one from its account workspace.</p>}</div>
                     <div><Label>Company Contact</Label><Select value={form.contactId} onValueChange={(value) => setForm((current) => ({ ...current, contactId: value }))} disabled={!selectedCompanyId}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">No specific contact</SelectItem>{contacts.filter((contact) => contact.status === "active").map((contact) => <SelectItem key={contact.id} value={contact.id.toString()}>{contact.firstName} {contact.lastName}{contact.isPrimary ? " · Primary" : ""}</SelectItem>)}</SelectContent></Select></div>
                     <div><Label>Job Type *</Label><Select value={form.jobType} onValueChange={(value) => setForm((current) => ({ ...current, jobType: value as WorkOrderJobType }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{WORK_ORDER_JOB_TYPES.map((type) => <SelectItem key={type} value={type}>{WORK_ORDER_JOB_TYPE_LABELS[type]}</SelectItem>)}</SelectContent></Select></div>
