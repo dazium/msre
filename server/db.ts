@@ -156,7 +156,7 @@ export async function listCustomersPage(
     )!);
   }
   if (filters.status) conditions.push(eq(customers.status, filters.status as any));
-  if (filters.roofType) conditions.push(like(customers.roofType, `%${filters.roofType.replace(/_/g, " ")}%`));
+  if (filters.roofType) conditions.push(like(customers.roofType, `%${filters.roofType.replace(/_/g, "%")}%`));
   const where = and(...conditions);
   const pageSize = Math.min(Math.max(filters.pageSize, 1), 100);
   const page = Math.max(filters.page, 1);
