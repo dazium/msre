@@ -38,7 +38,6 @@ export default function Estimates() {
 
   const { data: estimatesData, isLoading } = trpc.estimates.list.useQuery();
   const { data: projectsData } = trpc.projects.list.useQuery();
-  const { data: customersData } = trpc.customers.list.useQuery();
   const { data: materialsData } = trpc.materials.list.useQuery();
   const createMutation = trpc.estimates.create.useMutation();
   const createLineItemMutation = trpc.estimateLineItems.create.useMutation();
@@ -301,7 +300,6 @@ export default function Estimates() {
                 </div>
                 <div>
                   <CustomerPicker
-                    customers={customersData ?? []}
                     value={selectedCustomerId}
                     onChange={(customerId) => {
                       setSelectedCustomerId(customerId);
