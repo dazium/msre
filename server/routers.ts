@@ -28,6 +28,12 @@ export const appRouter = router({
     list: protectedProcedure.query(({ ctx }) =>
       db.getCustomersByUserId(ctx.user.id)
     ),
+    search: protectedProcedure.input(z.object({
+      query: z.string().max(255).default(""),
+      limit: z.number().int().min(1).max(20).default(8),
+    })).query(({ ctx, input }) =>
+      db.searchCustomersByUserId(ctx.user.id, input.query, input.limit)
+    ),
     getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
       db.getCustomerById(input.id, ctx.user.id)
     ),
