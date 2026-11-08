@@ -150,12 +150,12 @@ export async function createCustomer(data: InsertCustomer) {
   if (!db) throw new Error("Database not available");
   const existingCustomers = await getCustomersByUserId(data.userId);
   const normalizedEmail = data.email?.trim().toLowerCase();
-  const normalizedPhone = (data.phone ?? "").replace(/\\D/g, "");
+  const normalizedPhone = (data.phone ?? "").replace(/\D/g, "");
   const duplicate = existingCustomers.find((customer) => {
     const sameEmail = normalizedEmail && customer.email?.trim().toLowerCase() === normalizedEmail;
     const samePhoneAndName =
       normalizedPhone.length >= 7 &&
-      customer.phone.replace(/\\D/g, "") === normalizedPhone &&
+      customer.phone.replace(/\D/g, "") === normalizedPhone &&
       customer.firstName.trim().toLowerCase() === data.firstName.trim().toLowerCase() &&
       customer.lastName.trim().toLowerCase() === data.lastName.trim().toLowerCase();
     return Boolean(sameEmail || samePhoneAndName);
