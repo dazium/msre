@@ -156,7 +156,6 @@ export default function Estimates() {
     const total = calculateTotal();
 
     try {
-      const selectedProjectData = projectsData?.find(p => p.id === selectedProject);
       const estimate = await createMutation.mutateAsync({
         projectId: selectedProject,
         customerId: selectedCustomerId,
