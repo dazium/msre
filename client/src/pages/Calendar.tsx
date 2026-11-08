@@ -16,6 +16,9 @@ import { AddressMapModal } from "@/components/AddressMapModal";
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 31)); // March 2026
   const [showDialog, setShowDialog] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", description: "", startTime: "", endTime: "", status: "scheduled", location: "", notes: "" });
+  const [dayDetail, setDayDetail] = useState<{ label: string; appointments: any[] } | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [typeFilter, setTypeFilter] = useState("all");
@@ -25,6 +28,41 @@ export default function Calendar() {
 
   const { data: appointmentsData, isLoading } = trpc.appointments.list.useQuery();
   const createMutation = trpc.appointments.create.useMutation();
+  const updateMutation = trpc.appointments.update.useMutation();
+  const deleteMutation = trpc.appointments.delete.useMutation();
+  const utils = trpc.useUtils();
+
+  const toDateTimeLocal = (value: Date | string) => {
+    const date = new Date(value);
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  };
+
+  const openAppointmentEditor = (appointment: any) => {
+    setEditingAppointment(appointment);
+    setEditForm({
+      title: appointment.title || "",
+      description: appointment.description || "",
+      startTime: toDateTimeLocal(appointment.startTime),
+      endTime: toDateTimeLocal(appointment.endTime),
+      status: appointment.status || "scheduled",
+      location: appointment.location || "",
+      notes: appointment.notes || "",
+    });
+  };
+
+  const openDayDetail = (day: number, dayAppointments: any[]) => {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    if (dayAppointments.length === 0) {
+      setSelectedDate(date);
+      setShowDialog(true);
+      return;
+    }
+    setDayDetail({
+      label: date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }),
+      appointments: dayAppointments,
+    });
+  };
 
   useEffect(() => {
     if (appointmentsData) {
@@ -100,10 +138,51 @@ export default function Calendar() {
       });
 
       toast.success("Appointment created successfully");
+      await utils.appointments.list.invalidate();
       setShowDialog(false);
       (e.target as HTMLFormElement).reset();
     } catch (error) {
       toast.error("Failed to create appointment");
+    }
+  };
+
+  const handleUpdateAppointment = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingAppointment || !editForm.title.trim()) return;
+    const startTime = new Date(editForm.startTime);
+    const endTime = new Date(editForm.endTime);
+    if (endTime <= startTime) {
+      toast.error("End time must be after the start time");
+      return;
+    }
+    try {
+      await updateMutation.mutateAsync({
+        id: editingAppointment.id,
+        title: editForm.title.trim(),
+        description: editForm.description.trim() || undefined,
+        startTime,
+        endTime,
+        status: editForm.status as "scheduled" | "completed" | "cancelled" | "no_show",
+        location: editForm.location.trim() || undefined,
+        notes: editForm.notes.trim() || undefined,
+      });
+      await utils.appointments.list.invalidate();
+      toast.success("Appointment updated");
+      setEditingAppointment(null);
+    } catch {
+      toast.error("Could not update appointment");
+    }
+  };
+
+  const handleDeleteAppointment = async () => {
+    if (!editingAppointment || !window.confirm(`Delete appointment “${editingAppointment.title}”?`)) return;
+    try {
+      await deleteMutation.mutateAsync({ id: editingAppointment.id });
+      await utils.appointments.list.invalidate();
+      toast.success("Appointment deleted");
+      setEditingAppointment(null);
+    } catch {
+      toast.error("Could not delete appointment");
     }
   };
 
@@ -220,10 +299,7 @@ export default function Calendar() {
                 return (
                   <div
                     key={day}
-                    onClick={() => {
-                      setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
-                      setShowDialog(true);
-                    }}
+                    onClick={() => openDayDetail(day, dayAppointments)}
                     className={`min-h-12 min-w-0 rounded border p-1 cursor-pointer transition-colors sm:min-h-20 sm:p-2 ${
                       isToday
                         ? "border-primary bg-primary/10"
@@ -233,17 +309,19 @@ export default function Calendar() {
                     <div className="mb-1 text-xs font-semibold sm:text-sm">{day}</div>
                     <div className="space-y-1">
                       {dayAppointments.slice(0, 2).map((apt) => (
-                        <div
+                        <button
                           key={apt.id}
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); openAppointmentEditor(apt); }}
                           className="truncate rounded bg-blue-500/20 px-1 py-0.5 text-[10px] text-blue-700 dark:text-blue-300 sm:text-xs"
                         >
                           {apt.title}
-                        </div>
+                        </button>
                       ))}
                       {dayAppointments.length > 2 && (
-                        <div className="text-xs text-muted-foreground">
+                        <button type="button" onClick={(event) => { event.stopPropagation(); openDayDetail(day, dayAppointments); }} className="text-left text-xs text-primary hover:underline">
                           +{dayAppointments.length - 2} more
-                        </div>
+                        </button>
                       )}
                     </div>
                   </div>
@@ -276,7 +354,7 @@ export default function Calendar() {
                 })
                 .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
                 .map((apt) => (
-                  <div key={apt.id} className="flex items-start gap-4 p-4 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
+                  <div key={apt.id} role="button" tabIndex={0} onClick={() => openAppointmentEditor(apt)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") openAppointmentEditor(apt); }} className="flex w-full cursor-pointer items-start gap-4 rounded-lg border border-border/50 p-4 text-left transition-colors hover:bg-muted/50">
                     <div className="flex-1">
                       <h3 className="font-semibold">{apt.title}</h3>
                       <p className="text-sm text-muted-foreground">{apt.description}</p>
@@ -285,17 +363,7 @@ export default function Calendar() {
                           <Clock className="h-4 w-4" />
                           {new Date(apt.startTime).toLocaleString()}
                         </div>
-                        {apt.location && (
-                          <ContactLink
-                            type="address"
-                            value={apt.location}
-                            label={apt.location}
-                            onAddressClick={(addr) => {
-                              setSelectedAddress(addr);
-                              setMapOpen(true);
-                            }}
-                          />
-                        )}
+                        {apt.location && <div onClick={(event) => event.stopPropagation()}><ContactLink type="address" value={apt.location} label={apt.location} onAddressClick={(addr) => { setSelectedAddress(addr); setMapOpen(true); }} /></div>}
                       </div>
                     </div>
                     <div className="text-right">
@@ -401,6 +469,35 @@ export default function Calendar() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingAppointment} onOpenChange={(open) => !open && setEditingAppointment(null)}>
+        <DialogContent className="max-h-[90vh] w-[95vw] max-w-lg overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Appointment</DialogTitle></DialogHeader>
+          <form onSubmit={handleUpdateAppointment} className="space-y-4">
+            <div><Label htmlFor="edit-appointment-title">Title</Label><Input id="edit-appointment-title" value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} required /></div>
+            <div><Label htmlFor="edit-appointment-description">Description</Label><Textarea id="edit-appointment-description" value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} /></div>
+            <div className="grid gap-4 sm:grid-cols-2"><div><Label htmlFor="edit-appointment-start">Start</Label><Input id="edit-appointment-start" type="datetime-local" value={editForm.startTime} onChange={(event) => setEditForm({ ...editForm, startTime: event.target.value })} required /></div><div><Label htmlFor="edit-appointment-end">End</Label><Input id="edit-appointment-end" type="datetime-local" value={editForm.endTime} onChange={(event) => setEditForm({ ...editForm, endTime: event.target.value })} required /></div></div>
+            <div><Label htmlFor="edit-appointment-status">Status</Label><Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}><SelectTrigger id="edit-appointment-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scheduled">Scheduled</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem><SelectItem value="no_show">No show</SelectItem></SelectContent></Select></div>
+            <div><Label htmlFor="edit-appointment-location">Location</Label><Input id="edit-appointment-location" value={editForm.location} onChange={(event) => setEditForm({ ...editForm, location: event.target.value })} /></div>
+            <div><Label htmlFor="edit-appointment-notes">Notes</Label><Textarea id="edit-appointment-notes" value={editForm.notes} onChange={(event) => setEditForm({ ...editForm, notes: event.target.value })} /></div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between"><Button type="button" variant="destructive" onClick={handleDeleteAppointment} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? "Deleting..." : "Delete"}</Button><div className="flex flex-col-reverse gap-2 sm:flex-row"><Button type="button" variant="outline" onClick={() => setEditingAppointment(null)}>Cancel</Button><Button type="submit" disabled={updateMutation.isPending}>{updateMutation.isPending ? "Saving..." : "Save changes"}</Button></div></div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!dayDetail} onOpenChange={(open) => !open && setDayDetail(null)}>
+        <DialogContent className="max-h-[90vh] w-[95vw] max-w-lg overflow-y-auto">
+          <DialogHeader><DialogTitle>{dayDetail?.label}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            {dayDetail?.appointments.map((appointment) => (
+              <button key={appointment.id} type="button" onClick={() => { setDayDetail(null); openAppointmentEditor(appointment); }} className="flex min-h-16 w-full items-center justify-between gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:border-primary hover:bg-muted/40">
+                <div className="min-w-0"><p className="truncate font-semibold">{appointment.title}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(appointment.startTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}–{new Date(appointment.endTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</p></div>
+                <span className="shrink-0 text-xs font-semibold capitalize text-primary">{appointment.status.replace("_", " ")}</span>
+              </button>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

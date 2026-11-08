@@ -96,9 +96,13 @@ export default function FinancialReports() {
   // Calculate Customer Lifetime Value
   const customerLifetimeValue = useMemo(() => {
     return customers?.map(customer => {
-      const customerInvoices = invoices?.filter(inv => inv.customerId === customer.id) || [];
-      const totalValue = customerInvoices.reduce((sum, inv) => sum + (parseFloat(inv.total) || 0), 0);
-      const projectCount = projects?.filter(p => p.customerId === customer.id).length || 0;
+      const customerProjects = projects?.filter(p => p.customerId === customer.id) || [];
+      const totalValue = customerProjects.reduce((sum, project) => {
+        const actual = Number.parseFloat(String(project.actualValue ?? ""));
+        const estimated = Number.parseFloat(String(project.estimatedValue ?? ""));
+        return sum + (Number.isFinite(actual) ? actual : Number.isFinite(estimated) ? estimated : 0);
+      }, 0);
+      const projectCount = customerProjects.length;
       
       return {
         id: customer.id,
@@ -109,6 +113,23 @@ export default function FinancialReports() {
       };
     }).sort((a, b) => b.totalValue - a.totalValue).slice(0, 10) || [];
   }, [customers, invoices, projects]);
+
+  const receivablesSummary = useMemo(() => {
+    const today = new Date();
+    return (invoices ?? []).reduce((summary, invoice) => {
+      if (["paid", "cancelled"].includes(invoice.status)) return summary;
+      const total = Number.parseFloat(String(invoice.total ?? "0")) || 0;
+      const paid = Number.parseFloat(String(invoice.amountPaid ?? "0")) || 0;
+      const balance = Math.max(0, total - paid);
+      if (balance <= 0) return summary;
+      summary.outstanding += balance;
+      if (new Date(invoice.dueDate).getTime() < today.getTime()) {
+        summary.overdue += balance;
+        summary.overdueCount += 1;
+      }
+      return summary;
+    }, { outstanding: 0, overdue: 0, overdueCount: 0 });
+  }, [invoices]);
 
   // Calculate Sales Pipeline
   const salesPipeline = useMemo(() => {
@@ -146,11 +167,11 @@ export default function FinancialReports() {
     };
     
     invoices?.forEach(inv => {
-      if (inv.status === 'paid') return;
-      
-      const invDate = new Date(inv.createdAt);
-      const daysOld = Math.floor((today.getTime() - invDate.getTime()) / (1000 * 60 * 60 * 24));
-      const amount = parseFloat(inv.total) || 0;
+      if (["paid", "cancelled"].includes(inv.status)) return;
+
+      const dueDate = new Date(inv.dueDate);
+      const daysOld = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+      const amount = Math.max(0, (parseFloat(String(inv.total)) || 0) - (parseFloat(String(inv.amountPaid ?? "0")) || 0));
       
       if (daysOld <= 30) aging.current += amount;
       else if (daysOld <= 60) aging['30days'] += amount;
@@ -210,6 +231,11 @@ export default function FinancialReports() {
             <div className="p-4 rounded bg-purple-950/20 border border-purple-500/50">
               <p className="text-sm text-foreground/60">Profit Margin</p>
               <p className="text-2xl font-bold text-purple-400">{profitLoss.profitMargin}%</p>
+            </div>
+            <div className="p-4 rounded bg-amber-950/20 border border-amber-500/50">
+              <p className="text-sm text-foreground/60">Overdue Receivables</p>
+              <p className="text-2xl font-bold text-amber-400">${receivablesSummary.overdue.toFixed(2)}</p>
+              <p className="mt-1 text-xs text-foreground/60">{receivablesSummary.overdueCount} invoice{receivablesSummary.overdueCount === 1 ? "" : "s"}</p>
             </div>
           </div>
         </CardContent>

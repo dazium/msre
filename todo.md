@@ -36,7 +36,7 @@
 - [x] Add project update functionality
 - [x] Comprehensive tests for all project operations
 - [x] Build projects dashboard with kanban-style status board
-- [ ] Implement project detail view with timeline
+- [x] Implement project detail view with timeline
 - [ ] Create project timeline visualization
 
 ## Estimates & Pricing (MOSTLY COMPLETE)
@@ -47,7 +47,7 @@
 - [x] Build estimate preview/PDF view
 - [x] Add estimate status tracking (draft → sent → accepted)
 - [x] Implement estimate number auto-generation
-- [ ] Create estimate history for each project
+- [x] Create estimate history for each project
 - [ ] Auto-populate estimates from damages
 - [x] Write tests for estimates feature
 
@@ -79,7 +79,7 @@
 - [x] Implement appointment status tracking
 - [x] Write tests for calendar feature (14 tests passing)
 - [ ] Create appointment notifications/reminders
-- [ ] Build appointment detail view with editing
+- [x] Build appointment detail view with editing
 - [x] Add calendar filtering by type and status
 
 ## Google Maps Integration (IN PROGRESS)
@@ -293,7 +293,7 @@
 - [ ] Cash flow forecast - Project future cash based on invoices
 - [ ] Budget vs. actual - Compare budgeted to actual costs
 - [ ] Project profitability report - Profit margin by project/crew
-- [ ] Customer lifetime value - Total revenue per customer
+- [x] Customer lifetime value - Total revenue per customer
 - [ ] Sales pipeline report - Value of open estimates
 - [ ] Accounts receivable aging - Money owed and when due
 
@@ -343,7 +343,7 @@
 - [ ] Weather API integration - Weather forecasts for scheduling
 
 ## Marketing & Lead Generation - Phase 3
-- [ ] Lead capture forms - Website forms that auto-populate CRM
+- [x] Lead capture forms - Website forms that auto-populate CRM
 - [ ] Lead scoring - Automatic scoring based on engagement
 - [ ] Email marketing - Campaign management and automation
 - [ ] SMS marketing - Text message campaigns

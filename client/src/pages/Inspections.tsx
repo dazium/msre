@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { ClipboardCheck, Plus, Trash2, CheckCircle2, AlertTriangle, Circle, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ function inspectionStatusVariant(status: "draft" | "in_progress" | "completed") 
 
 export default function Inspections() {
   const utils = trpc.useUtils();
+  const [, setLocation] = useLocation();
   const inspectionsQuery = trpc.inspections.list.useQuery();
   const projectsQuery = trpc.projects.list.useQuery();
   const customersQuery = trpc.customers.list.useQuery();
@@ -110,6 +111,11 @@ export default function Inspections() {
     onError: (error) => toast.error("Could not delete checklist item", { description: error.message }),
   });
 
+  const createEstimate = trpc.estimates.create.useMutation({
+    onError: (error) => toast.error("Could not create estimate", { description: error.message }),
+  });
+  const createEstimateLineItem = trpc.estimateLineItems.create.useMutation();
+
   const selectedProject = selected ? projectById.get(selected.projectId) : undefined;
   const selectedCustomer = selected ? customerById.get(selected.customerId) : undefined;
   const completedCount = selectedDetails?.items.filter((item) => item.status === "pass" || item.status === "not_applicable").length ?? 0;
@@ -144,6 +150,44 @@ export default function Inspections() {
       return;
     }
     createItem.mutate({ inspectionId: selectedInspectionId, category, label });
+  };
+
+  const handleCreateEstimate = async () => {
+    if (!selected || !selectedProject) return;
+    const actionableItems = selectedDetails?.items.filter((item) => item.status === "fail" || item.status === "attention") ?? [];
+    const findings = actionableItems.length > 0
+      ? actionableItems.map((item) => `${item.category}: ${item.label}`).join("; ")
+      : "No corrective findings recorded yet. Review inspection checklist before pricing.";
+    try {
+      const result = await createEstimate.mutateAsync({
+        projectId: selectedProject.id,
+        customerId: selectedProject.customerId,
+        title: `Inspection estimate — ${selectedProject.title}`,
+        description: `Created from inspection #${selected.id}. Findings: ${findings}`,
+        subtotal: "0.00",
+        total: "0.00",
+        status: "draft",
+      });
+      const estimateId = Number(result?.[0]?.insertId ?? 0);
+      if (estimateId > 0) {
+        for (const item of actionableItems) {
+          await createEstimateLineItem.mutateAsync({
+            estimateId,
+            description: `${item.category}: ${item.label}`,
+            quantity: "1",
+            unitPrice: "0",
+            total: "0",
+          });
+        }
+        toast.success("Draft estimate created from inspection findings");
+        setLocation(`/estimates/${estimateId}`);
+      } else {
+        toast.success("Draft estimate created — open Estimates to finish pricing");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not create estimate from inspection findings");
+    }
   };
 
   if (inspectionsQuery.isLoading || projectsQuery.isLoading || customersQuery.isLoading) {
@@ -209,7 +253,7 @@ export default function Inspections() {
         <Card>
           <CardHeader className="gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div><CardTitle>{selectedProject?.title ?? `Inspection #${selected.id}`}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : "Customer details unavailable"} · {getRoofTypeLabel(selected.roofType ?? selectedProject?.roofType)} · {completedCount}/{totalCount} checklist items cleared</p></div>
-            <div className="flex flex-col gap-2 sm:flex-row"><select value={selected.status} onChange={(event) => updateInspection.mutate({ id: selected.id, status: event.target.value as "draft" | "in_progress" | "completed" })} className="min-h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="draft">Draft</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select><Button asChild variant="outline" className="min-h-11"><Link href={`/projects/${selected.projectId}`}>View project</Link></Button></div>
+            <div className="flex flex-col gap-2 sm:flex-row"><select value={selected.status} onChange={(event) => updateInspection.mutate({ id: selected.id, status: event.target.value as "draft" | "in_progress" | "completed" })} className="min-h-11 rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="draft">Draft</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select><Button onClick={handleCreateEstimate} disabled={createEstimate.isPending || createEstimateLineItem.isPending} className="min-h-11">{createEstimate.isPending || createEstimateLineItem.isPending ? "Creating estimate..." : "Create estimate"}</Button><Button asChild variant="outline" className="min-h-11"><Link href={`/projects/${selected.projectId}`}>View project</Link></Button></div>
           </CardHeader>
           <CardContent className="space-y-5">
             {selected.notes && <div className="rounded-lg border bg-muted/30 p-4 text-sm"><span className="font-semibold">Inspection notes:</span> {selected.notes}</div>}
