@@ -42,7 +42,7 @@ export function CustomerPicker({
         value={displayValue}
         placeholder={placeholder}
         autoComplete="off"
-        onFocus={() => setIsOpen(true)}
+        onFocus={(event) => { event.currentTarget.select(); setIsOpen(true); }}
         onChange={(event) => {
           setQuery(event.target.value);
           if (value !== null) {
