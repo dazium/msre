@@ -8,6 +8,8 @@ import * as db from "./db";
 import { WORK_ORDER_JOB_TYPES, WORK_ORDER_STATUSES } from "../shared/subcontractor";
 import { randomUUID } from "crypto";
 import { storagePut } from "./storage";
+import { generateInvoicePDF } from "./pdf";
+import { sendInvoiceEmail } from "./email";
 
 export const appRouter = router({
   system: systemRouter,
@@ -1158,8 +1160,35 @@ export const appRouter = router({
     sendEmail: protectedProcedure.input(z.object({
       id: z.number(),
       recipientEmail: z.string().email(),
-    })).mutation(async ({ input }) => {
-      return { success: true, invoiceId: input.id, recipientEmail: input.recipientEmail };
+    })).mutation(async ({ ctx, input }) => {
+      const invoice = await db.getInvoiceByIdForUser(input.id, ctx.user.id);
+      if (!invoice) throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found" });
+      const customer = invoice.customerId ? await db.getCustomerById(invoice.customerId, ctx.user.id) : undefined;
+      const project = invoice.projectId ? await db.getProjectById(invoice.projectId, ctx.user.id) : undefined;
+      const lineItems = await db.getInvoiceLineItems(invoice.id, ctx.user.id);
+      const pdfBuffer = await generateInvoicePDF({
+        invoice,
+        customerName: customer ? `${customer.firstName} ${customer.lastName}` : "Customer",
+        customerEmail: customer?.email || input.recipientEmail,
+        customerPhone: customer?.phone || "",
+        projectTitle: project?.title || "Roofing services",
+        lineItems: lineItems.map((item) => ({
+          description: item.description,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice),
+          total: Number(item.total),
+        })),
+      });
+      const delivery = await sendInvoiceEmail({
+        invoice,
+        recipientEmail: input.recipientEmail,
+        recipientName: customer ? `${customer.firstName} ${customer.lastName}` : "Customer",
+        pdfBuffer,
+        pdfFilename: `invoice-${invoice.invoiceNumber}.pdf`,
+      });
+      if (!delivery.success) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Invoice email could not be delivered" });
+      if (invoice.status === "draft") await db.updateInvoice(invoice.id, { status: "sent" });
+      return { success: true, invoiceId: invoice.id, recipientEmail: input.recipientEmail, messageId: delivery.messageId, previewUrl: delivery.previewUrl };
     }),
   }),
   invoiceTemplates: router({

@@ -155,7 +155,7 @@ export default function InvoiceTemplates() {
                   <Label htmlFor="companyName">Company Name *</Label>
                   <Input
                     id="companyName"
-                    placeholder="Rooftop Renovators"
+                    placeholder="MUNRO AND SONS ROOFING EXPERTS"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   />

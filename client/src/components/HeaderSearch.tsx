@@ -57,7 +57,7 @@ export function HeaderSearch() {
             type: "customer",
             title: `${customer.firstName} ${customer.lastName}`,
             subtitle: customer.phone || customer.email || undefined,
-            path: "/customers",
+            path: `/customers/${customer.id}`,
           });
         }
       });
@@ -72,7 +72,7 @@ export function HeaderSearch() {
             type: "project",
             title: project.title,
             subtitle: project.description ?? undefined,
-            path: "/projects",
+            path: `/projects/${project.id}`,
           });
         }
       });
@@ -90,7 +90,7 @@ export function HeaderSearch() {
             type: "estimate",
             title: estimate.title,
             subtitle: `#${estimate.estimateNumber}` || undefined,
-            path: "/estimates",
+            path: `/estimates/${estimate.id}`,
           });
         }
       });

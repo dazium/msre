@@ -48,9 +48,9 @@ export async function sendInvoiceEmail(data: EmailInvoiceData): Promise<{ succes
     const transporter = await getTransporter();
 
     const mailOptions = {
-      from: '"Rooftop Renovators" <noreply@rooftoprenovators.com>',
+      from: '"MUNRO AND SONS ROOFING EXPERTS" <noreply@munroandsonsroofing.com>',
       to: data.recipientEmail,
-      subject: `Invoice ${data.invoice.invoiceNumber} from Rooftop Renovators`,
+      subject: `Invoice ${data.invoice.invoiceNumber} from MUNRO AND SONS ROOFING EXPERTS`,
       html: generateEmailTemplate(data.invoice, data.recipientName),
       attachments: [
         {
@@ -208,7 +208,7 @@ function generateEmailTemplate(invoice: Invoice, recipientName: string): string 
       <body>
         <div class="container">
           <div class="header">
-            <h1>ROOFTOP RENOVATORS</h1>
+            <h1>MUNRO AND SONS ROOFING EXPERTS</h1>
             <p>Professional Roofing Services</p>
           </div>
 
@@ -274,15 +274,15 @@ function generateEmailTemplate(invoice: Invoice, recipientName: string): string 
 
             <p>Please find the complete invoice attached as a PDF. If you have any questions about this invoice, please don't hesitate to contact us.</p>
 
-            <a href="mailto:info@rooftoprenovators.com" class="cta-button">Contact Us</a>
+            <a href="mailto:info@munroandsonsroofing.com" class="cta-button">Contact Us</a>
 
             <p style="margin-top: 30px; font-size: 12px; color: #999;">
-              Thank you for choosing Rooftop Renovators for your roofing needs!
+              Thank you for choosing MUNRO AND SONS ROOFING EXPERTS for your roofing needs!
             </p>
           </div>
 
           <div class="footer">
-            <p>© 2026 Rooftop Renovators. All rights reserved.</p>
+            <p>© 2026 MUNRO AND SONS ROOFING EXPERTS. All rights reserved.</p>
             <p>This is an automated email. Please do not reply directly to this address.</p>
           </div>
         </div>

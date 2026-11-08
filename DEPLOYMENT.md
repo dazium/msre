@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Rooftop Renovators CRM is deployed on the Manus platform with automatic CI/CD, database hosting, and custom domain support.
+The MUNRO AND SONS ROOFING EXPERTS CRM is deployed on the Manus platform with automatic CI/CD, database hosting, and custom domain support.
 
 ## Pre-Deployment Checklist
 
@@ -21,7 +21,7 @@ The Rooftop Renovators CRM is deployed on the Manus platform with automatic CI/C
 1. **Clone Repository**
 ```bash
 git clone <repository-url>
-cd rooftop-renovators-crm
+cd msre-roofing-crm
 ```
 
 2. **Install Dependencies**
