@@ -310,7 +310,7 @@ export default function EstimateDetail() {
                     <p className="text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
                   <div className="text-sm">
-                    <p className="text-muted-foreground">${item.unitPrice.toFixed(2)}</p>
+                    <p className="text-muted-foreground">${Number(item.unitPrice || 0).toFixed(2)}</p>
                   </div>
                   <div className="text-sm font-semibold">
                     ${calculateLineItemTotal(item)}

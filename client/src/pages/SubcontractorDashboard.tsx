@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Banknote, Building2, CalendarDays, CheckCircle2, ClipboardList, ReceiptText, Users, Wrench } from "lucide-react";
+import { AlertTriangle, Banknote, Building2, CalendarDays, CheckCircle2, ClipboardList, ClipboardPlus, ReceiptText, Users, Wrench } from "lucide-react";
 import { WORK_ORDER_STATUS_LABELS, type WorkOrderStatus } from "@shared/subcontractor";
 import { getSubcontractorDashboardErrorState } from "@/lib/subcontractorDashboardState";
 import { getSubcontractorProfilePath } from "@/lib/subcontractorRoutes";
@@ -44,7 +44,7 @@ export default function SubcontractorDashboard() {
   return <div className="space-y-5 sm:space-y-6">
     <section className="blueprint-section">
       <div className="blueprint-header flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div><div className="flex items-center gap-2 text-primary"><Wrench className="h-5 w-5" /><span className="text-sm font-semibold uppercase tracking-wide">Subcontractor Operations</span></div><h1 className="mt-2 text-3xl font-bold">Operations Dashboard</h1><p className="mt-2 max-w-3xl text-sm text-foreground/65">Dispatch, exceptions, production, company performance, invoicing readiness, and receivables for the subcontractor-first workflow.</p></div>
+        <div><div className="flex items-center gap-2 text-primary"><Wrench className="h-5 w-5" /><span className="text-sm font-semibold uppercase tracking-wide">Subcontractor Operations</span></div><h1 className="mt-2 text-3xl font-bold">Operations Dashboard</h1><p className="mt-2 max-w-3xl text-sm text-foreground/65">Dispatch, exceptions, production, company performance, invoicing readiness, and receivables for the subcontractor-first workflow.</p><Link href="/work-orders?new=1" className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"><ClipboardPlus className="h-4 w-4" /> Receive Work Order</Link></div>
         <div className="grid grid-cols-1 gap-2 sm:flex sm:items-end"><div><label className="text-xs font-semibold uppercase tracking-wide text-foreground/55">Start</label><Input type="date" value={range.start} onChange={(event) => setRangeState((current) => ({ ...current, start: event.target.value }))} /></div><div><label className="text-xs font-semibold uppercase tracking-wide text-foreground/55">End</label><Input type="date" value={range.end} onChange={(event) => setRangeState((current) => ({ ...current, end: event.target.value }))} /></div><div className="grid grid-cols-3 gap-2 sm:flex"><Button size="sm" variant="outline" onClick={() => applyRange(7)}>7 days</Button><Button size="sm" variant="outline" onClick={() => applyRange(30)}>30 days</Button><Button size="sm" variant="outline" onClick={() => applyRange(90)}>90 days</Button></div></div>
       </div>
     </section>

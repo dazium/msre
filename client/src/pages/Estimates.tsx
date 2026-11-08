@@ -249,7 +249,15 @@ export default function Estimates() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => setLocation(`/estimates/${estimate.id}`)}
+                        className="min-h-11"
+                      >
+                        Open Estimate
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
