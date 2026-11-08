@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, MapPin, Phone, Mail } from "lucide-react";
@@ -53,6 +53,9 @@ export default function Customers() {
   const totalCustomers = customerPage?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
   const safePage = Math.min(page, totalPages);
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const createMutation = trpc.customers.create.useMutation();
   const updateMutation = trpc.customers.update.useMutation();
   const deleteMutation = trpc.customers.delete.useMutation();
