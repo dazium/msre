@@ -77,7 +77,7 @@ export default function Customers() {
       setIsOpen(false);
       refetch();
     } catch (error) {
-      toast.error("Failed to add customer");
+      toast.error(error instanceof Error ? error.message : "Failed to add customer");
     }
   };
 
