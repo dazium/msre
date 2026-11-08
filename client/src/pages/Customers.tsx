@@ -41,7 +41,18 @@ export default function Customers() {
     notes: "",
   });
 
-  const { data: customers, isLoading, refetch } = trpc.customers.list.useQuery();
+  const { data: customerPage, isLoading, refetch } = trpc.customers.directory.useQuery({
+    search: searchTerm.trim() || undefined,
+    status: statusFilter === "all" ? undefined : statusFilter as any,
+    roofType: roofTypeFilter === "all" ? undefined : roofTypeFilter,
+    sort: sortOrder as "name_asc" | "name_desc" | "newest",
+    page,
+    pageSize,
+  });
+  const customers = customerPage?.items ?? [];
+  const totalCustomers = customerPage?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
+  const safePage = Math.min(page, totalPages);
   const createMutation = trpc.customers.create.useMutation();
   const updateMutation = trpc.customers.update.useMutation();
   const deleteMutation = trpc.customers.delete.useMutation();
@@ -104,31 +115,6 @@ export default function Customers() {
       toast.error("Customer could not be deleted");
     }
   };
-
-  const filteredCustomers = customers?.filter((c) => {
-    const normalizedRoofType = (c.roofType ?? "").toLowerCase().replace(/\s+/g, "_");
-    const matchesSearch =
-      c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm) ||
-      c.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.roofType?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    const matchesRoofType = roofTypeFilter === "all" || normalizedRoofType === roofTypeFilter || normalizedRoofType.includes(roofTypeFilter);
-    return matchesSearch && matchesStatus && matchesRoofType;
-  });
-
-  const sortedCustomers = [...(filteredCustomers ?? [])].sort((a, b) => {
-    const aName = `${a.lastName} ${a.firstName}`.toLowerCase();
-    const bName = `${b.lastName} ${b.firstName}`.toLowerCase();
-    if (sortOrder === "name_desc") return bName.localeCompare(aName);
-    if (sortOrder === "newest") return b.createdAt.getTime() - a.createdAt.getTime();
-    return aName.localeCompare(bName);
-  });
-  const totalPages = Math.max(1, Math.ceil(sortedCustomers.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paginatedCustomers = sortedCustomers.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -361,13 +347,13 @@ export default function Customers() {
           <div className="p-6">
             {isLoading ? (
               <p className="text-center py-8 text-foreground/60">Loading customers...</p>
-            ) : sortedCustomers.length === 0 ? (
+            ) : totalCustomers === 0 ? (
               <p className="text-center py-8 text-foreground/60">
-                {customers?.length === 0 ? "No customers yet. Add one to get started!" : "No customers match your search."}
+                {totalCustomers === 0 && !searchTerm && statusFilter === "all" && roofTypeFilter === "all" ? "No customers yet. Add one to get started!" : "No customers match your search."}
               </p>
             ) : (
               <div className="space-y-3">
-                {paginatedCustomers.map((customer) => (
+                {customers.map((customer) => (
                   <div key={customer.id} className="blueprint-card min-w-0 p-4 hover:blueprint-glow transition-all">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0 flex-1">
@@ -429,10 +415,10 @@ export default function Customers() {
                 ))}
               </div>
             )}
-            {!isLoading && sortedCustomers.length > 0 && (
+            {!isLoading && totalCustomers > 0 && (
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-4">
                 <p className="text-sm text-foreground/60">
-                  Showing {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, sortedCustomers.length)} of {sortedCustomers.length} customers
+                  Showing {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, totalCustomers)} of {totalCustomers} customers
                 </p>
                 <div className="flex items-center gap-2">
                   <Button type="button" size="sm" variant="outline" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>Previous</Button>
