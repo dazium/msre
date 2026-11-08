@@ -122,7 +122,9 @@ export default function Customers() {
   const sortedCustomers = [...(filteredCustomers ?? [])].sort((a, b) => {
     const aName = `${a.lastName} ${a.firstName}`.toLowerCase();
     const bName = `${b.lastName} ${b.firstName}`.toLowerCase();
-    return sortOrder === "name_desc" ? bName.localeCompare(aName) : aName.localeCompare(bName);
+    if (sortOrder === "name_desc") return bName.localeCompare(aName);
+    if (sortOrder === "newest") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    return aName.localeCompare(bName);
   });
   const totalPages = Math.max(1, Math.ceil(sortedCustomers.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -331,6 +333,7 @@ export default function Customers() {
                     <SelectContent>
                       <SelectItem value="name_asc">Last name (A–Z)</SelectItem>
                       <SelectItem value="name_desc">Last name (Z–A)</SelectItem>
+                      <SelectItem value="newest">Recently added</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
