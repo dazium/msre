@@ -114,6 +114,28 @@ export async function getCustomersByUserId(userId: number) {
   return db.select().from(customers).where(eq(customers.userId, userId));
 }
 
+export async function searchCustomersByUserId(userId: number, query: string, limit = 8) {
+  const db = await getDb();
+  if (!db) return [];
+  const term = query.trim();
+  const where = term
+    ? and(
+        eq(customers.userId, userId),
+        or(
+          like(customers.firstName, `%${term}%`),
+          like(customers.lastName, `%${term}%`),
+          like(customers.email, `%${term}%`),
+          like(customers.phone, `%${term}%`),
+          like(customers.companyName, `%${term}%`),
+          like(customers.city, `%${term}%`),
+        ),
+      )
+    : eq(customers.userId, userId);
+  return db.select().from(customers).where(where)
+    .orderBy(asc(customers.lastName), asc(customers.firstName))
+    .limit(Math.min(Math.max(limit, 1), 20));
+}
+
 export async function getCustomerById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
