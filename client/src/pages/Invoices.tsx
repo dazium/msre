@@ -42,7 +42,6 @@ export default function Invoices() {
 
   // Fetch projects and customers for the form
   const { data: projects } = trpc.projects.list.useQuery();
-  const { data: customers } = trpc.customers.list.useQuery();
 
   // Fetch invoices
   const { data: invoices = [] } = trpc.invoices.list.useQuery();
@@ -136,7 +135,6 @@ export default function Invoices() {
                 </div>
                 <div>
                   <CustomerPicker
-                    customers={customers ?? []}
                     value={formData.customerId ? Number(formData.customerId) : null}
                     onChange={(customerId) => setFormData({ ...formData, customerId: customerId?.toString() ?? "" })}
                     label="Customer *"
