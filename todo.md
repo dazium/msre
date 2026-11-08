@@ -37,7 +37,7 @@
 - [x] Comprehensive tests for all project operations
 - [x] Build projects dashboard with kanban-style status board
 - [x] Implement project detail view with timeline
-- [ ] Create project timeline visualization
+- [x] Create project timeline visualization
 
 ## Estimates & Pricing (MOSTLY COMPLETE)
 - [x] Create estimates table queries in server/db.ts
@@ -60,7 +60,7 @@
 - [x] Create photo deletion and management features
 - [x] Link photos to damage records
 - [x] Create tests for photo upload feature (12 tests passing)
-- [ ] Add before/after photo comparison view
+- [x] Add before/after photo comparison view
 
 ## Damages Tracking (PRIORITY)
 - [x] Create damages table in schema (link to projects, descriptions, photos)
@@ -81,6 +81,7 @@
 - [ ] Create appointment notifications/reminders
 - [x] Build appointment detail view with editing
 - [x] Add calendar filtering by type and status
+- [x] Synchronize scheduled work orders and crew assignments with calendar appointments
 
 ## Google Maps Integration (IN PROGRESS)
 - [x] Integrate Google Maps component for job location visualization
@@ -96,7 +97,7 @@
 - [x] Show recent leads widget
 - [x] Add upcoming appointments widget
 - [x] Create quick stats (total customers, active projects, revenue)
-- [ ] Build activity feed showing recent changes
+- [x] Build activity feed showing recent changes
 - [ ] Add key metrics and KPIs display
 
 ## Google Maps Integration

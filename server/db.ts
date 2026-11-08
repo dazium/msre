@@ -1,6 +1,6 @@
 import { and, asc, eq, like, gte, inArray, lte, desc, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, damageMaterials, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, roofSpecifications, roofMeasurements, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceLineItems, InsertInvoiceLineItem, InvoiceLineItem, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote, inspections, InsertInspection, inspectionItems, InsertInspectionItem, companies, InsertCompany, Company, companyContacts, InsertCompanyContact, CompanyContact, companyNotes, InsertCompanyNote, CompanyNote, jobSites, InsertJobSite, JobSite, activityLog, InsertActivityLog, workOrders, InsertWorkOrder, WorkOrder, workOrderScopes, InsertWorkOrderScope, WorkOrderScope, workOrderAssignments, InsertWorkOrderAssignment, WorkOrderAssignment, workOrderCompletions, InsertWorkOrderCompletion, WorkOrderCompletion, changeOrders, InsertChangeOrder, ChangeOrder, documents, InsertDocument, Document, workOrderStatusHistory, InsertWorkOrderStatusHistory, WorkOrderStatusHistory } from "../drizzle/schema";
+import { InsertUser, users, customers, InsertCustomer, projects, InsertProject, estimates, InsertEstimate, appointments, InsertAppointment, photos, InsertPhoto, damages, InsertDamage, damagePhotos, InsertDamagePhoto, damageMaterials, materials, InsertMaterial, estimateLineItems, InsertEstimateLineItem, roofSpecifications, roofMeasurements, crews, InsertCrew, Crew, invoices, InsertInvoice, Invoice, invoiceLineItems, InsertInvoiceLineItem, InvoiceLineItem, invoiceTemplates, InsertInvoiceTemplate, InvoiceTemplate, payments, InsertPayment, Payment, crewSkills, InsertCrewSkill, CrewSkill, skillCategories, InsertSkillCategory, SkillCategory, predefinedSkills, InsertPredefinedSkill, PredefinedSkill, crewMembers, InsertCrewMember, CrewMember, crewMemberSkills, InsertCrewMemberSkill, CrewMemberSkill, customerNotes, InsertCustomerNote, CustomerNote, inspections, InsertInspection, inspectionItems, InsertInspectionItem, companies, InsertCompany, Company, companyContacts, InsertCompanyContact, CompanyContact, companyNotes, InsertCompanyNote, CompanyNote, jobSites, InsertJobSite, JobSite, activityLog, InsertActivityLog, ActivityLog, workOrders, InsertWorkOrder, WorkOrder, workOrderScopes, InsertWorkOrderScope, WorkOrderScope, workOrderAssignments, InsertWorkOrderAssignment, WorkOrderAssignment, workOrderCompletions, InsertWorkOrderCompletion, WorkOrderCompletion, changeOrders, InsertChangeOrder, ChangeOrder, documents, InsertDocument, Document, workOrderStatusHistory, InsertWorkOrderStatusHistory, WorkOrderStatusHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { WORK_ORDER_NORMAL_TRANSITIONS, type WorkOrderStatus } from "../shared/subcontractor";
 
@@ -1476,6 +1476,15 @@ export async function recordActivity(data: InsertActivityLog): Promise<void> {
   await db.insert(activityLog).values(data);
 }
 
+export async function getActivityLogByUserId(userId: number, limit = 20): Promise<ActivityLog[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(activityLog)
+    .where(eq(activityLog.userId, userId))
+    .orderBy(desc(activityLog.createdAt))
+    .limit(Math.min(Math.max(limit, 1), 100));
+}
+
 export async function getCompanyById(id: number, userId: number): Promise<Company | undefined> {
   const db = await getDb();
   if (!db) return undefined;
@@ -1862,6 +1871,54 @@ export async function getWorkOrderDetail(id: number, userId: number) {
   };
 }
 
+async function synchronizeWorkOrderScheduleAppointment(workOrder: WorkOrder, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existingAppointments = await db.select().from(appointments).where(and(eq(appointments.workOrderId, workOrder.id), eq(appointments.userId, userId)));
+  const baseAppointment = existingAppointments.find((appointment) => !appointment.crewId);
+
+  if (!workOrder.scheduledStartDate || !workOrder.scheduledEndDate) {
+    if (baseAppointment && baseAppointment.status !== "cancelled") {
+      await db.update(appointments).set({ status: "cancelled", notes: "Work order is no longer scheduled." }).where(and(eq(appointments.id, baseAppointment.id), eq(appointments.userId, userId)));
+    }
+    return;
+  }
+
+  const [jobSite, project] = await Promise.all([
+    getJobSiteById(workOrder.jobSiteId, userId),
+    workOrder.projectId ? getProjectById(workOrder.projectId, userId) : Promise.resolve(undefined),
+  ]);
+  const scheduledStart = new Date(workOrder.scheduledStartDate);
+  scheduledStart.setHours(8, 0, 0, 0);
+  const scheduledEnd = new Date(workOrder.scheduledEndDate);
+  scheduledEnd.setHours(17, 0, 0, 0);
+  const appointmentData: Partial<InsertAppointment> = {
+    title: `${workOrder.workOrderNumber} — Scheduled work`,
+    description: workOrder.scopeSummary,
+    projectId: workOrder.projectId ?? undefined,
+    customerId: project?.customerId ?? undefined,
+    workOrderId: workOrder.id,
+    startTime: scheduledStart,
+    endTime: scheduledEnd,
+    location: jobSite?.address,
+    type: "work_order",
+    status: ["completed", "invoiced", "partially_paid", "paid", "closed"].includes(workOrder.status) ? "completed" : workOrder.status === "cancelled" ? "cancelled" : "scheduled",
+    notes: workOrder.specialInstructions ?? undefined,
+  };
+
+  if (baseAppointment) {
+    await db.update(appointments).set(appointmentData).where(and(eq(appointments.id, baseAppointment.id), eq(appointments.userId, userId)));
+  } else {
+    await db.insert(appointments).values({
+      ...appointmentData,
+      userId,
+      title: appointmentData.title!,
+      startTime: appointmentData.startTime!,
+      endTime: appointmentData.endTime!,
+    });
+  }
+}
+
 export async function createWorkOrder(data: InsertWorkOrder, scopes: WorkOrderScopeInput[] = []): Promise<WorkOrder> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -1875,6 +1932,7 @@ export async function createWorkOrder(data: InsertWorkOrder, scopes: WorkOrderSc
   if (scopes.length > 0) {
     await db.insert(workOrderScopes).values(scopes.map((scope) => ({ ...scope, workOrderId })));
   }
+  await synchronizeWorkOrderScheduleAppointment(created, data.userId);
   await db.insert(workOrderStatusHistory).values({
     workOrderId,
     changedByUserId: data.createdByUserId,
@@ -1912,6 +1970,7 @@ export async function updateWorkOrder(id: number, userId: number, data: Partial<
   await db.update(workOrders).set({ ...data, updatedByUserId: userId }).where(eq(workOrders.id, id));
   const updated = await getWorkOrderById(id, userId);
   if (!updated) throw new Error("Failed to update work order");
+  await synchronizeWorkOrderScheduleAppointment(updated, userId);
   await recordActivity({
     userId,
     entityType: "work_order",
@@ -1967,7 +2026,8 @@ export async function transitionWorkOrderStatus(id: number, userId: number, stat
     reason: reason?.trim() || null,
   });
   const updated = await getWorkOrderById(id, userId);
-  if (!updated) throw new Error("Failed to transition work order status");
+  if (!updated) throw new Error("Failed to retrieve updated work order");
+  await synchronizeWorkOrderScheduleAppointment(updated, userId);
   await recordActivity({
     userId,
     entityType: "work_order",
@@ -2005,10 +2065,18 @@ async function synchronizeAssignmentAppointment(
     getCrewById(assignment.crewId, userId),
   ]);
   if (!workOrder || !jobSite || !crew) throw new Error("Unable to synchronize the crew schedule");
+  const project = workOrder.projectId ? await getProjectById(workOrder.projectId, userId) : undefined;
+  const existingSchedule = assignment.appointmentId
+    ? undefined
+    : (await db.select().from(appointments).where(and(eq(appointments.workOrderId, workOrder.id), eq(appointments.userId, userId))).orderBy(desc(appointments.createdAt))).find((appointment) => appointment.crewId === crew.id || !appointment.crewId);
 
   const appointmentData: Partial<InsertAppointment> = {
     title: `${workOrder.workOrderNumber} — ${crew.name}`,
     description: workOrder.scopeSummary,
+    projectId: workOrder.projectId ?? undefined,
+    customerId: project?.customerId ?? undefined,
+    workOrderId: workOrder.id,
+    crewId: crew.id,
     startTime: assignment.scheduledStart,
     endTime: assignment.scheduledEnd,
     location: jobSite.address,
@@ -2017,9 +2085,10 @@ async function synchronizeAssignmentAppointment(
     notes: workOrder.specialInstructions ?? undefined,
   };
 
-  if (assignment.appointmentId) {
-    await db.update(appointments).set(appointmentData).where(and(eq(appointments.id, assignment.appointmentId), eq(appointments.userId, userId)));
-    return assignment.appointmentId;
+  const appointmentId = assignment.appointmentId ?? existingSchedule?.id;
+  if (appointmentId) {
+    await db.update(appointments).set(appointmentData).where(and(eq(appointments.id, appointmentId), eq(appointments.userId, userId)));
+    return appointmentId;
   }
 
   const result = await db.insert(appointments).values({

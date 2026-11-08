@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, BarChart3, Calendar, ClipboardList, FileText, Plus, TrendingUp, Users } from "lucide-react";
+import { Activity, ArrowRight, BarChart3, Calendar, ClipboardList, FileText, Plus, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -21,8 +21,13 @@ export default function Home() {
   const { data: projects } = trpc.projects.list.useQuery();
   const { data: estimates } = trpc.estimates.list.useQuery();
   const { data: appointments } = trpc.appointments.list.useQuery();
+  const { data: activity } = trpc.activity.list.useQuery({ limit: 10 });
   const activeProjects = getActiveProjects(projects);
   const pendingEstimates = getPendingEstimates(estimates);
+  const getActivityPath = (entityType: string, entityId: number) => {
+    const routes: Record<string, string> = { company: "/companies", work_order: "/work-orders", job_site: "/companies", project: "/projects", customer: "/customers" };
+    return routes[entityType] ? `${routes[entityType]}/${entityId}` : undefined;
+  };
 
   const handleAddressClick = (address: string) => {
     setSelectedAddress(address);
@@ -190,6 +195,16 @@ export default function Home() {
             </div>
           </section>
         </div>
+
+        <section className="blueprint-section" aria-labelledby="recent-activity-title">
+          <div className="blueprint-header flex items-center justify-between gap-3">
+            <h2 id="recent-activity-title" className="text-xl font-bold flex items-center gap-2"><Activity className="h-5 w-5" />Recent Activity</h2>
+            <span className="text-xs font-semibold uppercase tracking-wide text-secondary-foreground/70">Latest CRM changes</span>
+          </div>
+          <div className="p-6">
+            {activity && activity.length > 0 ? <div className="space-y-2">{activity.map((event) => { const href = getActivityPath(event.entityType, event.entityId); const content = <div className="flex min-w-0 items-start justify-between gap-4 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary"><div className="min-w-0"><p className="font-semibold text-foreground">{event.details || `${event.action} ${event.entityType.replaceAll("_", " ")}`}</p><p className="mt-1 text-xs uppercase tracking-wide text-foreground/60">{event.action.replaceAll("_", " ")} · {event.entityType.replaceAll("_", " ")}</p></div><time className="shrink-0 text-xs text-foreground/60">{new Date(event.createdAt).toLocaleDateString()}</time></div>; return href ? <a key={event.id} href={href}>{content}</a> : <div key={event.id}>{content}</div>; })}</div> : <p className="rounded border border-dashed border-border p-4 text-sm text-foreground/60">New project, crew, work-order, and account changes will appear here.</p>}
+          </div>
+        </section>
 
         {/* Recent Activity Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

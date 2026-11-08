@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Columns2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Photos() {
@@ -18,6 +18,9 @@ export default function Photos() {
   const [selectedPhotoId, setSelectedPhotoId] = useState<number | null>(null);
   const [showDamageLink, setShowDamageLink] = useState(false);
   const [selectedDamageId, setSelectedDamageId] = useState<string>("");
+  const [showComparison, setShowComparison] = useState(false);
+  const [beforePhotoId, setBeforePhotoId] = useState<string>("");
+  const [afterPhotoId, setAfterPhotoId] = useState<string>("");
 
   // Queries
   const { data: photos, refetch: refetchPhotos } = trpc.photos.listByProject.useQuery(
@@ -99,6 +102,15 @@ export default function Photos() {
   };
 
   const projectDamages = damages?.filter((d) => d.projectId === projectId) || [];
+  const beforePhoto = photos?.find((photo) => photo.id.toString() === beforePhotoId);
+  const afterPhoto = photos?.find((photo) => photo.id.toString() === afterPhotoId);
+
+  const openComparison = () => {
+    if (!photos || photos.length < 2) return;
+    setBeforePhotoId(photos[0].id.toString());
+    setAfterPhotoId(photos[photos.length - 1].id.toString());
+    setShowComparison(true);
+  };
 
   if (!projectId) {
     return (
@@ -153,15 +165,7 @@ export default function Photos() {
               {photos?.length || 0} photos uploaded
             </CardDescription>
           </div>
-          {photos && photos.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDamageLink(true)}
-            >
-              Link to Damage
-            </Button>
-          )}
+          {photos && photos.length > 0 && <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => setShowDamageLink(true)}>Link to Damage</Button>{photos.length > 1 && <Button variant="outline" size="sm" onClick={openComparison}><Columns2 className="mr-2 h-4 w-4" />Compare before/after</Button>}</div>}
         </CardHeader>
         <CardContent>
           <PhotoGallery
@@ -232,6 +236,17 @@ export default function Photos() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showComparison} onOpenChange={setShowComparison}>
+        <DialogContent className="max-h-[90vh] w-[95vw] max-w-5xl overflow-y-auto">
+          <DialogHeader><DialogTitle>Before &amp; After Comparison</DialogTitle></DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2"><label className="text-sm font-medium">Before photo</label><Select value={beforePhotoId} onValueChange={setBeforePhotoId}><SelectTrigger><SelectValue placeholder="Choose the before photo" /></SelectTrigger><SelectContent>{photos?.map((photo) => <SelectItem key={`before-${photo.id}`} value={photo.id.toString()}>{photo.fileName}</SelectItem>)}</SelectContent></Select>{beforePhoto ? <div className="overflow-hidden rounded-lg border bg-muted/20"><img src={beforePhoto.fileUrl} alt={`Before: ${beforePhoto.caption || beforePhoto.fileName}`} className="aspect-[4/3] w-full object-cover" /><p className="p-2 text-xs text-muted-foreground">{beforePhoto.caption || beforePhoto.fileName}</p></div> : <div className="flex aspect-[4/3] items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">Select a before photo</div>}</div>
+            <div className="space-y-2"><label className="text-sm font-medium">After photo</label><Select value={afterPhotoId} onValueChange={setAfterPhotoId}><SelectTrigger><SelectValue placeholder="Choose the after photo" /></SelectTrigger><SelectContent>{photos?.map((photo) => <SelectItem key={`after-${photo.id}`} value={photo.id.toString()}>{photo.fileName}</SelectItem>)}</SelectContent></Select>{afterPhoto ? <div className="overflow-hidden rounded-lg border bg-muted/20"><img src={afterPhoto.fileUrl} alt={`After: ${afterPhoto.caption || afterPhoto.fileName}`} className="aspect-[4/3] w-full object-cover" /><p className="p-2 text-xs text-muted-foreground">{afterPhoto.caption || afterPhoto.fileName}</p></div> : <div className="flex aspect-[4/3] items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">Select an after photo</div>}</div>
+          </div>
+          <p className="text-xs text-muted-foreground">Use captions such as “Before — front slope” and “After — front slope” to keep comparisons easy to identify in the gallery.</p>
         </DialogContent>
       </Dialog>
     </div>

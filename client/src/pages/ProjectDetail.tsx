@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calendar, DollarSign, MapPin, FileText, Users, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Circle, Clock3, DollarSign, MapPin, FileText, Users, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { canConfirmCrewAssignment } from "@/lib/crewAssignment";
 const formatDate = (date: Date | string) => {
@@ -194,6 +194,14 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
     );
   }
 
+  const statusRank: Record<string, number> = { lead: 0, scheduled: 1, in_progress: 2, completed: 3 };
+  const projectMilestones = [
+    { label: "Project created", date: project.createdAt, completed: true, detail: "Customer record and project workspace created" },
+    { label: "Estimate activity", date: projectEstimates?.[0]?.createdAt, completed: Boolean(projectEstimates?.length), detail: projectEstimates?.length ? `${projectEstimates.length} estimate${projectEstimates.length === 1 ? "" : "s"} linked` : "Create an estimate to price the work" },
+    { label: "Work scheduled", date: project.startDate, completed: (statusRank[project.status] ?? 0) >= 1 && Boolean(project.startDate), detail: project.startDate ? `Starts ${formatDate(project.startDate)}` : "Set a project start date" },
+    { label: "Target completion", date: project.endDate, completed: project.status === "completed", detail: project.endDate ? `Target ${formatDate(project.endDate)}` : "Set a target end date" },
+  ];
+
   return (
       <div className="space-y-6">
         {/* Header with back button */}
@@ -306,21 +314,24 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   Timeline
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-foreground/60 mb-1">Start Date</p>
-                    <p className="text-foreground font-semibold">
-                      {project.startDate ? formatDate(project.startDate) : "Not set"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60 mb-1">End Date</p>
-                    <p className="text-foreground font-semibold">
-                      {project.endDate ? formatDate(project.endDate) : "Not set"}
-                    </p>
-                  </div>
+              <CardContent>
+                <div className="relative space-y-5 before:absolute before:bottom-5 before:left-[11px] before:top-5 before:w-px before:bg-border">
+                  {projectMilestones.map((milestone) => (
+                    <div key={milestone.label} className="relative flex gap-3">
+                      <div className="z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-card">
+                        {milestone.completed ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-foreground/30" />}
+                      </div>
+                      <div className="min-w-0 flex-1 pb-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                          <p className={`font-semibold ${milestone.completed ? "text-foreground" : "text-foreground/60"}`}>{milestone.label}</p>
+                          {milestone.date && <time className="text-xs text-foreground/60">{formatDate(milestone.date)}</time>}
+                        </div>
+                        <p className="mt-1 text-sm text-foreground/60">{milestone.detail}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+                <div className="mt-5 flex items-center gap-2 rounded border border-dashed border-border p-3 text-xs text-foreground/60"><Clock3 className="h-4 w-4 shrink-0" />Timeline updates as estimates, dates, and project status change.</div>
               </CardContent>
             </Card>
 

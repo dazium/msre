@@ -17,6 +17,8 @@ async function cleanup() {
   if (orderIds.length > 0) {
     const assignmentRows = await database.select({ appointmentId: workOrderAssignments.appointmentId }).from(workOrderAssignments).where(inArray(workOrderAssignments.workOrderId, orderIds));
     const appointmentIds = assignmentRows.map((row) => row.appointmentId).filter((id): id is number => id !== null);
+    const orderAppointments = await database.select({ id: appointments.id }).from(appointments).where(inArray(appointments.workOrderId, orderIds));
+    appointmentIds.push(...orderAppointments.map((appointment) => appointment.id));
     if (appointmentIds.length > 0) await database.delete(appointments).where(inArray(appointments.id, appointmentIds));
     await database.delete(workOrderAssignments).where(inArray(workOrderAssignments.workOrderId, orderIds));
     await database.delete(workOrderCompletions).where(inArray(workOrderCompletions.workOrderId, orderIds));
@@ -72,6 +74,25 @@ describe("Work-order execution workflow", () => {
 
     const listedAssignments = await db.listWorkOrderAssignments(workOrderId, userId);
     expect(listedAssignments[0]?.crew?.name).toBe("North Crew");
+  });
+
+  it("creates and updates a calendar appointment for a scheduled work order", async () => {
+    const firstStart = new Date("2026-08-20T08:00:00");
+    const firstEnd = new Date("2026-08-20T16:00:00");
+    const scheduledOrder = await db.createWorkOrder({ userId, companyId, jobSiteId, workOrderNumber: "WO-EXEC-0002", jobType: "repair", scopeSummary: "Scheduled roof repair.", scheduledStartDate: firstStart, scheduledEndDate: firstEnd, status: "scheduled", createdByUserId: userId });
+    const database = await db.getDb();
+    const firstAppointments = await database!.select().from(appointments).where(eq(appointments.workOrderId, scheduledOrder.id));
+    expect(firstAppointments).toHaveLength(1);
+    expect(firstAppointments[0]?.startTime).toEqual(new Date("2026-08-20T08:00:00"));
+    expect(firstAppointments[0]?.endTime).toEqual(new Date("2026-08-20T17:00:00"));
+
+    const secondStart = new Date("2026-08-21T09:00:00");
+    const secondEnd = new Date("2026-08-21T17:00:00");
+    await db.updateWorkOrder(scheduledOrder.id, userId, { scheduledStartDate: secondStart, scheduledEndDate: secondEnd });
+    const updatedAppointments = await database!.select().from(appointments).where(eq(appointments.workOrderId, scheduledOrder.id));
+    expect(updatedAppointments).toHaveLength(1);
+    expect(updatedAppointments[0]?.startTime).toEqual(new Date("2026-08-21T08:00:00"));
+    expect(updatedAppointments[0]?.endTime).toEqual(new Date("2026-08-21T17:00:00"));
   });
 
   it("starts crew work, records completion, completes scopes, and synchronizes calendar status", async () => {

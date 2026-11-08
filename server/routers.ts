@@ -25,6 +25,12 @@ export const appRouter = router({
     }),
   }),
 
+  activity: router({
+    list: protectedProcedure.input(z.object({ limit: z.number().int().positive().max(100).optional() }).optional()).query(({ ctx, input }) =>
+      db.getActivityLogByUserId(ctx.user.id, input?.limit ?? 12)
+    ),
+  }),
+
   customers: router({
     list: protectedProcedure.query(({ ctx }) =>
       db.getCustomersByUserId(ctx.user.id)
