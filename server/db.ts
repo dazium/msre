@@ -136,6 +136,45 @@ export async function searchCustomersByUserId(userId: number, query: string, lim
     .limit(Math.min(Math.max(limit, 1), 20));
 }
 
+export async function listCustomersPage(
+  userId: number,
+  filters: { search?: string; status?: string; roofType?: string; sort?: string; page: number; pageSize: number },
+) {
+  const db = await getDb();
+  if (!db) return { items: [], total: 0 };
+  const conditions = [eq(customers.userId, userId)];
+  const term = filters.search?.trim();
+  if (term) {
+    conditions.push(or(
+      like(customers.firstName, `%${term}%`),
+      like(customers.lastName, `%${term}%`),
+      like(customers.email, `%${term}%`),
+      like(customers.phone, `%${term}%`),
+      like(customers.companyName, `%${term}%`),
+      like(customers.city, `%${term}%`),
+      like(customers.roofType, `%${term}%`),
+    )!);
+  }
+  if (filters.status) conditions.push(eq(customers.status, filters.status as any));
+  if (filters.roofType) conditions.push(like(customers.roofType, `%${filters.roofType.replace(/_/g, " ")}%`));
+  const where = and(...conditions);
+  const pageSize = Math.min(Math.max(filters.pageSize, 1), 100);
+  const page = Math.max(filters.page, 1);
+  const [items, countRows] = await Promise.all([
+    db.select().from(customers).where(where)
+      .orderBy(
+        filters.sort === "newest" ? desc(customers.createdAt) :
+        filters.sort === "name_desc" ? desc(customers.lastName) :
+        asc(customers.lastName),
+        asc(customers.firstName),
+      )
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+    db.select({ total: sql<number>`count(*)` }).from(customers).where(where),
+  ]);
+  return { items, total: Number(countRows[0]?.total ?? 0) };
+}
+
 export async function getCustomerById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
