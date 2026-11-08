@@ -13,6 +13,7 @@ import { Download } from "lucide-react";
 import { generateInvoicePDF } from "@/lib/pdf-export";
 import { filterInvoices } from "@/lib/invoiceFilters";
 import { toast } from "sonner";
+import { CustomerPicker } from "@/components/CustomerPicker";
 
 export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -134,19 +135,12 @@ export default function Invoices() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="customer">Customer *</Label>
-                  <Select value={formData.customerId} onValueChange={(value) => setFormData({ ...formData, customerId: value })}>
-                    <SelectTrigger id="customer">
-                      <SelectValue placeholder="Select a customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers?.map((customer: any) => (
-                        <SelectItem key={customer.id} value={customer.id.toString()}>
-                          {customer.firstName} {customer.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CustomerPicker
+                    customers={customers ?? []}
+                    value={formData.customerId ? Number(formData.customerId) : null}
+                    onChange={(customerId) => setFormData({ ...formData, customerId: customerId?.toString() ?? "" })}
+                    label="Customer *"
+                  />
                 </div>
               </div>
 
