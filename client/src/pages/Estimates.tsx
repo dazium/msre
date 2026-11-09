@@ -13,6 +13,7 @@ import { Plus, Trash2, Download } from "lucide-react";
 import { FormError } from "@/components/FormError";
 import { validateField, validators, errorsToMap, type ValidationError } from "@/lib/validation";
 import { getNextEstimateNumber } from "@/lib/estimateNumber";
+import { CustomerPicker } from "@/components/CustomerPicker";
 
 import { generateEstimatePDF } from "@/lib/pdf-export";
 import RoofSpecifications from "@/components/RoofSpecifications";
@@ -24,6 +25,7 @@ export default function Estimates() {
   const [estimates, setEstimates] = useState<any[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [lineItems, setLineItems] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const [showRoofSpecs, setShowRoofSpecs] = useState(false);
@@ -143,8 +145,8 @@ export default function Estimates() {
   const handleCreateEstimate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!selectedProject || lineItems.length === 0) {
-      toast.error("Please select a project and add line items");
+    if (!selectedCustomerId || !selectedProject || lineItems.length === 0) {
+      toast.error("Please select a customer, a project for that customer, and add line items");
       return;
     }
 
@@ -153,10 +155,9 @@ export default function Estimates() {
     const total = calculateTotal();
 
     try {
-      const selectedProjectData = projectsData?.find(p => p.id === selectedProject);
       const estimate = await createMutation.mutateAsync({
         projectId: selectedProject,
-        customerId: selectedProjectData?.customerId || 0,
+        customerId: selectedCustomerId,
         estimateNumber: estimateNumber.trim(),
         title: formData.get("title") as string || "Estimate",
         description: formData.get("description") as string,
@@ -187,6 +188,7 @@ export default function Estimates() {
       setShowDialog(false);
       setLineItems([]);
       setSelectedProject(null);
+      setSelectedCustomerId(null);
       setEstimateNumber("");
       (e.target as HTMLFormElement).reset()
     } catch (error) {
@@ -297,13 +299,26 @@ export default function Estimates() {
                   />
                 </div>
                 <div>
+                  <CustomerPicker
+                    value={selectedCustomerId}
+                    onChange={(customerId) => {
+                      setSelectedCustomerId(customerId);
+                      setSelectedProject(null);
+                    }}
+                  />
+                </div>
+                <div>
                   <Label htmlFor="project">Project</Label>
-                  <Select value={selectedProject?.toString() || ""} onValueChange={(v) => setSelectedProject(parseInt(v))}>
+                  <Select
+                    value={selectedProject?.toString() || ""}
+                    onValueChange={(v) => setSelectedProject(parseInt(v))}
+                    disabled={!selectedCustomerId}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a project" />
+                      <SelectValue placeholder={selectedCustomerId ? "Select a project" : "Select a customer first"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {projectsData?.map(project => (
+                      {projectsData?.filter(project => project.customerId === selectedCustomerId).map(project => (
                         <SelectItem key={project.id} value={project.id.toString()}>
                           {project.title}
                         </SelectItem>

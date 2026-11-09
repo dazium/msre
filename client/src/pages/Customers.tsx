@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, MapPin, Phone, Mail } from "lucide-react";
@@ -21,6 +21,9 @@ export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [roofTypeFilter, setRoofTypeFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<string>("name_asc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [mapOpen, setMapOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [addressIsValidated, setAddressIsValidated] = useState(false);
@@ -38,7 +41,21 @@ export default function Customers() {
     notes: "",
   });
 
-  const { data: customers, isLoading, refetch } = trpc.customers.list.useQuery();
+  const { data: customerPage, isLoading, refetch } = trpc.customers.directory.useQuery({
+    search: searchTerm.trim() || undefined,
+    status: statusFilter === "all" ? undefined : statusFilter as any,
+    roofType: roofTypeFilter === "all" ? undefined : roofTypeFilter,
+    sort: sortOrder as "name_asc" | "name_desc" | "newest",
+    page,
+    pageSize,
+  });
+  const customers = customerPage?.items ?? [];
+  const totalCustomers = customerPage?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
+  const safePage = Math.min(page, totalPages);
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const createMutation = trpc.customers.create.useMutation();
   const updateMutation = trpc.customers.update.useMutation();
   const deleteMutation = trpc.customers.delete.useMutation();
@@ -74,7 +91,7 @@ export default function Customers() {
       setIsOpen(false);
       refetch();
     } catch (error) {
-      toast.error("Failed to add customer");
+      toast.error(error instanceof Error ? error.message : "Failed to add customer");
     }
   };
 
@@ -102,24 +119,11 @@ export default function Customers() {
     }
   };
 
-  const filteredCustomers = customers?.filter((c) => {
-    const normalizedRoofType = (c.roofType ?? "").toLowerCase().replace(/\s+/g, "_");
-    const matchesSearch =
-      c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm) ||
-      c.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.roofType?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    const matchesRoofType = roofTypeFilter === "all" || normalizedRoofType === roofTypeFilter || normalizedRoofType.includes(roofTypeFilter);
-    return matchesSearch && matchesStatus && matchesRoofType;
-  });
-
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setRoofTypeFilter("all");
+    setPage(1);
   };
 
   return (
@@ -274,12 +278,12 @@ export default function Customers() {
                   id="search"
                   placeholder="Search by name, email, or phone..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                 />
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
                   <SelectTrigger id="status">
                     <SelectValue />
                   </SelectTrigger>
@@ -296,7 +300,7 @@ export default function Customers() {
               </div>
               <div>
                 <Label htmlFor="customer-roof-type">Roof Type</Label>
-                <Select value={roofTypeFilter} onValueChange={setRoofTypeFilter}>
+                <Select value={roofTypeFilter} onValueChange={(value) => { setRoofTypeFilter(value); setPage(1); }}>
                   <SelectTrigger id="customer-roof-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All roof types</SelectItem>
@@ -309,7 +313,31 @@ export default function Customers() {
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="flex flex-wrap gap-3">
+                <div>
+                  <Label htmlFor="customer-sort">Sort</Label>
+                  <Select value={sortOrder} onValueChange={(value) => { setSortOrder(value); setPage(1); }}>
+                    <SelectTrigger id="customer-sort" className="w-44"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name_asc">Last name (A–Z)</SelectItem>
+                      <SelectItem value="name_desc">Last name (Z–A)</SelectItem>
+                      <SelectItem value="newest">Recently added</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="customer-page-size">Per page</Label>
+                  <Select value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }}>
+                    <SelectTrigger id="customer-page-size" className="w-28"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <Button type="button" variant="outline" onClick={clearFilters} disabled={!searchTerm && statusFilter === "all" && roofTypeFilter === "all"}>
                 Clear filters
               </Button>
@@ -322,13 +350,13 @@ export default function Customers() {
           <div className="p-6">
             {isLoading ? (
               <p className="text-center py-8 text-foreground/60">Loading customers...</p>
-            ) : filteredCustomers?.length === 0 ? (
+            ) : totalCustomers === 0 ? (
               <p className="text-center py-8 text-foreground/60">
-                {customers?.length === 0 ? "No customers yet. Add one to get started!" : "No customers match your search."}
+                {totalCustomers === 0 && !searchTerm && statusFilter === "all" && roofTypeFilter === "all" ? "No customers yet. Add one to get started!" : "No customers match your search."}
               </p>
             ) : (
               <div className="space-y-3">
-                {filteredCustomers?.map((customer) => (
+                {customers.map((customer) => (
                   <div key={customer.id} className="blueprint-card min-w-0 p-4 hover:blueprint-glow transition-all">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0 flex-1">
@@ -388,6 +416,18 @@ export default function Customers() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            {!isLoading && totalCustomers > 0 && (
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-4">
+                <p className="text-sm text-foreground/60">
+                  Showing {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, totalCustomers)} of {totalCustomers} customers
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button type="button" size="sm" variant="outline" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>Previous</Button>
+                  <span className="min-w-20 text-center text-sm text-foreground/70">Page {safePage} of {totalPages}</span>
+                  <Button type="button" size="sm" variant="outline" disabled={safePage >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next</Button>
+                </div>
               </div>
             )}
           </div>

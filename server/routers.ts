@@ -28,6 +28,22 @@ export const appRouter = router({
     list: protectedProcedure.query(({ ctx }) =>
       db.getCustomersByUserId(ctx.user.id)
     ),
+    search: protectedProcedure.input(z.object({
+      query: z.string().max(255).default(""),
+      limit: z.number().int().min(1).max(20).default(8),
+    })).query(({ ctx, input }) =>
+      db.searchCustomersByUserId(ctx.user.id, input.query, input.limit)
+    ),
+    directory: protectedProcedure.input(z.object({
+      search: z.string().max(255).optional(),
+      status: z.enum(["lead", "contacted", "qualified", "proposal_sent", "won", "lost"]).optional(),
+      roofType: z.string().max(100).optional(),
+      sort: z.enum(["name_asc", "name_desc", "newest"]).default("name_asc"),
+      page: z.number().int().min(1).default(1),
+      pageSize: z.number().int().min(1).max(100).default(25),
+    })).query(({ ctx, input }) =>
+      db.listCustomersPage(ctx.user.id, input)
+    ),
     getById: protectedProcedure.input(z.object({ id: z.number() })).query(({ ctx, input }) =>
       db.getCustomerById(input.id, ctx.user.id)
     ),
