@@ -243,6 +243,26 @@ export default function CustomerDetail() {
     });
   }, [projects]);
 
+  const customerHistory = useMemo(() => {
+    const serviceEvents = sortedProjects.map((project) => ({
+      id: `project-${project.id}`,
+      kind: "service" as const,
+      date: project.startDate ? new Date(project.startDate) : new Date(project.createdAt),
+      title: project.title,
+      detail: `Project ${project.status.replace("_", " ")}${project.description ? ` — ${project.description}` : ""}`,
+      status: project.status,
+    }));
+    const interactionEvents = (notes ?? []).map((note) => ({
+      id: `note-${note.id}`,
+      kind: "interaction" as const,
+      date: new Date(note.createdAt),
+      title: note.title,
+      detail: note.content,
+      status: note.noteType,
+    }));
+    return [...serviceEvents, ...interactionEvents].sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [notes, sortedProjects]);
+
   const openNewJob = () => {
     if (!customerId) return;
     navigate(`/projects?new=1&customerId=${customerId}`);
@@ -665,6 +685,39 @@ export default function CustomerDetail() {
             </div>
           ) : (
             <p className="text-gray-600 text-center py-8">No contact history yet. Add your first note!</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Customer History</CardTitle>
+          <CardDescription>Service history and customer interactions in chronological order</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {customerHistory.length > 0 ? (
+            <div className="relative space-y-4 border-l-2 border-border pl-5">
+              {customerHistory.map((event) => (
+                <div key={event.id} className="relative rounded-lg border border-border bg-background/50 p-4">
+                  <span className="absolute -left-[1.65rem] top-5 h-3 w-3 rounded-full border-2 border-background bg-primary" />
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className={event.kind === "service" ? projectStatusColors[event.status] : noteTypeColors[event.status]}>
+                          {event.kind === "service" ? "Service" : "Interaction"}
+                        </Badge>
+                        <span className="text-xs font-medium capitalize text-muted-foreground">{event.status.replace("_", " ")}</span>
+                      </div>
+                      <h3 className="mt-2 font-semibold">{event.title}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{event.detail}</p>
+                    </div>
+                    <time className="text-xs text-muted-foreground">{event.date.toLocaleDateString()} {event.date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded border border-dashed border-border p-4 text-center text-sm text-muted-foreground">No customer history yet. Add a quick note or create a job to start the timeline.</p>
           )}
         </CardContent>
       </Card>

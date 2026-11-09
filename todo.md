@@ -213,7 +213,7 @@
 ## Customer Management - Phase 1
 - [ ] Customer portal - View projects, estimates, photos
 - [ ] Customer communication hub - SMS, email, in-app notifications
-- [ ] Customer history & notes - Interaction log and service history
+- [x] Customer history & notes - Interaction log and service history
 - [ ] Customer feedback system - Post-project surveys and ratings
 
 ## Sales & Quoting - Phase 1

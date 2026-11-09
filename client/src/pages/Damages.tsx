@@ -72,7 +72,7 @@ export default function Damages() {
       // Create damage record
       const newDamage = await createMutation.mutateAsync({
         projectId: parseInt(selectedProject),
-        customerId: 0,
+        customerId: selectedProjectData?.customerId ?? 0,
         category: formData.category as any,
         description: formData.description,
         severity: formData.severity as any,

@@ -647,18 +647,23 @@ export const appRouter = router({
       severity: z.enum(["minor", "moderate", "severe"]).default("moderate"),
       location: z.string().optional(),
       estimatedCost: z.string().optional(),
-    })).mutation(({ ctx, input }) =>
-      db.createDamage({
+    })).mutation(async ({ ctx, input }) => {
+      const project = await db.getProjectById(input.projectId, ctx.user.id);
+      if (!project) throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
+      if (input.customerId !== project.customerId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "The damage customer must match the selected project" });
+      }
+      return db.createDamage({
         userId: ctx.user.id,
         projectId: input.projectId,
-        customerId: input.customerId,
+        customerId: project.customerId,
         category: input.category,
         description: input.description,
         severity: input.severity,
         location: input.location,
         estimatedCost: input.estimatedCost,
-      })
-    ),
+      });
+    }),
   }),
 
   inspections: router({
