@@ -14,6 +14,8 @@ import { generateInvoicePDF } from "@/lib/pdf-export";
 import { filterInvoices } from "@/lib/invoiceFilters";
 import { toast } from "sonner";
 
+const HST_RATE = 0.13;
+
 export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
@@ -97,6 +99,15 @@ export default function Invoices() {
   };
 
   const filteredInvoices = filterInvoices(invoices, searchTerm, filterStatus);
+  const updateSubtotal = (subtotal: string) => {
+    const amount = Number.parseFloat(subtotal);
+    if (!Number.isFinite(amount) || amount < 0) {
+      setFormData({ ...formData, subtotal, tax: "", total: "" });
+      return;
+    }
+    const tax = (amount * HST_RATE).toFixed(2);
+    setFormData({ ...formData, subtotal, tax, total: (amount + Number.parseFloat(tax)).toFixed(2) });
+  };
 
   return (
     <div className="space-y-6">
@@ -180,19 +191,21 @@ export default function Invoices() {
                     step="0.01"
                     placeholder="0.00"
                     value={formData.subtotal}
-                    onChange={(e) => setFormData({ ...formData, subtotal: e.target.value })}
+                    onChange={(e) => updateSubtotal(e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="tax">Tax (HST)</Label>
+                  <Label htmlFor="tax">HST (13%)</Label>
                   <Input
                     id="tax"
                     type="number"
                     step="0.01"
-                    placeholder="0.00"
+                    placeholder="Calculated from subtotal"
                     value={formData.tax}
-                    onChange={(e) => setFormData({ ...formData, tax: e.target.value })}
+                    readOnly
+                    aria-describedby="hst-help"
                   />
+                  <p id="hst-help" className="mt-1 text-xs text-muted-foreground">Automatically calculated from the subtotal.</p>
                 </div>
                 <div>
                   <Label htmlFor="total">Total *</Label>
@@ -200,9 +213,9 @@ export default function Invoices() {
                     id="total"
                     type="number"
                     step="0.01"
-                    placeholder="0.00"
+                    placeholder="Subtotal + HST"
                     value={formData.total}
-                    onChange={(e) => setFormData({ ...formData, total: e.target.value })}
+                    readOnly
                   />
                 </div>
               </div>

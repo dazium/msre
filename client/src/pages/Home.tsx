@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Activity, ArrowRight, BarChart3, Calendar, ClipboardList, FileText, Plus, TrendingUp, Users } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Activity, AlertTriangle, ArrowRight, BarChart3, Calendar, ClipboardList, DollarSign, FileText, Plus, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -22,8 +23,11 @@ export default function Home() {
   const { data: estimates } = trpc.estimates.list.useQuery();
   const { data: appointments } = trpc.appointments.list.useQuery();
   const { data: activity } = trpc.activity.list.useQuery({ limit: 10 });
+  const { data: invoiceStats } = trpc.financialReporting.getInvoiceStats.useQuery();
+  const { data: projectStats } = trpc.financialReporting.getProjectStats.useQuery();
   const activeProjects = getActiveProjects(projects);
   const pendingEstimates = getPendingEstimates(estimates);
+  const formatCurrency = (amount: number | undefined) => amount === undefined ? "—" : `$${amount.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const getActivityPath = (entityType: string, entityId: number) => {
     const routes: Record<string, string> = { company: "/companies", work_order: "/work-orders", job_site: "/companies", project: "/projects", customer: "/customers" };
     return routes[entityType] ? `${routes[entityType]}/${entityId}` : undefined;
@@ -100,7 +104,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Total Customers</p>
-                <p className="blueprint-value">{customers?.length || 0}</p>
+                {customers ? <p className="blueprint-value">{customers.length}</p> : <Skeleton className="mt-2 h-10 w-16" />}
               </div>
               <Users className="w-12 h-12 text-primary/20" />
             </div>
@@ -110,7 +114,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Active Projects</p>
-                <p className="blueprint-value">{activeProjects.length}</p>
+                {projects ? <p className="blueprint-value">{activeProjects.length}</p> : <Skeleton className="mt-2 h-10 w-16" />}
               </div>
               <BarChart3 className="w-12 h-12 text-primary/20" />
             </div>
@@ -120,12 +124,25 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="blueprint-label">Pending Estimates</p>
-                <p className="blueprint-value">{pendingEstimates.length}</p>
+                {estimates ? <p className="blueprint-value">{pendingEstimates.length}</p> : <Skeleton className="mt-2 h-10 w-16" />}
               </div>
               <FileText className="w-12 h-12 text-primary/20" />
             </div>
           </div>
         </div>
+
+        <section className="blueprint-section" aria-labelledby="dashboard-kpis-title">
+          <div className="blueprint-header flex items-center justify-between gap-3">
+            <h2 id="dashboard-kpis-title" className="text-xl font-bold">Financial &amp; Pipeline KPIs</h2>
+            <a href="/financial-reports" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">View reports <ArrowRight className="h-4 w-4" /></a>
+          </div>
+          <div className="grid gap-3 p-6 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded border border-border bg-background/50 p-4"><div className="flex items-center justify-between"><p className="blueprint-label">Collected revenue</p><DollarSign className="h-5 w-5 text-primary/50" /></div>{invoiceStats ? <p className="mt-2 text-2xl font-bold text-primary">{formatCurrency(invoiceStats.paidAmount)}</p> : <Skeleton className="mt-2 h-8 w-32" />}<p className="mt-1 text-xs text-foreground/60">Across paid invoices</p></div>
+            <div className="rounded border border-border bg-background/50 p-4"><div className="flex items-center justify-between"><p className="blueprint-label">Outstanding</p><DollarSign className="h-5 w-5 text-primary/50" /></div>{invoiceStats ? <p className="mt-2 text-2xl font-bold text-foreground">{formatCurrency(invoiceStats.unpaidAmount)}</p> : <Skeleton className="mt-2 h-8 w-32" />}<p className="mt-1 text-xs text-foreground/60">Open receivables</p></div>
+            <div className="rounded border border-border bg-background/50 p-4"><div className="flex items-center justify-between"><p className="blueprint-label">Overdue invoices</p><AlertTriangle className="h-5 w-5 text-amber-500/70" /></div>{invoiceStats ? <p className="mt-2 text-2xl font-bold text-amber-500">{invoiceStats.overdueInvoices}</p> : <Skeleton className="mt-2 h-8 w-16" />}<p className="mt-1 text-xs text-foreground/60">Needs follow-up</p></div>
+            <div className="rounded border border-border bg-background/50 p-4"><div className="flex items-center justify-between"><p className="blueprint-label">Project pipeline</p><TrendingUp className="h-5 w-5 text-primary/50" /></div>{projectStats ? <p className="mt-2 text-2xl font-bold text-primary">{formatCurrency(projectStats.totalProjectValue)}</p> : <Skeleton className="mt-2 h-8 w-32" />}<p className="mt-1 text-xs text-foreground/60">Estimated and actual values</p></div>
+          </div>
+        </section>
 
         {/* Quick Summary Dashboard */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -147,7 +164,7 @@ export default function Home() {
                 </div>
                 <BarChart3 className="h-12 w-12 text-primary/20" aria-hidden="true" />
               </div>
-              {activeProjects.length > 0 ? (
+              {!projects ? <div className="space-y-2" role="status" aria-label="Loading active projects"><Skeleton className="h-11 w-full" /><Skeleton className="h-11 w-11/12" /><Skeleton className="h-11 w-10/12" /><span className="sr-only">Loading active projects...</span></div> : activeProjects.length > 0 ? (
                 <div className="space-y-2">
                   {activeProjects.slice(0, 3).map((project) => (
                     <a key={project.id} href={`/projects/${project.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
@@ -180,7 +197,7 @@ export default function Home() {
                 </div>
                 <FileText className="h-12 w-12 text-primary/20" aria-hidden="true" />
               </div>
-              {pendingEstimates.length > 0 ? (
+              {!estimates ? <div className="space-y-2" role="status" aria-label="Loading pending estimates"><Skeleton className="h-11 w-full" /><Skeleton className="h-11 w-11/12" /><Skeleton className="h-11 w-10/12" /><span className="sr-only">Loading pending estimates...</span></div> : pendingEstimates.length > 0 ? (
                 <div className="space-y-2">
                   {pendingEstimates.slice(0, 3).map((estimate) => (
                     <a key={estimate.id} href={`/estimates/${estimate.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary">
@@ -202,7 +219,7 @@ export default function Home() {
             <span className="text-xs font-semibold uppercase tracking-wide text-secondary-foreground/70">Latest CRM changes</span>
           </div>
           <div className="p-6">
-            {activity && activity.length > 0 ? <div className="space-y-2">{activity.map((event) => { const href = getActivityPath(event.entityType, event.entityId); const content = <div className="flex min-w-0 items-start justify-between gap-4 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary"><div className="min-w-0"><p className="font-semibold text-foreground">{event.details || `${event.action} ${event.entityType.replaceAll("_", " ")}`}</p><p className="mt-1 text-xs uppercase tracking-wide text-foreground/60">{event.action.replaceAll("_", " ")} · {event.entityType.replaceAll("_", " ")}</p></div><time className="shrink-0 text-xs text-foreground/60">{new Date(event.createdAt).toLocaleDateString()}</time></div>; return href ? <a key={event.id} href={href}>{content}</a> : <div key={event.id}>{content}</div>; })}</div> : <p className="rounded border border-dashed border-border p-4 text-sm text-foreground/60">New project, crew, work-order, and account changes will appear here.</p>}
+            {activity === undefined ? <div className="space-y-2" role="status" aria-label="Loading recent activity"><Skeleton className="h-14 w-full" /><Skeleton className="h-14 w-11/12" /><Skeleton className="h-14 w-10/12" /><span className="sr-only">Loading recent activity...</span></div> : activity.length > 0 ? <div className="space-y-2">{activity.map((event) => { const href = getActivityPath(event.entityType, event.entityId); const content = <div className="flex min-w-0 items-start justify-between gap-4 rounded border border-border bg-background/50 p-3 transition-colors hover:border-primary"><div className="min-w-0"><p className="font-semibold text-foreground">{event.details || `${event.action} ${event.entityType.replaceAll("_", " ")}`}</p><p className="mt-1 text-xs uppercase tracking-wide text-foreground/60">{event.action.replaceAll("_", " ")} · {event.entityType.replaceAll("_", " ")}</p></div><time className="shrink-0 text-xs text-foreground/60">{new Date(event.createdAt).toLocaleDateString()}</time></div>; return href ? <a key={event.id} href={href}>{content}</a> : <div key={event.id}>{content}</div>; })}</div> : <p className="rounded border border-dashed border-border p-4 text-sm text-foreground/60">New project, crew, work-order, and account changes will appear here.</p>}
           </div>
         </section>
 

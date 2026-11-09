@@ -48,7 +48,7 @@
 - [x] Add estimate status tracking (draft → sent → accepted)
 - [x] Implement estimate number auto-generation
 - [x] Create estimate history for each project
-- [ ] Auto-populate estimates from damages
+- [x] Auto-populate estimates from damages
 - [x] Write tests for estimates feature
 
 ## Photo Upload & Documentation (PRIORITY)
@@ -98,7 +98,7 @@
 - [x] Add upcoming appointments widget
 - [x] Create quick stats (total customers, active projects, revenue)
 - [x] Build activity feed showing recent changes
-- [ ] Add key metrics and KPIs display
+- [x] Add key metrics and KPIs display
 
 ## Google Maps Integration
 - [x] Set up Google Maps component from template
@@ -171,7 +171,7 @@
 - [ ] Add micro-interactions and animations
 - [ ] Optimize colors for accessibility
 - [ ] Test dark/light theme consistency
-- [ ] Add empty states and loading skeletons
+- [x] Add empty states and loading skeletons
 
 ## Performance & Optimization
 - [ ] Optimize database queries with indexes
@@ -261,6 +261,7 @@
 - [x] Invoice generation - Auto-generate from estimates
 - [x] Invoice database schema and tRPC procedures
 - [x] Invoice UI components (create, list, filter)
+- [x] New Invoice automatically calculates Ontario HST from subtotal and synchronizes the total
 - [x] Invoice number auto-generation with format
 - [x] Invoice status tracking (draft, sent, viewed, paid, overdue, cancelled)
 - [x] Comprehensive invoice tests (17 tests passing)

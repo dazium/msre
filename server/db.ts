@@ -309,6 +309,50 @@ export async function createEstimate(data: InsertEstimate) {
   return db.insert(estimates).values(data);
 }
 
+export async function createEstimateFromDamages(projectId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const project = await getProjectById(projectId, userId);
+  if (!project) throw new Error("Project not found");
+  const damageRows = await getDamagesByProjectId(projectId, userId);
+  if (damageRows.length === 0) throw new Error("Add at least one damage assessment before creating an estimate");
+  const customer = await getCustomerById(project.customerId, userId);
+  if (!customer) throw new Error("Customer not found for this project");
+
+  const lineItems = damageRows.map((damage) => {
+    const amount = Number(damage.estimatedCost ?? 0);
+    const safeAmount = Number.isFinite(amount) && amount >= 0 ? amount : 0;
+    const category = damage.category.replaceAll("_", " ");
+    return {
+      description: `${category.charAt(0).toUpperCase()}${category.slice(1)}: ${damage.description}${damage.location ? ` (${damage.location})` : ""}`,
+      quantity: "1.00",
+      unitPrice: safeAmount.toFixed(2),
+      total: safeAmount.toFixed(2),
+    };
+  });
+  const subtotal = lineItems.reduce((sum, item) => sum + Number(item.total), 0).toFixed(2);
+  let estimateNumber = await generateEstimateNumber();
+  if (await estimateNumberExists(estimateNumber)) estimateNumber = `EST-${Date.now()}`;
+  const result = await db.insert(estimates).values({
+    userId,
+    projectId,
+    customerId: customer.id,
+    estimateNumber,
+    title: `Damage assessment — ${project.title}`,
+    description: `Estimate generated from ${damageRows.length} recorded damage assessment${damageRows.length === 1 ? "" : "s"}. Review zero-cost items before sending.`,
+    subtotal,
+    tax: "0.00",
+    total: subtotal,
+    status: "draft",
+  });
+  const estimateId = Number(result[0]?.insertId);
+  if (!estimateId) throw new Error("Failed to create estimate");
+  await db.insert(estimateLineItems).values(lineItems.map((item) => ({ ...item, estimateId })));
+  const estimate = await getEstimateById(estimateId, userId);
+  if (!estimate) throw new Error("Failed to load created estimate");
+  return { estimate, lineItems, damageCount: damageRows.length };
+}
+
 export async function listEstimates() {
   const db = await getDb();
   if (!db) return [];

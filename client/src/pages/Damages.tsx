@@ -4,7 +4,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useRef } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { Plus, Upload, Trash2, AlertCircle } from "lucide-react";
 import MaterialsChecklist, { SelectedMaterial } from "@/components/MaterialsChecklist";
@@ -24,6 +26,7 @@ const DAMAGE_CATEGORIES = [
 export default function Damages() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
+  const [estimateProjectId, setEstimateProjectId] = useState("");
   const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ url: string; file: File }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
@@ -40,6 +43,8 @@ export default function Damages() {
   const createMutation = trpc.damages.create.useMutation();
   const uploadPhotoMutation = trpc.photos.uploadFile.useMutation();
   const linkPhotoMutation = trpc.photos.linkToDamage.useMutation();
+  const [, setLocation] = useLocation();
+  const createEstimateMutation = trpc.estimates.createFromDamages.useMutation();
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.currentTarget.files;
@@ -130,13 +135,39 @@ export default function Damages() {
   };
 
   const selectedProjectData = projects?.find((p) => p.id === parseInt(selectedProject));
+  const estimateProjectData = projects?.find((p) => p.id === parseInt(estimateProjectId));
+  const estimateDamageCount = damages?.filter((damage) => damage.projectId === parseInt(estimateProjectId)).length ?? 0;
+
+  const createEstimateFromDamages = async () => {
+    if (!estimateProjectId) {
+      toast.error("Select a project first");
+      return;
+    }
+    try {
+      const result = await createEstimateMutation.mutateAsync({ projectId: parseInt(estimateProjectId) });
+      toast.success(`Draft estimate created from ${result.damageCount} damage assessment${result.damageCount === 1 ? "" : "s"}`);
+      setLocation(`/estimates/${result.estimate.id}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create estimate from damages");
+    }
+  };
 
   return (
     <div className="space-y-6">
         {/* Header */}
         <div className="blueprint-section">
-          <div className="blueprint-header flex items-center justify-between">
+          <div className="blueprint-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-3xl font-bold">Roof Damage Assessment</h1>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+                <Select value={estimateProjectId} onValueChange={setEstimateProjectId}>
+                  <SelectTrigger className="min-h-11 w-full sm:w-56"><SelectValue placeholder="Project for estimate" /></SelectTrigger>
+                  <SelectContent>{projects?.map((project) => <SelectItem key={`estimate-${project.id}`} value={project.id.toString()}>{project.title}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button type="button" variant="outline" className="min-h-11" onClick={createEstimateFromDamages} disabled={!estimateProjectId || estimateDamageCount === 0 || createEstimateMutation.isPending}>
+                  {createEstimateMutation.isPending ? "Creating estimate..." : `Estimate damages${estimateProjectData ? ` (${estimateDamageCount})` : ""}`}
+                </Button>
+              </div>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
@@ -294,6 +325,7 @@ export default function Damages() {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </div>
 
@@ -313,7 +345,10 @@ export default function Damages() {
         <div className="blueprint-section">
           <div className="p-6">
             {isLoading ? (
-              <p className="text-center py-8 text-foreground/60">Loading damages...</p>
+              <div className="space-y-3" aria-label="Loading damage assessments" role="status">
+                {[1, 2, 3].map((item) => <div key={item} className="blueprint-card space-y-3 p-4"><div className="flex items-center justify-between gap-4"><Skeleton className="h-5 w-2/5" /><Skeleton className="h-6 w-20 rounded-full" /></div><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/5" /></div>)}
+                <span className="sr-only">Loading damage assessments...</span>
+              </div>
             ) : !damages || damages.length === 0 ? (
               <p className="text-center py-8 text-foreground/60">
                 No damages recorded yet. Start by recording your first damage assessment.

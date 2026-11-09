@@ -950,6 +950,9 @@ export const appRouter = router({
     convertToProject: protectedProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ ctx, input }) =>
       db.convertEstimateToProject(input.id, ctx.user.id)
     ),
+    createFromDamages: protectedProcedure.input(z.object({ projectId: z.number().int().positive() })).mutation(({ ctx, input }) =>
+      db.createEstimateFromDamages(input.projectId, ctx.user.id)
+    ),
   }),
 
   estimateLineItems: router({

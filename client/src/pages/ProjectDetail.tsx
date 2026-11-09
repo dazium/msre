@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -179,8 +180,11 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
   if (projectLoading || customerLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-foreground/60">Loading project details...</p>
+      <div className="space-y-6" role="status" aria-label="Loading project details">
+        <Skeleton className="h-6 w-32" />
+        <div className="blueprint-section space-y-4 p-6"><Skeleton className="h-9 w-2/3" /><Skeleton className="h-6 w-24 rounded-full" /></div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3"><div className="space-y-6 lg:col-span-2"><Skeleton className="h-44 w-full rounded-lg" /><Skeleton className="h-64 w-full rounded-lg" /><Skeleton className="h-48 w-full rounded-lg" /></div><div className="space-y-6"><Skeleton className="h-52 w-full rounded-lg" /><Skeleton className="h-56 w-full rounded-lg" /></div></div>
+        <span className="sr-only">Loading project details...</span>
       </div>
     );
   }
@@ -393,7 +397,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/60">Crew information loading...</p>
+                  <div className="space-y-3" role="status" aria-label="Loading crew information"><Skeleton className="h-5 w-1/2" /><Skeleton className="h-4 w-3/4" /><span className="sr-only">Crew information loading...</span></div>
                 </CardContent>
               </Card>
             )}

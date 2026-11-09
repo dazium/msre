@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -321,7 +322,10 @@ export default function Customers() {
         <div className="blueprint-section">
           <div className="p-6">
             {isLoading ? (
-              <p className="text-center py-8 text-foreground/60">Loading customers...</p>
+              <div className="space-y-3" aria-label="Loading customers" role="status">
+                {[1, 2, 3].map((item) => <div key={item} className="blueprint-card space-y-3 p-4"><div className="flex items-center justify-between gap-4"><Skeleton className="h-5 w-2/5" /><Skeleton className="h-6 w-24 rounded-full" /></div><Skeleton className="h-4 w-3/5" /><div className="flex flex-wrap gap-3"><Skeleton className="h-4 w-28" /><Skeleton className="h-4 w-36" /></div></div>)}
+                <span className="sr-only">Loading customers...</span>
+              </div>
             ) : filteredCustomers?.length === 0 ? (
               <p className="text-center py-8 text-foreground/60">
                 {customers?.length === 0 ? "No customers yet. Add one to get started!" : "No customers match your search."}

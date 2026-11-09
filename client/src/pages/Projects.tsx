@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -514,7 +515,10 @@ export default function Projects() {
       <section className="blueprint-section">
         <div className="p-6">
           {isLoading ? (
-            <p className="py-12 text-center text-foreground/60">Loading projects...</p>
+            <div className="space-y-3" aria-label="Loading projects" role="status">
+              {[1, 2, 3].map((item) => <div key={item} className="blueprint-card space-y-3 p-4"><div className="flex items-center justify-between gap-4"><Skeleton className="h-5 w-2/3" /><Skeleton className="h-6 w-20 rounded-full" /></div><Skeleton className="h-4 w-1/2" /><div className="flex gap-3"><Skeleton className="h-4 w-28" /><Skeleton className="h-4 w-36" /></div></div>)}
+              <span className="sr-only">Loading projects...</span>
+            </div>
           ) : filteredProjects.length === 0 ? (
             <div className="py-12 text-center">
               <p className="font-medium text-foreground">No projects match the current view.</p>
