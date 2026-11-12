@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -206,7 +207,7 @@ export default function Estimates() {
   };
 
   if (isLoading) {
-    return <div className="p-8">Loading estimates...</div>;
+    return <div className="space-y-4" role="status" aria-label="Loading estimates"><Skeleton className="h-9 w-48" /><Skeleton className="h-5 w-64" />{[1, 2, 3].map((item) => <div key={item} className="space-y-3 rounded-lg border border-border/50 p-4"><div className="flex items-center justify-between gap-4"><Skeleton className="h-5 w-2/5" /><Skeleton className="h-8 w-24" /></div><Skeleton className="h-4 w-3/5" /><Skeleton className="h-9 w-24" /></div>)}<span className="sr-only">Loading estimates...</span></div>;
   }
 
   return (

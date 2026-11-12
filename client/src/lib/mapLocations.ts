@@ -1,5 +1,6 @@
 export type MappableRecord = {
   id: number;
+  customerId?: number | null;
   latitude?: string | number | null;
   longitude?: string | number | null;
   title?: string | null;
@@ -8,6 +9,7 @@ export type MappableRecord = {
   address?: string | null;
   city?: string | null;
   state?: string | null;
+  zipCode?: string | null;
   status?: string | null;
 };
 
@@ -50,6 +52,9 @@ const coordinatesFor = (record: MappableRecord) => {
 
 const customerName = (customer: MappableRecord) =>
   [customer.firstName, customer.lastName].filter(Boolean).join(" ") || "Customer location";
+
+export const getRecordAddress = (record: MappableRecord) =>
+  [record.address, record.city, record.state, record.zipCode, "Canada"].filter(Boolean).join(", ");
 
 export const APPOINTMENT_TYPE_OPTIONS = [
   "estimate",
@@ -99,7 +104,7 @@ export function buildLocationMarkers({
   const customerMarkers = customers.flatMap((customer) => {
     const coordinates = coordinatesFor(customer);
     if (!coordinates) return [];
-    const location = [customer.address, customer.city, customer.state].filter(Boolean).join(", ");
+    const location = getRecordAddress(customer).replace(/, Canada$/, "");
     return [{
       id: `customer-${customer.id}`,
       ...coordinates,

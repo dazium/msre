@@ -3,6 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -293,7 +294,7 @@ export default function CustomerDetail() {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center">Loading customer details...</div>;
+    return <div className="space-y-6" role="status" aria-label="Loading customer details"><div className="space-y-3"><Skeleton className="h-9 w-64" /><Skeleton className="h-5 w-80" /><Skeleton className="h-6 w-24 rounded-full" /></div><div className="grid grid-cols-1 gap-4 md:grid-cols-4">{[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-28 rounded-lg" />)}</div><Skeleton className="h-52 w-full rounded-lg" /><Skeleton className="h-72 w-full rounded-lg" /><span className="sr-only">Loading customer details...</span></div>;
   }
 
   if (!customer) {

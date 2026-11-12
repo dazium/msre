@@ -340,6 +340,7 @@
 
 ## Scheduling & Mapping - Phase 3
 - [ ] Google Calendar sync - Complete integration with crew calendars
+- [x] Job Map auto-populates project and customer address markers with Google geocoding fallback
 - [ ] Google Maps integration - Route optimization and geolocation
 - [ ] Travel time calculation - Account for travel between jobs
 - [ ] Weather API integration - Weather forecasts for scheduling

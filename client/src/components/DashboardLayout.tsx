@@ -13,6 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { BarChart3, Building2, Calendar, ClipboardCheck, ClipboardList, FileText, Home, Menu, Settings, Users, Zap, Navigation, Package, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -95,6 +96,7 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const [location, setLocation] = useLocation();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
@@ -105,10 +107,15 @@ function DashboardLayoutContent({
   const [historyIndex, setHistoryIndex] = useState(0);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (isAuthenticated) {
+      localStorage.setItem(ACCESS_MODE_KEY, "staff");
+      return;
+    }
     if (!localStorage.getItem(ACCESS_MODE_KEY)) {
       setLocation("/login");
     }
-  }, [setLocation]);
+  }, [authLoading, isAuthenticated, setLocation]);
 
   useEffect(() => {
     if (isCollapsed) {
@@ -234,8 +241,8 @@ MUNRO & Sons
                 <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">M</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
-                <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">MUNRO and Sons</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate mt-1.5">Public CRM demo</p>
+                <p className="text-sm font-semibold truncate leading-none text-sidebar-foreground">{user?.name || "MUNRO and Sons"}</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate mt-1.5">{isAuthenticated ? "Staff session" : "Public CRM demo"}</p>
               </div>
             </div>
           </SidebarFooter>

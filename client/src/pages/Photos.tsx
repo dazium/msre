@@ -5,6 +5,7 @@ import { PhotoUpload } from "@/components/PhotoUpload";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Columns2 } from "lucide-react";
@@ -123,6 +124,10 @@ export default function Photos() {
         </div>
       </div>
     );
+  }
+
+  if (photos === undefined) {
+    return <div className="space-y-6" role="status" aria-label="Loading project photos"><Skeleton className="h-9 w-48" /><Skeleton className="h-36 w-full rounded-lg" /><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <Skeleton key={index} className="aspect-square rounded-lg" />)}</div><span className="sr-only">Loading project photos...</span></div>;
   }
 
   return (

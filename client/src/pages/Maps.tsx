@@ -9,6 +9,7 @@ import {
   APPOINTMENT_STATUS_OPTIONS,
   APPOINTMENT_TYPE_OPTIONS,
   buildLocationMarkers,
+  getRecordAddress,
   getProjectStatusColor,
   getProjectStatusOptions,
 } from "@/lib/mapLocations";
@@ -23,20 +24,58 @@ export default function Maps() {
   const [appointmentTypeFilter, setAppointmentTypeFilter] = useState("all");
   const [appointmentStatusFilter, setAppointmentStatusFilter] = useState("all");
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [geocodedCoordinates, setGeocodedCoordinates] = useState<Record<string, { lat: number; lng: number }>>({});
   const markerRefs = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
   const statusOptions = useMemo(() => getProjectStatusOptions(projects), [projects]);
-  const markers = useMemo(
-    () => buildLocationMarkers({
-      projects,
-      customers,
+  const customerById = useMemo(() => new Map(customers.map((customer) => [customer.id, customer])), [customers]);
+  const geocodableRecords = useMemo(() => [
+    ...projects.map((project) => ({
+      key: `project-${project.id}`,
+      record: project,
+      address: getRecordAddress(project) || (customerById.get(project.customerId) ? getRecordAddress(customerById.get(project.customerId)!) : ""),
+    })),
+    ...customers.map((customer) => ({ key: `customer-${customer.id}`, record: customer, address: getRecordAddress(customer) })),
+  ].filter((entry) => (!entry.record.latitude || !entry.record.longitude) && entry.address), [projects, customers, customerById]);
+
+  useEffect(() => {
+    if (!map || !window.google?.maps?.Geocoder || geocodableRecords.length === 0) return;
+    let cancelled = false;
+    const geocoder = new google.maps.Geocoder();
+    const geocode = (address: string) => new Promise<{ lat: number; lng: number } | null>((resolve) => {
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === "OK" && results?.[0]) {
+          const location = results[0].geometry.location;
+          resolve({ lat: location.lat(), lng: location.lng() });
+        } else {
+          resolve(null);
+        }
+      });
+    });
+
+    Promise.all(geocodableRecords.map(async ({ key, address }) => ({ key, coordinates: await geocode(address) }))).then((results) => {
+      if (cancelled) return;
+      setGeocodedCoordinates((current) => {
+        const next = { ...current };
+        results.forEach(({ key, coordinates }) => { if (coordinates) next[key] = coordinates; });
+        return next;
+      });
+    });
+    return () => { cancelled = true; };
+  }, [map, geocodableRecords]);
+
+  const mappedProjects = useMemo(() => projects.map((project) => ({ ...project, ...(geocodedCoordinates[`project-${project.id}`] ?? {}) })), [projects, geocodedCoordinates]);
+  const mappedCustomers = useMemo(() => customers.map((customer) => ({ ...customer, ...(geocodedCoordinates[`customer-${customer.id}`] ?? {}) })), [customers, geocodedCoordinates]);
+  const markers = useMemo(() => {
+    return buildLocationMarkers({
+      projects: mappedProjects,
+      customers: mappedCustomers,
       appointments,
       statusFilter,
       appointmentTypeFilter,
       appointmentStatusFilter,
-    }),
-    [projects, customers, appointments, statusFilter, appointmentTypeFilter, appointmentStatusFilter],
-  );
+    });
+  }, [mappedProjects, mappedCustomers, appointments, statusFilter, appointmentTypeFilter, appointmentStatusFilter]);
 
   useEffect(() => {
     if (!map || !window.google?.maps?.marker) return;
@@ -80,7 +119,8 @@ export default function Maps() {
     };
   }, [map, markers]);
 
-  const visibleProjects = projects.filter((project) => statusFilter === "all" || project.status === statusFilter);
+  const visibleProjects = mappedProjects.filter((project) => statusFilter === "all" || project.status === statusFilter);
+  const visibleCustomers = mappedCustomers.filter((customer) => customer.latitude && customer.longitude);
   const handleGetDirections = (lat: number, lng: number) => {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank", "noopener,noreferrer");
   };
@@ -122,7 +162,7 @@ export default function Maps() {
             <span className="rounded-full bg-amber-500/15 px-2 py-1 text-amber-700">J Project job</span>
             <span className="rounded-full bg-violet-500/15 px-2 py-1 text-violet-700">C Customer address</span>
             <span className="rounded-full bg-cyan-500/15 px-2 py-1 text-cyan-700">A Appointment</span>
-            <span className="ml-auto">{markers.length} mapped location{markers.length === 1 ? "" : "s"}</span>
+            <span className="ml-auto">{markers.length} mapped location{markers.length === 1 ? "" : "s"}{geocodableRecords.length > 0 ? " · resolving addresses…" : ""}</span>
           </div>
           <div className="overflow-hidden rounded-lg border border-primary/30 bg-muted/30">
             <MapView initialCenter={mapCenterFallback} initialZoom={11} className="h-[420px] sm:h-[520px]" onMapReady={setMap} />
@@ -149,12 +189,12 @@ export default function Maps() {
         <Card className="blueprint-section">
           <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Customer locations</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {customers.filter((customer) => customer.latitude && customer.longitude).length ? customers.filter((customer) => customer.latitude && customer.longitude).map((customer) => (
+            {visibleCustomers.length ? visibleCustomers.map((customer) => (
               <div key={customer.id} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
                 <div className="min-w-0"><p className="font-semibold">{customer.firstName} {customer.lastName}</p><p className="truncate text-sm text-muted-foreground">{customer.address || "Address mapped"}</p></div>
                 <Button size="sm" variant="outline" onClick={() => handleGetDirections(Number(customer.latitude), Number(customer.longitude))}><Navigation className="mr-1 h-4 w-4" />Directions</Button>
               </div>
-            )) : <p className="py-6 text-center text-sm text-muted-foreground">Customer locations appear here once an address is selected through the validated Google address search.</p>}
+            )) : <p className="py-6 text-center text-sm text-muted-foreground">No customer addresses could be mapped yet. Add a street address and city to the customer record.</p>}
           </CardContent>
         </Card>
       </div>

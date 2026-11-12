@@ -2,12 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
 import { ShieldCheck, Zap } from "lucide-react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const ACCESS_KEY = "msre-access-mode";
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const { isAuthenticated, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      localStorage.setItem(ACCESS_KEY, "staff");
+      setLocation("/");
+    }
+  }, [isAuthenticated, loading, setLocation]);
 
   const enterDemo = () => {
     localStorage.setItem(ACCESS_KEY, "public-demo");
@@ -15,6 +25,7 @@ export default function Login() {
   };
 
   const enterStaffLogin = () => {
+    localStorage.setItem(ACCESS_KEY, "staff");
     window.location.href = getLoginUrl();
   };
 

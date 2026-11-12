@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { format } from "date-fns";
 import { Download } from "lucide-react";
@@ -46,7 +47,7 @@ export default function Invoices() {
   const { data: customers } = trpc.customers.list.useQuery();
 
   // Fetch invoices
-  const { data: invoices = [] } = trpc.invoices.list.useQuery();
+  const { data: invoices = [], isLoading } = trpc.invoices.list.useQuery();
 
   const createInvoiceMutation = trpc.invoices.create.useMutation({
     onSuccess: () => {
@@ -272,7 +273,22 @@ export default function Invoices() {
           <CardDescription>{filteredInvoices.length} invoice(s)</CardDescription>
         </CardHeader>
         <CardContent>
-          {filteredInvoices.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-3" role="status" aria-label="Loading invoices">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-44" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-9 w-16" />
+                    <Skeleton className="h-9 w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No invoices found. Create one to get started.</p>
             </div>

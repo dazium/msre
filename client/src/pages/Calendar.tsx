@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -14,12 +15,12 @@ import { ContactLink } from "@/components/ContactLink";
 import { AddressMapModal } from "@/components/AddressMapModal";
 
 export default function Calendar() {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 31)); // March 2026
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [showDialog, setShowDialog] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ title: "", description: "", startTime: "", endTime: "", status: "scheduled", location: "", notes: "" });
   const [dayDetail, setDayDetail] = useState<{ label: string; appointments: any[] } | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date());
   const [appointments, setAppointments] = useState<any[]>([]);
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -193,7 +194,7 @@ export default function Calendar() {
   const emptyDays = Array.from({ length: firstDay }, (_, i) => i);
 
   if (isLoading) {
-    return <div className="p-8">Loading calendar...</div>;
+    return <div className="space-y-5" role="status" aria-label="Loading calendar"><div className="flex items-center justify-between"><Skeleton className="h-9 w-64" /><Skeleton className="h-11 w-40" /></div><Skeleton className="h-28 w-full rounded-lg" /><div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">{Array.from({ length: 14 }, (_, index) => <Skeleton key={index} className="h-24 rounded-lg" />)}</div><span className="sr-only">Loading calendar...</span></div>;
   }
 
   return (
